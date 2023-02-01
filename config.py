@@ -10,9 +10,9 @@ PATH_RAW_RUBRIC = "input/rubrics"
 
 # Imports
 import spacy
-# download the respective spacy models
-spacy.cli.download("en_core_web_lg")
-spacy.cli.download("de_core_news_lg")
+# download the spacy models if not already downloaded
+#spacy.cli.download("en_core_web_lg")
+#spacy.cli.download("de_core_news_lg")
 
 nlp = spacy.load("en_core_web_lg")
 nlp_de = spacy.load("de_core_news_lg")

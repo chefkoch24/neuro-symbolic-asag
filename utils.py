@@ -7,10 +7,18 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 import json
 
-def save_as_json(data,path, file_name):
+def save_json(data, path, file_name):
+    directory = path
+    if not os.path.exists(directory):
+        os.mkdir(directory)
     with open(path+'/'+file_name, 'w') as fout:
         json.dump(data, fout)
         print('saved', file_name)
+
+def load_json(path):
+    with open(path, 'r') as fin:
+        data = json.load(fin)
+    return data
 
 def save_to_csv(X_train, X_dev, y_train, y_dev, path):
     sep = "\t"

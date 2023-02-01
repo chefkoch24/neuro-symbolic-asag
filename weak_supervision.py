@@ -519,6 +519,7 @@ for j, data in enumerate([X_train, X_dev]):
                 soft_labels[cue[0]:cue[1] + 1] = cue[3]  # 3 is idx for soft label
             labeling_functions[lf['name']] = soft_labels.tolist()
         item = {
+            'lang': d['lang'],
             'question_id': d['question_id'],
             'question': d['question'],
             'reference_answer': d['reference_answer'],
@@ -532,4 +533,4 @@ for j, data in enumerate([X_train, X_dev]):
         file_name = 'train-soft'
     else:
         file_name = 'dev-soft'
-    utils.save_as_json(annotated_data, config.PATH_DATA, file_name + '.json')
+    utils.save_json(annotated_data, config.PATH_DATA, file_name + '.json')

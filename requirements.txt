@@ -11,3 +11,4 @@ sentence-transformers~=2.2.2
 sentencepiece~=0.1.97
 pillow~=9.4.0
 torchvision~=0.14.1
+pytokenizations~=0.8.4
