@@ -1,0 +1,8 @@
+QP,ID,key element,points
+P1,1,"Both implement a more efficient kind (in terms of duplicate packets) of
+broadcasting than flooding / to minimize the number of duplicate packets in the network
+when broadcasting","0,2"
+P2,2,"Reverse Path Forwarding: only forward to all adjacent nodes when you
+would send packets to S over N","0,4"
+P3,3,"Reverse Path Broadcast: identical to Reverse Path Forwarding exception only
+forwards packets on edges that are part of a spanning tree","0,4"

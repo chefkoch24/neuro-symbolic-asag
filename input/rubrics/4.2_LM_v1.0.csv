@@ -1,0 +1,4 @@
+QP,ID,key element,points
+P1,1,reduces the overhead for transmitting small frames by concatenating a sequence of multiple frames in one single transmission,"0,5"
+P1,2,higher efficiency,"0,25"
+P1,3,need frames waiting for transmission / buffering and delay of frames,"0,25"

@@ -1,0 +1,3 @@
+QP,ID,key element,points
+P1,1,Yes,"0,25"
+P1,2,using the current load to find the best path can lead to fluctuations/oscillations when there is more than one path between any pair of end systems,"0,75"

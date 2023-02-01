@@ -1,0 +1,3 @@
+QP,ID,key element,points
+P1,1,Every character is unit surrounded by a start bit and a stop bit,"0,5"
+P1,2,Characters pooled to a continuous stream of data (frames),"0,5"

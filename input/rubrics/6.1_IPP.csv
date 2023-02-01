@@ -1,0 +1,12 @@
+QP,ID,key element,points
+P1,1,To support billions of end-systems,"0,25"
+P1,2,To reduce routing tables,"0,25"
+P1,3,To simplify protocol processing with Simplified header,"0,25"
+P1,4,To increase security,"0,25"
+P1,5,To support real time data traffic (quality of service),"0,25"
+P1,6,"Flow label, traffic class","0,25"
+P1,7,To provide multicasting,"0,25"
+P1,8,To support mobility (roaming),"0,25"
+P1,9,"To be open for change (future): extension headers for additional change
+incorporation","0,25"
+P1,10,To coexistence with existing protocols,"0,25"

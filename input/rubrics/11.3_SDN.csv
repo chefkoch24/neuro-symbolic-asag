@@ -1,0 +1,12 @@
+QP,ID,key element,points
+P1,1,Replication,"0,25"
+P1,2,Partitioning,"0,25"
+P2,3,Replication: Issue of scalability,"0,25"
+P2,4,"Replication: More resources, more cost","0,25"
+P2,5,"Replication: Wastage of resources as the replicated node is on standby and no actual load
+distribution occurs.","0,25"
+P2,6,Replication: The problem to keep the data consistent in the replicated node is hard and complex.,"0,25"
+P3,7,Partitioning: Raises issues similar to P2P networks,"0,25"
+P3,8,Partitioning: Knowledge about neighborhood,"0,25"
+P3,9,Partitioning: Coordination and consistency,"0,25"
+P3,10,Partitioning: Lower availability,"0,25"

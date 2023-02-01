@@ -1,0 +1,5 @@
+QP,ID,key element,points
+P1,1,"Alternatively to the blocking probability summing up the probabilities for 0, 1, ..., 9 packets to be in the queue","0,25"
+P1,2,"multiply the time frame with P(X<10) or the
+complement of P_B","0,25"
+P1,3,57 seconds,"0,5"

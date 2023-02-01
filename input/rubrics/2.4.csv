@@ -1,0 +1,17 @@
+QP,ID,key element,points
+P1,1,Token Ring,"0,5"
+P1,2,p-persistent CSMA,"0,5"
+P1,3,"non-persistent CSMA,","0,5"
+P1,4,TDMA with reservation,"0,5"
+P1,5,CSMA/CD,"0,5"
+P2,6,scalability,2
+P2,7,waiting time,2
+P2,8,extendability,2
+P2,9,cost effectiveness,2
+P2,10,constraints,2
+P2,11,hardware requirements,2
+P2,12,compatibility,2
+P2,13,throughput,2
+P2,14,overhead,2
+P2,15,complexity,2
+P2,16,prioritization capabilities,2

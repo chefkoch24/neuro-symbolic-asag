@@ -1,0 +1,11 @@
+QP,ID,key element,points
+P1,1,Adaptation: dynamic changes,"0,5"
+P1,2,Security: Interception or injection,"0,5"
+P1,3,"Medium Access Control: collisions, Hidden Terminal, Exposed Terminal, Near and Far Terminal","0,5"
+P1,4,Quality of Service (QoS): rapidly changing signal quality,"0,5"
+P1,5,"Scalability: is not possible to know the number of participating nodes
+beforehand","0,5"
+P1,6,"Heterogeneity: different capabilities, responsibilities, and
+constraints","0,5"
+P1,7,Dependability: higher-level services can trust,"0,5"
+P1,8,Power Consumption: battery-powered,"0,5"

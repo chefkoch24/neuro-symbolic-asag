@@ -1,0 +1,3 @@
+QP,ID,key element,points
+P1,1,"Connectionless, because you will communicate with various partners (websites) for short periods of time",1
+P2,2,"if you would initiate a connection with every website you skim, that would incur a lot of overhead in the connecting and disconnecting phase, just to have very short data transfers.",1

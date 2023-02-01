@@ -1,0 +1,4 @@
+QP,ID,key element,points
+P1,1,"Property: a single unique path between every pair not contain
+loops","0,5"
+P2,2,Spanning Tree with Link State Routing: add multicast group information to the link state packet full network topology and group information locally,"0,5"
