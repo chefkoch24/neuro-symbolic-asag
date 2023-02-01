@@ -33,9 +33,9 @@ warnings.filterwarnings("ignore", category=UserWarning, module="nltk")
 class WeakSupervisionSoft():
     def __init__(self, rubrics=None):
         self.rubrics = rubrics
-        #self.para_detector = ParaphraseDetector()
+        self.para_detector = ParaphraseDetector()
         self._punctuation = ['.', ',', '?', '!', ';']
-        self.rouge = rouge = Rouge(metrics=["rouge-1", "rouge-2", "rouge-3", "rouge-4", "rouge-5", "rouge-l"])
+        self.rouge = Rouge(metrics=["rouge-1", "rouge-2", "rouge-3", "rouge-4", "rouge-5", "rouge-l"])
         self.labeling_functions = [
             {'name': 'LF_noun_phrases', 'function': self.LF_noun_phrases},
             {'name': 'LF_lemma_match', 'function': self.LF_lemma_match},
@@ -57,8 +57,8 @@ class WeakSupervisionSoft():
             {'name': 'LF_rouge_L_sentences', 'function': self.LF_rouge_L_sentences},
             {'name': 'LF_word_alignment', 'function': self.LF_word_alignment},
             {'name': 'LF_edit_distance', 'function': self.LF_edit_distance},
-            #{'name': 'LF_parahrase_detection_sentences', 'function': self.LF_parahrase_detection_sentences},
-            #{'name': 'LF_parahrase_detection_candidates', 'function': self.LF_parahrase_detection_candidates},
+            {'name': 'LF_parahrase_detection_sentences', 'function': self.LF_parahrase_detection_sentences},
+            {'name': 'LF_parahrase_detection_candidates', 'function': self.LF_parahrase_detection_candidates},
             {'name': 'LF_bleu_candidates', 'function': self.LF_bleu_candidates},
             {'name': 'LF_meteor_candidates', 'function': self.LF_meteor_candidates},
             {'name': 'LF_meteor_sentences', 'function': self.LF_meteor_sentences},
