@@ -130,7 +130,7 @@ class WeakSupervisionSoft():
             noun_chunk_text.append(' '.join([t.text.lower() for t in nc]))
         ind_dict = dict((k, i) for i, k in enumerate(noun_chunk_text))
         rubric_text = []
-        for r in rubric['key element']:
+        for r in rubric['key_element']:
             rubric_text.append(r.lower())
         matches = set(noun_chunk_text).intersection(rubric_text)
         indices = [ind_dict[x] for x in matches]
@@ -294,7 +294,7 @@ class WeakSupervisionSoft():
         for c, i in zip(candidates, indicies):
             c = ' '.join([t.text for t in c])
             scores = []
-            for r in rubric['key element']:
+            for r in rubric['key_element']:
                 score = nltk.translate.bleu_score.sentence_bleu([r.lower()], c.lower(), weights=(1, 0, 0, 0))
                 scores.append(score)
             v = np.argmax(scores)
@@ -402,7 +402,7 @@ class WeakSupervisionSoft():
         for c in candidates:
             c = ' '.join([t.text for t in c])
             scores = []
-            for r in rubric['key element']:
+            for r in rubric['key_element']:
                 try:
                     score = self.rouge.get_scores(c, r)
                     score = score[0][rouge_val]['f']
@@ -473,12 +473,7 @@ def tokenize_data(data):
 sep = "\t"
 X_train = pd.read_csv(config.PATH_DATA + '/' + 'x_train.csv', sep=sep)
 X_dev = pd.read_csv(config.PATH_DATA + '/' + 'x_dev.csv', sep=sep)
-with open(config.PATH_DATA + '/' + 'rubrics.json', 'r') as f:
-    data = json.load(f)
-    f.close()
-rubrics = dict()
-for key in data:
-    rubrics[key] = pd.DataFrame.from_dict(data[key])
+rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 
 X_train = tokenize_data(X_train)
 X_dev = tokenize_data(X_dev)
@@ -490,7 +485,7 @@ for key in rubrics:
     rubric = rubrics[key]
     tokenezied_elements = []
     for i, r in rubric.iterrows():
-        key_element = r['key element']
+        key_element = r['key_element']
         if key in german_question_ids:
             tokenized = config.nlp_de(key_element)
         else:

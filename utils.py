@@ -34,6 +34,15 @@ def save_to_csv(X_train, X_dev, y_train, y_dev, path):
     pd.DataFrame(data=y_dev).to_csv(save_path+ "y_dev.tsv", sep=sep)
     print('successfully saved')
 
+def load_rubrics(path):
+    with open(path, 'r') as f:
+        data = json.load(f)
+        f.close()
+    rubrics = dict()
+    for key in data:
+        rubrics[key] = pd.DataFrame.from_dict(data[key])
+    return rubrics
+
 
 class ParaphraseDetector():
     def __init__(self):
@@ -42,7 +51,7 @@ class ParaphraseDetector():
 
     def _encode_rubric(self, rubric):
         sentence_embeddings = []
-        for r in rubric['key element']:
+        for r in rubric['key_element']:
             encoded_input = self.tokenizer(r, padding=True, truncation=True, return_tensors='pt')
             with torch.no_grad():
                 model_output = self.model(**encoded_input)

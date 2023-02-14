@@ -1,2 +1,2 @@
-QP,ID,key element,points
-P1,1,if the receiver is not capable of differentiating between valid and duplicated packets it may act on the same information twice,"0,5"
+ID,key_element,points
+1,act on the same information twice,"0,5"

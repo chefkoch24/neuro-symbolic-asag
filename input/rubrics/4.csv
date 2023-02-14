@@ -1,3 +1,3 @@
-QP,ID,key element,points
-P1,1,Es muss ein Foto der Sanitäranlagen von außen,"0,5"
-P1,2,Frage nach Begehbarkeit und Funktionsfähigkeit muss dieser Zustand beantwortet,"0,5"
+ID,key_element,points
+1,Foto der Sanitäranlagen von außen,"0,5"
+2,in Frage nach Begehbarkeit und Funktionsfähigkeit muss dieser Zustand beantwortet,"0,5"

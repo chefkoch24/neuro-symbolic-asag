@@ -105,7 +105,7 @@ for file in os.listdir(config.PATH_RAW_RUBRIC):
 
 rubrics = {}
 for qi, r in zip(question_ids, rubric_elemenets):
-    r['key element'] = clean_text(r['key element'].str)
+    r['key_element'] = clean_text(r['key_element'].str)
     rubrics[qi] = r
 
 reference_answers = {}

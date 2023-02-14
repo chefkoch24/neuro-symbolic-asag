@@ -1,5 +1,7 @@
-QP,ID,key element,points
-P1,1,Fehlen von Verbrauchsmaterial,"0,25"
-P1,2,"ein überfüllter Mülleimer, ein verdreckter Boden/verdreckte Wand","0,25"
-P1,3,Verschmutzung an den Toiletten,"0,25"
-P1,4,Verschmutzung an den Waschbecken,"0,25"
+ID,key_element,points
+1,Fehlen von Verbrauchsmaterial,"0,25"
+2,ein überfüllter Mülleimer,"0,25"
+3,verdreckter Boden,"0,25"
+4,verdreckte Wand,"0,25"
+5,Verschmutzung an den Toiletten,"0,25"
+6,Verschmutzung an den Waschbecken,"0,25"

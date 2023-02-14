@@ -1,8 +1,8 @@
-QP,ID,key element,points
-P1,1,mapping between destinations/stations and outgoing LAN interfaces,"0,25"
-P2,2,receives a frame adds the entry,"0,125"
-P2,3,learns by observing the incoming traffic,"0,125"
-P3,4,selective forwarding,"0,25"
-P4,5,less duplication/unnecessary flooding is prevented,"0,25"
-P4,6,less congestion ,"0,25"
-P4,7,better bandwidth usage than flooding,"0,25"
+ID,key_element,points
+1,mapping between destinations/stations and outgoing LAN interfaces,"0,25"
+2,receives a frame adds the entry,"0,125"
+3,learns by observing the incoming traffic,"0,125"
+4,selective forwarding,"0,25"
+5,less duplication/unnecessary flooding is prevented,"0,25"
+6,less congestion ,"0,25"
+7,better bandwidth usage than flooding,"0,25"

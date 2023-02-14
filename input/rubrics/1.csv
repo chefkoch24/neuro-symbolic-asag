@@ -1,5 +1,5 @@
-QP,ID,key element,points
-P1,1,Der Jobber soll sich dem Personal gegenüber zu erkennen geben ,"0,25"
-P1,2,entsprechende Informationsschreiben in der App vorzeigen,"0,25"
-P1,3,notieren zu welchem Zeitpunkt,"0,25"
-P1,4,Job mit Erlaubnis der Mitarbeiter bis zum Ende durchführen,"0,25"
+ID,key_element,points
+1,dem Personal gegenüber zu erkennen geben ,"0,25"
+2,Informationsschreiben in der App vorzeigen,"0,25"
+3,notieren zu welchem Zeitpunkt,"0,25"
+4,Job mit Erlaubnis der Mitarbeiter bis zum Ende durchführen,"0,25"
