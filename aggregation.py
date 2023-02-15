@@ -2,7 +2,7 @@
 import numpy as np
 
 import config
-import utils
+import myutils as utils
 # TODO: refine after analysis of softlabels
 # Functions
 def mean_nonzero(col):

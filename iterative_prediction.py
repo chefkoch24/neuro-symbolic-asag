@@ -7,7 +7,7 @@ from pytorch_lightning import Trainer
 import logging
 import torch
 import config
-import utils
+import myutils as utils
 logging.basicConfig(level=logging.ERROR)
 from dataset import JustificationCueDataset, IterativeJustificationCueDataset
 #torch.distributed.is_available=False

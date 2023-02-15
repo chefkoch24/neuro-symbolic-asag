@@ -1,11 +1,15 @@
 import os
 
 import pandas as pd
+import skweak
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from transformers import AutoTokenizer, AutoModel
 import torch
 import json
+
+import config
+
 
 def save_json(data, path, file_name):
     directory = path
@@ -43,6 +47,38 @@ def load_rubrics(path):
         rubrics[key] = pd.DataFrame.from_dict(data[key])
     return rubrics
 
+def prepare_rubrics(rubrics):
+    german_question_ids = [str(i) for i in range(1, 10)]
+    for key in rubrics:
+        rubric = rubrics[key]
+        tokenezied_elements = []
+        for i, r in rubric.iterrows():
+            key_element = r['key_element']
+            if key in german_question_ids:
+                tokenized = config.nlp_de(key_element)
+            else:
+                tokenized = config.nlp(key_element)
+            tokenezied_elements.append(tokenized)
+        rubric['tokenized'] = tokenezied_elements
+        rubrics[key] = rubric
+    return rubrics
+
+def save_annotated_corpus(annotated_docs, path):
+    print(len(annotated_docs))
+    for doc in annotated_docs:
+        doc.ents = doc.spans["hmm"]
+    skweak.utils.docbin_writer(annotated_docs, path)
+
+def tokenize_data(data):
+    tokenized = []
+    for _, d in data.iterrows():
+        if d['lang'] == 'en':
+            d = config.nlp(d['student_answer'])
+        elif d['lang'] == 'de':
+            d = config.nlp_de(d['student_answer'])
+        tokenized.append(d)
+    data['tokenized'] = tokenized
+    return data
 
 class ParaphraseDetector():
     def __init__(self):

@@ -22,9 +22,9 @@ from sklearn.base import BaseEstimator
 import json
 import warnings
 from tqdm import tqdm
-import utils
-from utils import ParaphraseDetector
+from myutils import ParaphraseDetector
 import config
+import myutils
 
 # Filter out warnings from the NLTK package
 warnings.filterwarnings("ignore", category=UserWarning, module="nltk")
@@ -57,8 +57,8 @@ class WeakSupervisionSoft():
             {'name': 'LF_rouge_L_sentences', 'function': self.LF_rouge_L_sentences},
             {'name': 'LF_word_alignment', 'function': self.LF_word_alignment},
             {'name': 'LF_edit_distance', 'function': self.LF_edit_distance},
-            {'name': 'LF_parahrase_detection_sentences', 'function': self.LF_parahrase_detection_sentences},
-            {'name': 'LF_parahrase_detection_candidates', 'function': self.LF_parahrase_detection_candidates},
+            {'name': 'LF_paraphrase_detection_sentences', 'function': self.LF_paraphrase_detection_sentences},
+            {'name': 'LF_paraphrase_detection_candidates', 'function': self.LF_paraphrase_detection_candidates},
             {'name': 'LF_bleu_candidates', 'function': self.LF_bleu_candidates},
             {'name': 'LF_meteor_candidates', 'function': self.LF_meteor_candidates},
             {'name': 'LF_meteor_sentences', 'function': self.LF_meteor_sentences},
@@ -95,7 +95,7 @@ class WeakSupervisionSoft():
         indicies = [(c[0].i, c[-1].i + 1) for c in candidates]  # +1 to get the last token
         return candidates, indicies
 
-    def LF_parahrase_detection_candidates(self, doc, rubric, lang):
+    def LF_paraphrase_detection_candidates(self, doc, rubric, lang):
         candidates, indicies = self._generate_candidates(doc)
         for c, i in zip(candidates, indicies):
             c = [t.text for t in c]
@@ -104,7 +104,7 @@ class WeakSupervisionSoft():
             max_value = sim[max_index]
             yield i[0], i[-1], 'CUE', max_value
 
-    def LF_parahrase_detection_sentences(self, doc, rubric, lang):
+    def LF_paraphrase_detection_sentences(self, doc, rubric, lang):
         candidates, indicies = self._generate_sentences(doc)
         for c, i in zip(candidates, indicies):
             c = [t.text for t in c]
@@ -123,7 +123,6 @@ class WeakSupervisionSoft():
                 yield indices[0], indices[-1], 'CUE'
 
     def LF_noun_phrases(self, doc, rubric, lang):
-
         noun_chunks = [chunk for chunk in doc.noun_chunks]
         noun_chunk_text = []
         for nc in noun_chunks:
@@ -457,75 +456,52 @@ class WeakSupervisionSoft():
                 yield span[0], span[1], "CUE", labels[row, column]
 
 
-def tokenize_data(data):
-    tokenized = []
-    for _, d in data.iterrows():
-        if d['lang'] == 'en':
-            d = config.nlp(d['student_answer'])
-        elif d['lang'] == 'de':
-            d = config.nlp_de(d['student_answer'])
-        tokenized.append(d)
-    data['tokenized'] = tokenized
-    return data
 
-# Helper functions
-# Read data
-sep = "\t"
-X_train = pd.read_csv(config.PATH_DATA + '/' + 'x_train.csv', sep=sep)
-X_dev = pd.read_csv(config.PATH_DATA + '/' + 'x_dev.csv', sep=sep)
-rubrics = utils.load_rubrics(config.PATH_RUBRIC)
+def main():
+    # Read data
+    sep = "\t"
+    X_train = pd.read_csv(config.PATH_DATA + '/' + 'x_train.csv', sep=sep)
+    X_dev = pd.read_csv(config.PATH_DATA + '/' + 'x_dev.csv', sep=sep)
+    rubrics = myutils.load_rubrics(config.PATH_RUBRIC)
 
-X_train = tokenize_data(X_train)
-X_dev = tokenize_data(X_dev)
+    X_train = myutils.tokenize_data(X_train)
+    X_dev = myutils.tokenize_data(X_dev)
 
-german_question_ids = [str(i) for i in range(1, 10)]
+    # prepare the rubric and tokenize key elements
+    rubrics = myutils.prepare_rubrics(rubrics)
 
-# prepare the rubric and tokenize key elements
-for key in rubrics:
-    rubric = rubrics[key]
-    tokenezied_elements = []
-    for i, r in rubric.iterrows():
-        key_element = r['key_element']
-        if key in german_question_ids:
-            tokenized = config.nlp_de(key_element)
+    # Annotation
+    ws = WeakSupervisionSoft(rubrics=rubrics)
+    for j, data in enumerate([X_train, X_dev]):
+        annotated_data = []
+        for i, d in tqdm(data.iterrows()):
+            q_id = d['question_id']
+            x = d['tokenized']
+            lang = d['lang']
+            rubric = rubrics[q_id]
+            len_seq = len(x)
+            labeling_functions = {}
+            for i, lf in enumerate(ws.labeling_functions):
+                soft_labels = np.zeros((len_seq))
+                for cue in lf['function'](x, rubric, lang):
+                    soft_labels[cue[0]:cue[1] + 1] = cue[3]  # 3 is idx for soft label
+                labeling_functions[lf['name']] = soft_labels.tolist()
+            item = {
+                'lang': d['lang'],
+                'question_id': d['question_id'],
+                'question': d['question'],
+                'reference_answer': d['reference_answer'],
+                'score': d['score'],
+                'label': d['label'],
+                'student_answer': d['student_answer'],
+                'labeling_functions': labeling_functions,
+            }
+            annotated_data.append(item)
+        if j == 0:
+            file_name = 'train-soft'
         else:
-            tokenized = config.nlp(key_element)
-        tokenezied_elements.append(tokenized)
-    rubric['tokenized'] = tokenezied_elements
-    rubrics[key] = rubric
+            file_name = 'dev-soft'
+        myutils.save_json(annotated_data, config.PATH_DATA, file_name + '.json')
 
-
-
-
-# Annotation
-ws = WeakSupervisionSoft(rubrics=rubrics)
-for j, data in enumerate([X_train, X_dev]):
-    annotated_data = []
-    for i, d in tqdm(data.iterrows()):
-        q_id = d['question_id']
-        x = d['tokenized']
-        lang = d['lang']
-        rubric = rubrics[q_id]
-        len_seq = len(x)
-        labeling_functions = {}
-        for i, lf in enumerate(ws.labeling_functions):
-            soft_labels = np.zeros((len_seq))
-            for cue in lf['function'](x, rubric, lang):
-                soft_labels[cue[0]:cue[1] + 1] = cue[3]  # 3 is idx for soft label
-            labeling_functions[lf['name']] = soft_labels.tolist()
-        item = {
-            'lang': d['lang'],
-            'question_id': d['question_id'],
-            'question': d['question'],
-            'reference_answer': d['reference_answer'],
-            'score': d['score'],
-            'label': d['label'],
-            'student_answer': d['student_answer'],
-            'labeling_functions': labeling_functions,
-        }
-        annotated_data.append(item)
-    if j == 0:
-        file_name = 'train-soft'
-    else:
-        file_name = 'dev-soft'
-    utils.save_json(annotated_data, config.PATH_DATA, file_name + '.json')
+if __name__ == "__main__":
+    main()
