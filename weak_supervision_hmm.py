@@ -268,8 +268,8 @@ def main():
     train_result = ws.fit(X_train)
     dev_result = ws.predict(X_dev)
 
-    myutils.save_annotated_corpus(train_result, "results/train_corpus_IO.spacy")
-    myutils.save_annotated_corpus(dev_result, "results/dev_corpus_IO.spacy")
+    myutils.save_annotated_corpus(train_result, "data/train_corpus_IO.spacy")
+    myutils.save_annotated_corpus(dev_result, "data/dev_corpus_IO.spacy")
 
 if __name__ == "__main__":
     main()

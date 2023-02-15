@@ -12,12 +12,16 @@ import metrics
 
 # Model
 class TokenClassificationModel(LightningModule):
-    def __init__(self, model_name: str, rubrics=None):
+    def __init__(self, model_name: str, rubrics=None, lr=1e-5, eps=0, weight_decay=0.01, warmup_steps=0, ):
         super().__init__()
         self.model = AutoModelForTokenClassification.from_pretrained(model_name)
         self.loss = nn.CrossEntropyLoss()
-
         self.rubrics = rubrics
+        #Hyperparameters
+        self.lr = lr
+        self.eps = eps
+        self.weight_decay = weight_decay
+        self.warmup_steps = warmup_steps
 
     def create_labels(self, batch):
         targets = []
@@ -79,7 +83,7 @@ class TokenClassificationModel(LightningModule):
         return metric  # metrics['val_loss'] = avg_loss
 
     def configure_optimizers(self):
-        optimizer = AdamW(self.parameters(), lr=2e-5, eps=1e-8)
+        optimizer = AdamW(self.parameters(), lr=self.lr, eps=self.eps, weight_decay=self.weight_decay)
         scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
         return [optimizer], [scheduler]
 
