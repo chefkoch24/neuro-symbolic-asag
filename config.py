@@ -7,7 +7,7 @@ PATH_DATA = "data"
 PATH_RUBRIC = "data/rubrics.json"
 PATH_RAW_DATA = "input/safdataset/training"
 PATH_RAW_RUBRIC = "input/rubrics"
-PATH_CHECK_POINTS = "checkpoints"
+PATH_CHECKPOINT = "checkpoints"
 MAX_LEN = 512
 BATCH_SIZE = 8
 # Imports

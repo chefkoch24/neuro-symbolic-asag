@@ -37,9 +37,6 @@ def extract_annotations(annotated_data, exclude_LFs=[]):
         labels.append(soft_labels)
     return labels
 
-def flat_list(lst):
-    x = [item for sublist in lst for item in sublist]
-    return x
 
 def silver2target(data, th=0.5):
     targets = []

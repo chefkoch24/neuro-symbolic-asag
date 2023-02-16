@@ -23,7 +23,7 @@ import metrics
 def get_spans(labels):
     true_labels = [l for l in labels if l != -100]
     hard_labels = metrics.silver2target(true_labels)
-    spans = metrics.get_idxs_elements(hard_labels)
+    spans = metrics.get_spans_from_labels(hard_labels)
     return spans
 
 def get_rubric_elements(spans, input_ids, qid):

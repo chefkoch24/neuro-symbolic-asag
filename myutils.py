@@ -24,6 +24,10 @@ def load_json(path):
         data = json.load(fin)
     return data
 
+def flat_list(lst):
+    x = [item for sublist in lst for item in sublist]
+    return x
+
 def save_to_csv(X_train, X_dev, y_train, y_dev, path):
     sep = "\t"
     directory = path

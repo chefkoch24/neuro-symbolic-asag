@@ -25,6 +25,7 @@ from spacy import displacy
 import config
 import matplotlib.pyplot as plt
 import skweak
+import myutils as utils
 
 # Functions
 def global_normalize(data, average_outliers=False):
@@ -57,9 +58,6 @@ def read_from_json(path):
         data = json.load(f)
     return data
 
-def flat_list(lst):
-    x = [item for sublist in lst for item in sublist]
-    return x
 
 def extract_annotations(annotated_data, exclude_LFs=[]):
     labels = []
@@ -274,9 +272,9 @@ for mode in ['average', 'max', 'average_nonzero', 'sum']:
             plt.title(lang.upper() + ' ' + mode)
             plt.xlabel('Data')
             plt.ylabel('Frequency')
-            correct = flat_list(stats['CORRECT'])
-            partial_correct = flat_list(stats['PARTIAL_CORRECT'])
-            incorrect = flat_list(stats['INCORRECT'])
+            correct = utils.flat_list(stats['CORRECT'])
+            partial_correct = utils.flat_list(stats['PARTIAL_CORRECT'])
+            incorrect = utils.flat_list(stats['INCORRECT'])
             normalized_data = []
             weights = []
 
