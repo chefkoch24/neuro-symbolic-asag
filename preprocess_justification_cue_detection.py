@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 from transformers import AutoTokenizer
 import config
-import myutils
+import myutils as utils
 from dataset import JustificationCueDataset
 import torch
 
@@ -67,8 +67,8 @@ dev_data = utils.load_json(config.PATH_DATA + '/' + 'dev_labeled_data.json')
 tokenizer = AutoTokenizer.from_pretrained(config.TOKENIZER_NAME)
 
 # Preprocess data
-bert_labels_train, bert_tokens_train = create_inputs(train_data, with_context=True)
-bert_labels_dev, bert_tokens_dev = create_inputs(dev_data, with_context=True)
+bert_labels_train, bert_tokens_train = create_inputs(train_data, with_context=config.WITH_CONTEXT)
+bert_labels_dev, bert_tokens_dev = create_inputs(dev_data, with_context=config.WITH_CONTEXT)
 
 def create_json_data(data, bert_tokens, silver_labels, MAX_LEN=512):
     model_inputs = []

@@ -7,7 +7,7 @@ from transformers import AutoTokenizer
 
 import config
 import metrics
-import myutils
+import myutils as utils
 
 
 class JustificationCueDataset(Dataset):

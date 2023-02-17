@@ -24,7 +24,7 @@ import warnings
 from tqdm import tqdm
 from myutils import ParaphraseDetector
 import config
-import myutils
+import myutils as utils
 
 # Filter out warnings from the NLTK package
 warnings.filterwarnings("ignore", category=UserWarning, module="nltk")
@@ -501,7 +501,7 @@ def main():
             file_name = 'train-soft'
         else:
             file_name = 'dev-soft'
-        myutils.save_json(annotated_data, config.PATH_DATA, file_name + '.json')
+        utils.save_json(annotated_data, config.PATH_DATA, file_name + '.json')
 
 if __name__ == "__main__":
     main()

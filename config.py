@@ -2,7 +2,7 @@
 MODEL_NAME = "distilroberta-base"
 TOKENIZER_NAME = MODEL_NAME
 SEED = 42
-NUM_EPOCHS = 3
+NUM_EPOCHS = 10
 PATH_DATA = "data"
 PATH_RUBRIC = "data/rubrics.json"
 PATH_RAW_DATA = "input/safdataset/training"
@@ -10,6 +10,7 @@ PATH_RAW_RUBRIC = "input/rubrics"
 PATH_CHECKPOINT = "checkpoints"
 MAX_LEN = 512
 BATCH_SIZE = 8
+WITH_CONTEXT = False
 # Imports
 import spacy
 # download the spacy models if not already downloaded
