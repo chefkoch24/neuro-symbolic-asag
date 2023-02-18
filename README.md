@@ -1,4 +1,8 @@
 # README
+## Requirements
+`python -m spacy download de_core_news_lg`
+
+`python -m spacy download en_core_web_lg`
 
 ## Experiments
 The experiments run the whole pipleline with the respective configurations.

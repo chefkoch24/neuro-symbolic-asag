@@ -1,7 +1,7 @@
 # Imports
 import numpy as np
 
-from model import TokenClassificationModel, SoftLabelTokenClassificationModel, IterativeModel
+from model import TokenClassificationModel, IterativeModel
 from torch.utils.data import DataLoader
 from pytorch_lightning import Trainer
 import logging
