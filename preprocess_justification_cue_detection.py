@@ -1,4 +1,5 @@
 # This script preprocesses the data for the justification cue detection training
+import argparse
 import tokenizations
 import numpy as np
 import pandas as pd
@@ -44,7 +45,7 @@ def create_inputs(data, with_context=False):
             tokenized = tokenizer(student_answer, context, max_length=config.MAX_LEN, truncation=True)
             input_ids = tokenized['input_ids']
             attention_mask = np.ones(len(input_ids), dtype=np.int64)
-            attention_mask[length_stud_answer:-1] = 0
+            attention_mask[length_stud_answer:] = 0
 
         else:
             tokenized = tokenizer(student_answer, max_length=config.MAX_LEN, truncation=True)
@@ -60,15 +61,24 @@ def create_inputs(data, with_context=False):
 
     return labels, bert_tokens
 
+parser=argparse.ArgumentParser()
+
+parser.add_argument("--model", help="Name of the pretrained model")
+parser.add_argument("--context", help="With context or not")
+args=parser.parse_args()
+if args.context == 'True':
+    args.context = True
+else:
+    args.context = False
 
 #Loading
-train_data = utils.load_json(config.PATH_DATA + '/' + 'train_labeled_data.json')
-dev_data = utils.load_json(config.PATH_DATA + '/' + 'dev_labeled_data.json')
-tokenizer = AutoTokenizer.from_pretrained(config.TOKENIZER_NAME)
+train_data = utils.load_json(config.PATH_DATA + '/' + 'train_labeled_data_hmm.json')
+dev_data = utils.load_json(config.PATH_DATA + '/' + 'dev_labeled_data_hmm.json')
+tokenizer = AutoTokenizer.from_pretrained(args.model)
 
 # Preprocess data
-bert_labels_train, bert_tokens_train = create_inputs(train_data, with_context=config.WITH_CONTEXT)
-bert_labels_dev, bert_tokens_dev = create_inputs(dev_data, with_context=config.WITH_CONTEXT)
+bert_labels_train, bert_tokens_train = create_inputs(train_data, with_context=args.context)
+bert_labels_dev, bert_tokens_dev = create_inputs(dev_data, with_context=args.context)
 
 def create_json_data(data, bert_tokens, silver_labels, MAX_LEN=512):
     model_inputs = []
@@ -92,5 +102,6 @@ training_dataset = create_json_data(train_data, bert_tokens_train, bert_labels_t
 dev_dataset = create_json_data(dev_data, bert_tokens_dev, bert_labels_dev)
 
 #save data
-utils.save_json(training_dataset, config.PATH_DATA + '/', 'training_dataset.json')
-utils.save_json(dev_dataset, config.PATH_DATA + '/', 'dev_dataset.json')
+DATASET_NAME = 'dataset'+ '_' + args.model + '_context-' + str(args.context) + '.json'
+utils.save_json(training_dataset, config.PATH_DATA + '/', 'training_' + DATASET_NAME)
+utils.save_json(dev_dataset, config.PATH_DATA + '/', 'dev_'+DATASET_NAME)

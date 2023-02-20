@@ -270,6 +270,36 @@ def main():
 
     myutils.save_annotated_corpus(train_result, "data/train_corpus_IO.spacy")
     myutils.save_annotated_corpus(dev_result, "data/dev_corpus_IO.spacy")
+    for j, data in enumerate([X_train, X_dev]):
+        annotated_data = []
+        for i, d in tqdm(data.iterrows()):
+            q_id = d['question_id']
+            x = d['tokenized']
+            lang = d['lang']
+            rubric = rubrics[q_id]
+            len_seq = len(x)
+            labeling_functions = {}
+            for i, lf in enumerate(ws.labeling_functions):
+                soft_labels = np.zeros((len_seq))
+                for cue in lf['function'](x, rubric, lang):
+                    soft_labels[cue[0]:cue[1] + 1] = cue[3]  # 3 is idx for soft label
+                labeling_functions[lf['name']] = soft_labels.tolist()
+            item = {
+                'lang': d['lang'],
+                'question_id': d['question_id'],
+                'question': d['question'],
+                'reference_answer': d['reference_answer'],
+                'score': d['score'],
+                'label': d['label'],
+                'student_answer': d['student_answer'],
+                'labeling_functions': labeling_functions,
+            }
+            annotated_data.append(item)
+        if j == 0:
+            file_name = 'train-soft'
+        else:
+            file_name = 'dev-soft'
+        utils.save_json(annotated_data, config.PATH_DATA, file_name + '.json')
 
 if __name__ == "__main__":
     main()

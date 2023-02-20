@@ -106,6 +106,7 @@ class TokenClassificationModel(LightningModule):
     def training_step(self, batch, batch_idx):
         data = batch
         _, loss = self.forward(data['input_ids'], data['attention_mask'], data['labels'])
+        self.log('train_loss', loss)
         return loss
 
     def training_epoch_end(self, outputs):
@@ -140,95 +141,10 @@ class TokenClassificationModel(LightningModule):
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)
         scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
-        return [optimizer], [scheduler]
+        return optimizer
 
 
-class TokenClassificationModelBinary(LightningModule):
-    def __init__(self, model_name: str, rubrics=None, lr=1e-5, eps=0, weight_decay=0.01, warmup_steps=0, ):
-        super().__init__()
-        self.model = AutoModelForTokenClassification.from_pretrained(model_name)
-        self.loss = nn.BCEWithLogitsLoss()
-        self.rubrics = rubrics
-        # Hyperparameters
-        self.lr = lr
-        self.eps = eps
-        self.weight_decay = weight_decay
-        self.warmup_steps = warmup_steps
 
-    def create_labels(self, batch):
-        targets = []
-        for labels in batch:
-            t = []
-            for l in labels:
-                if l > -100:
-                    t.append(1)
-                else:
-                    t.append(0)
-            targets.append(t)
-        labels = torch.tensor(targets, dtype=torch.float32)
-        return labels
-
-    def remove_paddings(self, logits, target):
-        new_target, new_logits = [], []
-        for l, t in zip(logits, target):
-            if t[0] != -100 and t[1] != -100:
-                new_target.append(t)
-                new_logits.append(l)
-
-        target = torch.stack(new_target)
-        logits = torch.stack(new_logits)
-        return logits, target
-
-    def loss_function(self, logits, labels):
-        labels = self.create_labels(labels)
-        logits, labels = self.remove_paddings(logits, labels)
-        return self.loss(logits, labels)
-
-    def forward(self, input_ids, attention_mask, labels=None):
-        outputs = self.model(input_ids, attention_mask=attention_mask)[0]
-        if labels is not None:
-            loss = self.loss_function(outputs, labels)
-            return outputs, loss
-        return outputs
-
-    def training_step(self, batch, batch_idx):
-        data = batch
-        _, loss = self.forward(data['input_ids'], data['attention_mask'], data['labels'])
-        return loss
-
-    def training_epoch_end(self, outputs):
-        avg_loss = torch.stack([x for x in outputs]).mean()
-        self.log('train_loss', avg_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-
-    def validation_step(self, batch, batch_idx):
-        data = batch
-        logits, loss = self.forward(data['input_ids'], data['attention_mask'], data['labels'])
-        # loss = self.loss(outputs.view(-1, outputs.size(-1)), labels)
-        data['logits'] = logits
-        data['loss'] = loss
-        return data
-
-    def validation_epoch_end(self, outputs):
-        metric = metrics.compute_metrics(outputs)
-        self.log(metric, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-        return metric
-
-    def test_step(self, batch, batch_idx):
-        data = batch
-        logits, loss = self.forward(data['input_ids'], data['attention_mask'], data['labels'])
-        data['logits'] = logits
-        data['loss'] = loss
-        return data
-
-    def test_epoch_end(self, outputs):
-        metric = metrics.compute_metrics(outputs)
-        self.log(metric, on_step=False, on_epoch=True, prog_bar=True, logger=True)
-        return metric
-
-    def configure_optimizers(self):
-        optimizer = AdamW(self.parameters(), lr=self.lr, eps=self.eps, weight_decay=self.weight_decay)
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
-        return [optimizer], [scheduler]
 
 class IterativeModel(LightningModule):
     def __init__(self, model_name: str, rubrics=None):
@@ -264,7 +180,7 @@ class IterativeModel(LightningModule):
     def training_step(self, batch, batch_idx):
         data = batch
         _, loss = self.forward(input_ids=data['input_ids'], attention_mask=data['attention_mask'], start_positions=data['start_positions'], end_positions=data['end_positions'])
-        logs = {'train_loss': loss}
+        self.log("train_loss", loss)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -276,4 +192,4 @@ class IterativeModel(LightningModule):
     def configure_optimizers(self):
         optimizer = AdamW(self.parameters(), lr=2e-5, eps=1e-8)
         scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
-        return [optimizer], [scheduler]
+        return optimizer
