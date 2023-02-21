@@ -45,30 +45,15 @@ val_loader = DataLoader(dev_dataset, batch_size=config.BATCH_SIZE, shuffle=False
 model = TokenClassificationModel(args.model, rubrics)
 
 
-checkpoint_callback = ModelCheckpoint(
-    dirpath=config.PATH_CHECKPOINT,
-    filename='checkpoint-{epoch:02d}-{val_loss:.2f}',
-    save_top_k=1,
-    verbose=True,
-    monitor='val_loss',
-    mode='min',
-)
-
-early_stop_callback = EarlyStopping(
-    monitor='loss',
-    min_delta=0.00,
-    patience=3,
-    verbose=False,
-    mode='min'
-)
-
 EXPERIMENT_NAME = "justification_cue" + "_" + args.model + "_context-" + str(args.context)
 logger = CSVLogger("logs", name=EXPERIMENT_NAME)
 trainer = Trainer(max_epochs=config.NUM_EPOCHS,
                   #gradient_clip_val=0.5,
                   #accumulate_grad_batches=2,
                   #auto_scale_batch_size='power',
-                  #callbacks=[checkpoint_callback, early_stop_callback],
+                  callbacks=[config.checkpoint_callback,
+                            # early_stop_callback
+                             ],
                   logger=logger)
 trainer.fit(model, train_loader, val_loader)
 trainer.test(model, val_loader)

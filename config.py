@@ -1,4 +1,6 @@
 # Here is all the stuff configured that is needed across scripts
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+
 MODEL_NAME = "distilroberta-base"
 TOKENIZER_NAME = MODEL_NAME
 SEED = 42
@@ -19,3 +21,20 @@ import spacy
 
 nlp = spacy.load("en_core_web_lg")
 nlp_de = spacy.load("de_core_news_lg")
+
+checkpoint_callback = ModelCheckpoint(
+    dirpath=PATH_CHECKPOINT,
+    filename='checkpoint-{epoch:02d}-{val_loss:.2f}',
+    save_top_k=3,
+    verbose=True,
+    monitor='val_loss',
+    mode='min',
+)
+
+early_stop_callback = EarlyStopping(
+    monitor='loss',
+    min_delta=0.00,
+    patience=3,
+    verbose=False,
+    mode='min'
+)

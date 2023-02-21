@@ -32,8 +32,8 @@ dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 
 # Create dataset and dataloader
-training_dataset = IterativeJustificationCueDataset(training_data[0:8])
-dev_dataset = IterativeJustificationCueDataset(dev_data[0:8])
+training_dataset = IterativeJustificationCueDataset(training_data)
+dev_dataset = IterativeJustificationCueDataset(dev_data)
 
 
 train_loader = DataLoader(training_dataset, batch_size=config.BATCH_SIZE, shuffle=True)
@@ -47,7 +47,9 @@ trainer = Trainer(max_epochs=config.NUM_EPOCHS,
                   #gradient_clip_val=0.5,
                   #accumulate_grad_batches=2,
                   #auto_scale_batch_size='power',
-                  #callbacks=[checkpoint_callback, early_stop_callback],
+                  callbacks=[config.checkpoint_callback,
+                            # early_stop_callback
+                             ],
                   logger=logger)
 trainer.fit(model, train_loader, val_loader)
 trainer.test(model, val_loader)
