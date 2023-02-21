@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import skweak
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+from scipy.spatial.distance import cosine
 from transformers import AutoTokenizer, AutoModel
 import torch
 import json
@@ -84,6 +84,16 @@ def tokenize_data(data):
     data['tokenized'] = tokenized
     return data
 
+def create_labels_probability_distribution(labels):
+    targets = []
+    for l in labels:
+        if l > -100:
+            targets.append([1 - l, l])
+        else:
+            targets.append([l, l])
+    return targets
+
+
 class ParaphraseDetector():
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
@@ -115,6 +125,6 @@ class ParaphraseDetector():
             candidate_embedding = self._mean_pooling(model_output, encoded_input['attention_mask'])
         similarities = []
         for r in rubric_elements:
-            similarity = cosine_similarity(candidate_embedding, r)[0][0]
+            similarity = cosine(candidate_embedding[0], r[0])
             similarities.append(similarity)
         return similarities

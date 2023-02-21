@@ -3,3 +3,5 @@
 /results
 .ipynb_checkpoints
 *.job
+*.sh
+checkpoints

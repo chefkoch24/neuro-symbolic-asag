@@ -81,18 +81,16 @@ bert_labels_train, bert_tokens_train = create_inputs(train_data, with_context=ar
 bert_labels_dev, bert_tokens_dev = create_inputs(dev_data, with_context=args.context)
 
 def create_json_data(data, bert_tokens, silver_labels, MAX_LEN=512):
+    ''' Include the padding to MAX_LEN. '''
     model_inputs = []
     for i, inputs in enumerate(bert_tokens):
         pad_len = MAX_LEN - len(inputs['input_ids'])
         # add silverlabels as labels for the trainer
-        inputs['input_ids'] = torch.nn.functional.pad(torch.tensor(inputs['input_ids']), pad=(0, pad_len),
-                                                      mode='constant',
-                                                      value=1).detach().numpy().tolist()  # padding token for distilroberta-base = 1
-        inputs['attention_mask'] = torch.nn.functional.pad(torch.tensor(inputs['attention_mask']), pad=(0, pad_len),
-                                                           mode='constant', value=0).detach().numpy().tolist()
+        inputs['input_ids'] = torch.nn.functional.pad(torch.tensor(inputs['input_ids']), pad=(0, pad_len), mode='constant', value=1).detach().numpy().tolist()  # padding token for distilroberta-base = 1
+        inputs['attention_mask'] = torch.nn.functional.pad(torch.tensor(inputs['attention_mask']), pad=(0, pad_len), mode='constant', value=0).detach().numpy().tolist()
         pad_len = MAX_LEN - len(silver_labels[i])
-        inputs['labels'] = torch.nn.functional.pad(torch.tensor(silver_labels[i]), pad=(0, pad_len), mode='constant',
-                                                   value=-100).detach().numpy().tolist()
+        inputs['labels'] = utils.create_labels_probability_distribution(torch.nn.functional.pad(torch.tensor(silver_labels[i]), pad=(0, pad_len), mode='constant', value=-100).detach().numpy().tolist())
+        #inputs['labels'] = create_labels_probability_distribution(silver_labels[i])
         inputs['class'] = data[i]['label']
         inputs['question_id'] = data[i]['question_id']
         model_inputs.append(inputs)
