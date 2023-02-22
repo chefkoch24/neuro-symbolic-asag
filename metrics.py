@@ -102,7 +102,7 @@ def get_average_number_of_key_elements_by_class(labels, classes):
         num_elm = len(get_spans_from_labels(label))
         if c == 'CORRECT':
             num_key_elements_correct.append(num_elm)
-        elif c == 'PARTIAL':
+        elif c == 'PARTIAL_CORRECT':
             num_key_elements_partial.append(num_elm)
         elif c == 'INCORRECT':
             num_key_elements_incorrect.append(num_elm)
@@ -117,7 +117,7 @@ def get_average_realtion_by_class(labels, classes):
         rel = relation(label)
         if c == 'CORRECT':
             relations_correct.append(rel)
-        elif c == 'PARTIAL':
+        elif c == 'PARTIAL_CORRECT':
             relations_partial.append(rel)
         elif c == 'INCORRECT':
             relations_incorrect.append(rel)
@@ -133,7 +133,7 @@ def get_average_number_of_tokens_per_key_element_by_class(labels, classes):
         num_tokens = sum([end - start for start, end in idxs])
         if c == 'CORRECT':
             num_tokens_correct.append(num_tokens)
-        elif c == 'PARTIAL':
+        elif c == 'PARTIAL_CORRECT':
             num_tokens_partial.append(num_tokens)
         elif c == 'INCORRECT':
             num_tokens_incorrect.append(num_tokens)

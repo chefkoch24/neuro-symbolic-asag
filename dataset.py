@@ -40,22 +40,11 @@ class IterativeJustificationCueDataset(Dataset):
 
 
 class GradingDataset(Dataset):
-    def __init__(self, answer_texts, input_ids, question_ids, labels, scores):
-        self.answer_texts = answer_texts
-        self.question_ids = question_ids
-        self.labels = labels
-        self.scores = scores
-        self.input_ids = input_ids
+    def __init__(self, data):
+        self.data = data
 
     def __len__(self):
-        return len(self.answer_texts)
+        return len(self.data)
 
     def __getitem__(self, idx):
-        item = {
-            'input_ids': self.input_ids[idx],
-            'answer_text':  self.answer_texts[idx],
-            'question_id':  self.question_ids[idx],
-            'label': self.labels[idx],
-            'score': self.scores[idx]
-            }
-        return item
+        return self.data[idx]

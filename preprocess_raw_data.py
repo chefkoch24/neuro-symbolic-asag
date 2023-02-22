@@ -133,6 +133,8 @@ y_train = y_train.tolist()
 y_train = [float(y) for y in y_train]
 y_dev = y_dev.tolist()
 y_dev = [float(y) for y in y_dev]
+X_train['score'] = y_train
+X_dev['score'] = y_dev
 
 X_train['reference_answer'] = get_additional_data(X_train, reference_answers)
 X_dev['reference_answer'] = get_additional_data(X_dev, reference_answers)
@@ -142,8 +144,13 @@ X_dev['question'] = get_additional_data(X_dev, questions)
 remove_empty_responses(X_train)
 remove_empty_responses(X_dev)
 
-save_to_csv(X_train, X_dev, config.PATH_DATA)
+#X_train.to_json('training_dataset.json')
+records = X_train.to_dict('records')
+# save the list of dictionaries as a JSON file
+with open(config.PATH_DATA + '/training_dataset.json', 'w') as f:
+    f.write(json.dumps(records))
+records = X_dev.to_dict('records')
+# save the list of dictionaries as a JSON file
+with open(config.PATH_DATA + '/dev_dataset.json', 'w') as f:
+    f.write(json.dumps(records))
 save_as_json(rubrics, config.PATH_DATA, 'rubrics.json')
-
-# Zip it for download in the console
-# !zip -9r data data
