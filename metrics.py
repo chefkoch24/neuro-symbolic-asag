@@ -192,7 +192,7 @@ def get_average_number_of_tokens_per_key_element_by_class(labels, classes):
         num_tokens_incorrect) if num_tokens_incorrect else 0.0
 
 
-def compute_metrics(outputs):
+def compute_metrics_token_classification(outputs):
     avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
     predictions = torch.cat([x['logits'] for x in outputs]).argmax(dim=-1)  # .max(dim=-1).values
     labels = torch.cat([x['labels'] for x in outputs])

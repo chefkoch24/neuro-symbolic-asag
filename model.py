@@ -10,8 +10,9 @@ import metrics
 
 # Model
 class TokenClassificationModel(LightningModule):
-    def __init__(self, model_name: str, rubrics=None, lr=0.001, eps=1e-08, betas=(0.9, 0.999), weight_decay=0.01, warmup_steps=0, ):
+    def __init__(self, model_name: str, rubrics=None):
         super().__init__()
+        self.save_hyperparameters()
         self.model = AutoModelForTokenClassification.from_pretrained(model_name)
         self.loss = nn.CrossEntropyLoss()
         #self.loss = NLLLoss()
@@ -19,12 +20,6 @@ class TokenClassificationModel(LightningModule):
         #self.loss = nn.KLDivLoss() #reduction='none' for attention mask
         #kl loss and cross entropy loss are working with probabilities in labels and logits
         self.rubrics = rubrics
-        #Hyperparameters
-        self.lr = lr
-        self.eps = eps
-        self.weight_decay = weight_decay
-        self.warmup_steps = warmup_steps
-        self.betas = betas
 
 
     def remove_paddings(self, logits, target):
@@ -70,7 +65,7 @@ class TokenClassificationModel(LightningModule):
 
 
     def validation_epoch_end(self, outputs):
-        metric = metrics.compute_metrics(outputs)
+        metric = metrics.compute_metrics_token_classification(outputs)
         self.log_dict(metric, on_step=False, on_epoch=True, logger=True)
         return metric
 
@@ -82,12 +77,12 @@ class TokenClassificationModel(LightningModule):
         return data
 
     def test_epoch_end(self, outputs):
-        metric = metrics.compute_metrics(outputs)
+        metric = metrics.compute_metrics_token_classification(outputs)
         self.log_dict(metric, on_step=False, on_epoch=True, logger=True)
         return metric
 
     def configure_optimizers(self):
         #optimizer = AdamW(self.model.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)
         optimizer = Adafactor(self.model.parameters(), lr=None, warmup_init=True, relative_step=True)
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+        #scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
         return optimizer

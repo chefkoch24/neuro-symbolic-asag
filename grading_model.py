@@ -9,11 +9,13 @@ from transformers import AutoModelForTokenClassification, AutoModelForQuestionAn
 from transformers import AdamW
 from torch.optim import lr_scheduler
 import logging
+
+import config
 import metrics
 import sklearn
 import myutils as utils
 from incremental_trees.models.classification.streaming_rfc import StreamingRFC
-from torchmetrics import Accuracy, F1, Precision, Recall
+from torchmetrics import Accuracy, F1Score, Precision, Recall
 
 
 from model import TokenClassificationModel
@@ -22,7 +24,8 @@ from model import TokenClassificationModel
 class GradingModelClassification(LightningModule):
     def __init__(self, checkpoint: str, symbolic_learner, model_name, rubrics):
         super().__init__()
-        self.model = TokenClassificationModel.load_from_checkpoint(checkpoint, map_location=torch.device('cpu')) #("/path/to/checkpoint.ckpt")
+        self.save_hyperparameters()
+        self.model = TokenClassificationModel(config.MODEL_NAME).load_from_checkpoint(checkpoint) #("/path/to/checkpoint.ckpt")
         self.loss = nn.CrossEntropyLoss()
         self.rubrics = rubrics
         self.symbolic_models = self.__init_learners__(symbolic_learner)
@@ -30,7 +33,7 @@ class GradingModelClassification(LightningModule):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
         #metrics
-        self.f1 = F1(num_classes=3, average='micro')
+        self.f1 = F1Score(num_classes=3, average='micro')
         self.accuracy = Accuracy()
 
     def __init_learners__(self, symbolic_learner):
