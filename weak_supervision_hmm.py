@@ -1,8 +1,7 @@
 from typing import (Callable, Collection, Dict, Iterable, Optional, Sequence, Set, Tuple)
 
+import numpy as np
 import pandas as pd
-from rouge import Rouge
-from sklearn.base import BaseEstimator
 from spacy.tokens import Doc, Span, Token  # type: ignore
 from skweak import base, aggregation, utils
 from tqdm import tqdm
@@ -249,41 +248,29 @@ class WeakSupervisionMulti:
 
 def main():
     # Read data
-    sep = "\t"
-    X_train = pd.read_csv(config.PATH_DATA + '/' + 'x_train.csv', sep=sep)
-    X_dev = pd.read_csv(config.PATH_DATA + '/' + 'x_dev.csv', sep=sep)
+    X_train = pd.read_json(config.PATH_DATA + '/' + 'training_dataset.json')
+    X_dev = pd.read_json(config.PATH_DATA + '/' + 'dev_dataset.json')
     X_train = myutils.tokenize_data(X_train)
     X_dev = myutils.tokenize_data(X_dev)
     rubrics = myutils.load_rubrics(config.PATH_RUBRIC)
     rubrics = myutils.prepare_rubrics(rubrics)
 
-    th = 0.49
+    th = 0.5
     ws = WeakSupervisionMulti(rubrics=rubrics, meteor_th=th, ngram_th=th, rouge_th=th, edit_dist_th=th,
                               paraphrase_th=th, bleu_th=th, jaccard_th=th)
 
-    # subset for testing
-    #X_train = X_train[:10]
-    #X_dev = X_dev[:10]
 
     train_result = ws.fit(X_train)
     dev_result = ws.predict(X_dev)
 
-    myutils.save_annotated_corpus(train_result, "data/train_corpus_IO.spacy")
-    myutils.save_annotated_corpus(dev_result, "data/dev_corpus_IO.spacy")
+    myutils.save_annotated_corpus(train_result, "corpora/train_corpus_IO.spacy")
+    myutils.save_annotated_corpus(dev_result, "corpora/dev_corpus_IO.spacy")
+    # create the json file from it but without the detailed LF annotations
     for j, data in enumerate([X_train, X_dev]):
         annotated_data = []
         for i, d in tqdm(data.iterrows()):
             q_id = d['question_id']
             x = d['tokenized']
-            lang = d['lang']
-            rubric = rubrics[q_id]
-            len_seq = len(x)
-            labeling_functions = {}
-            for i, lf in enumerate(ws.labeling_functions):
-                soft_labels = np.zeros((len_seq))
-                for cue in lf['function'](x, rubric, lang):
-                    soft_labels[cue[0]:cue[1] + 1] = cue[3]  # 3 is idx for soft label
-                labeling_functions[lf['name']] = soft_labels.tolist()
             item = {
                 'lang': d['lang'],
                 'question_id': d['question_id'],
@@ -292,14 +279,14 @@ def main():
                 'score': d['score'],
                 'label': d['label'],
                 'student_answer': d['student_answer'],
-                'labeling_functions': labeling_functions,
+                'labeling_functions': {},
             }
             annotated_data.append(item)
         if j == 0:
-            file_name = 'train-soft'
+            file_name = 'training_ws'
         else:
-            file_name = 'dev-soft'
-        utils.save_json(annotated_data, config.PATH_DATA, file_name + '.json')
+            file_name = 'dev_ws'
+        myutils.save_json(annotated_data, config.PATH_DATA, file_name + '_hmm' + '.json')
 
 if __name__ == "__main__":
     main()

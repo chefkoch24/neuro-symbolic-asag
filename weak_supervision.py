@@ -8,6 +8,8 @@ import spacy
 import numpy as np
 import nltk
 
+import myutils
+
 nltk.download('wordnet')
 nltk.download('omw-1.4')
 from nltk.corpus import stopwords
@@ -24,7 +26,7 @@ import warnings
 from tqdm import tqdm
 from myutils import ParaphraseDetector
 import config
-import myutils as utils
+import myutils
 
 # Filter out warnings from the NLTK package
 warnings.filterwarnings("ignore", category=UserWarning, module="nltk")
@@ -459,15 +461,11 @@ class WeakSupervisionSoft():
 
 def main():
     # Read data
-    sep = "\t"
-    X_train = pd.read_csv(config.PATH_DATA + '/' + 'x_train.csv', sep=sep)
-    X_dev = pd.read_csv(config.PATH_DATA + '/' + 'x_dev.csv', sep=sep)
-    rubrics = myutils.load_rubrics(config.PATH_RUBRIC)
-
+    X_train = pd.read_json(config.PATH_DATA + '/' + 'training_dataset.json')
+    X_dev = pd.read_json(config.PATH_DATA + '/' + 'dev_dataset.json')
     X_train = myutils.tokenize_data(X_train)
     X_dev = myutils.tokenize_data(X_dev)
-
-    # prepare the rubric and tokenize key elements
+    rubrics = myutils.load_rubrics(config.PATH_RUBRIC)
     rubrics = myutils.prepare_rubrics(rubrics)
 
     # Annotation
@@ -498,10 +496,10 @@ def main():
             }
             annotated_data.append(item)
         if j == 0:
-            file_name = 'train-soft'
+            file_name = 'training_ws'
         else:
-            file_name = 'dev-soft'
-        utils.save_json(annotated_data, config.PATH_DATA, file_name + '.json')
+            file_name = 'dev_ws'
+        myutils.save_json(annotated_data, config.PATH_DATA, file_name + '_lfs' + '.json')
 
 if __name__ == "__main__":
     main()

@@ -13,7 +13,7 @@ from dataset import GradingDataset
 from grading_model import GradingModelClassification
 import myutils as utils
 
-model_checkpoint = 'checkpoints/checkpoint-epoch=08-val_loss=0.40.ckpt'
+model_checkpoint = 'logs/justification_cue_distilroberta-base_context-False/version_8/checkpoints/checkpoint-epoch=03-val_loss=0.45.ckpt'
 tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
 
 

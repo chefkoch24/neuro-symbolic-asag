@@ -16,10 +16,10 @@ def append_silver_label(docs, data):
     return data
 
 
-annotated_train_data = utils.load_json(config.PATH_DATA + '/' +'train-soft.json')
-annotated_dev_data = utils.load_json(config.PATH_DATA + '/' + 'dev-soft.json')
-train_corpus = skweak.utils.docbin_reader(config.PATH_DATA + '/' + 'train_corpus_IO.spacy', spacy_model_name='en_core_web_lg')
-dev_corpus = skweak.utils.docbin_reader(config.PATH_DATA + '/' + 'dev_corpus_IO.spacy', spacy_model_name='en_core_web_lg')
+annotated_train_data = utils.load_json(config.PATH_DATA + '/' + 'training_ws_hmm.json')
+annotated_dev_data = utils.load_json(config.PATH_DATA + '/' + 'dev_ws_hmm.json')
+train_corpus = skweak.utils.docbin_reader('corpora/' + 'train_corpus_IO.spacy', spacy_model_name='en_core_web_lg')
+dev_corpus = skweak.utils.docbin_reader('corpora/' + 'dev_corpus_IO.spacy', spacy_model_name='en_core_web_lg')
 
 
 train_corpus = list(train_corpus)

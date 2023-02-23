@@ -1,6 +1,4 @@
 # Here is all the stuff configured that is needed across scripts
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-
 MODEL_NAME = "distilroberta-base"
 TOKENIZER_NAME = MODEL_NAME
 SEED = 42
@@ -15,6 +13,7 @@ BATCH_SIZE = 8
 
 # Imports
 import spacy
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 # download the spacy models if not already downloaded
 #spacy.cli.download("en_core_web_lg") TODO: uncomment
 #spacy.cli.download("de_core_news_lg") TODO: uncomment

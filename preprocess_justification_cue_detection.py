@@ -65,6 +65,8 @@ parser=argparse.ArgumentParser()
 
 parser.add_argument("--model", help="Name of the pretrained model")
 parser.add_argument("--context", help="With context or not")
+parser.add_argument("--train_file", help="train file")
+parser.add_argument("--dev_file", help="dev file")
 args=parser.parse_args()
 if args.context == 'True':
     args.context = True
@@ -72,8 +74,8 @@ else:
     args.context = False
 
 #Loading
-train_data = utils.load_json(config.PATH_DATA + '/' + 'train_labeled_data_hmm.json')
-dev_data = utils.load_json(config.PATH_DATA + '/' + 'dev_labeled_data_hmm.json')
+train_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
+dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
 tokenizer = AutoTokenizer.from_pretrained(args.model)
 
 # Preprocess data

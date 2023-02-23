@@ -1,9 +1,7 @@
 # Aggregation of the labeling functions to create the silver labels
 import numpy as np
-
 import config
 import myutils as utils
-# TODO: refine after analysis of softlabels
 # Functions
 def mean_nonzero(col):
     return np.mean([c for c in col if c!=0])
@@ -37,41 +35,35 @@ def extract_annotations(annotated_data, exclude_LFs=[]):
         labels.append(soft_labels)
     return labels
 
-
-def silver2target(data, th=0.5):
-    targets = []
-    for l in data:
-        if l >= th:
-            targets.append(1)
-        else:
-            targets.append(0)
-    return targets
-
-
 # Load data
-annotated_train_data = utils.load_json(config.PATH_DATA + '/' +'train-soft.json')
-annotated_dev_data = utils.load_json(config.PATH_DATA + '/' + 'dev-soft.json')
+def _main():
+    annotated_train_data = utils.load_json(config.PATH_DATA + '/' +'training_ws_lfs.json')
+    annotated_dev_data = utils.load_json(config.PATH_DATA + '/' + 'dev_ws_lfs.json')
 
-# Aggregate annotations
-exclude = []
-annotations_train = extract_annotations(annotated_train_data, exclude_LFs=exclude)
-annotations_dev = extract_annotations(annotated_dev_data, exclude_LFs=exclude)
-for i,data in enumerate([annotations_train, annotations_dev]):
-    silver_labels = []
-    for a in data:
-        y = aggregate_soft_labels(a, 'sum')
-        y = normalize(y)
-        silver_labels.append(y)
-    if i == 0:
-        silver_label_train = silver_labels
-    elif i == 1:
-        silver_label_dev = silver_labels
+    # Aggregate annotations
+    exclude = []
+    for mode in ['average', 'max', 'average_nonzero', 'sum']:
+        annotations_train = extract_annotations(annotated_train_data, exclude_LFs=exclude)
+        annotations_dev = extract_annotations(annotated_dev_data, exclude_LFs=exclude)
+        for i,data in enumerate([annotations_train, annotations_dev]):
+            silver_labels = []
+            for a in data:
+                y = aggregate_soft_labels(a, mode)
+                y = normalize(y)
+                silver_labels.append(y)
+            if i == 0:
+                silver_label_train = silver_labels
+            elif i == 1:
+                silver_label_dev = silver_labels
 
-for a, labels in zip(annotated_train_data, silver_label_train):
-    a['silver_labels'] = labels
-for a, labels in zip(annotated_dev_data, silver_label_dev):
-    a['silver_labels'] = labels
+        for a, labels in zip(annotated_train_data, silver_label_train):
+            a['silver_labels'] = labels
+        for a, labels in zip(annotated_dev_data, silver_label_dev):
+            a['silver_labels'] = labels
 
-# Save data
-utils.save_json(annotated_train_data, config.PATH_DATA, 'train_labeled_data.json')
-utils.save_json(annotated_dev_data, config.PATH_DATA,  'dev_labeled_data.json')
+        # Save data
+        utils.save_json(annotated_train_data, config.PATH_DATA, 'train_labeled_data_' + mode + '.json')
+        utils.save_json(annotated_dev_data, config.PATH_DATA,  'dev_labeled_data_' + mode + '.json')
+
+if __name__ == '__main__':
+    _main()

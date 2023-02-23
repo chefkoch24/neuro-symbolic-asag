@@ -51,8 +51,9 @@ trainer = Trainer(max_epochs=config.NUM_EPOCHS,
                   #gradient_clip_val=0.5,
                   #accumulate_grad_batches=2,
                   #auto_scale_batch_size='power',
-                  callbacks=[config.checkpoint_callback,
-                            # early_stop_callback
+                  callbacks=[
+                      config.checkpoint_callback,
+                      # early_stop_callback
                              ],
                   logger=logger)
 trainer.fit(model, train_loader, val_loader)

@@ -2,6 +2,7 @@ import os
 
 import pandas as pd
 import skweak
+from matplotlib import pyplot as plt
 from sentence_transformers import SentenceTransformer
 from scipy.spatial.distance import cosine
 from transformers import AutoTokenizer, AutoModel
@@ -75,7 +76,7 @@ def save_annotated_corpus(annotated_docs, path):
 
 def tokenize_data(data):
     tokenized = []
-    for _, d in data.iterrows():
+    for i, d in data.iterrows():
         if d['lang'] == 'en':
             d = config.nlp(d['student_answer'])
         elif d['lang'] == 'de':
@@ -92,6 +93,16 @@ def create_labels_probability_distribution(labels):
         else:
             targets.append([l, l])
     return targets
+
+def plot_hist(stats, bins=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], title=""):
+    plt.title(title)
+    plt.xlabel('Data')
+    plt.ylabel('Frequency')
+    plt.hist([stats['CORRECT'],stats['PARTIAL_CORRECT'],stats['INCORRECT']], bins=bins, label=list(stats.keys()))
+    plt.legend()
+    plt.show()
+
+
 
 
 class ParaphraseDetector():
