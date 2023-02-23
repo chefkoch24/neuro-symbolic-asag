@@ -5,7 +5,6 @@ import config
 import numpy as np
 import myutils as utils
 
-ner_metric = evaluate.load("seqeval")
 tokenizer = AutoTokenizer.from_pretrained(config.TOKENIZER_NAME)
 
 idx2label = {0: 'O', 1: 'I-CUE'}
@@ -95,6 +94,56 @@ def get_matches(predicitons, labels):
     matches = sum(matches) / len(matches)
     return matches
 
+def micro_macro_f1(predictions, labels):
+    # Flatten the lists of predictions and labels
+    y_true = [label for label_list in labels for label in label_list]
+    y_pred = [pred for pred_list in predictions for pred in pred_list]
+
+    # Calculate true positives, false positives, and false negatives for each label
+    tp = [0] * 2
+    fp = [0] * 2
+    fn = [0] * 2
+    for i in range(len(y_true)):
+        if y_true[i] == y_pred[i]:
+            tp[y_true[i]] += 1
+        else:
+            fp[y_pred[i]] += 1
+            fn[y_true[i]] += 1
+
+    # Calculate micro-averaged F1 score, precision, and recall
+    micro_tp = sum(tp)
+    micro_fp = sum(fp)
+    micro_fn = sum(fn)
+    if micro_tp == 0:
+        micro_precision = 0
+        micro_recall = 0
+        micro_f1_score = 0
+    else:
+        micro_precision = micro_tp / (micro_tp + micro_fp)
+        micro_recall = micro_tp / (micro_tp + micro_fn)
+        micro_f1_score = 2 * ((micro_precision * micro_recall) / (micro_precision + micro_recall))
+
+    # Calculate macro-averaged F1 score, precision, and recall
+    macro_precision = sum(tp[i] / (tp[i] + fp[i]) if tp[i] + fp[i] != 0 else 0 for i in range(2)) / 2
+    macro_recall = sum(tp[i] / (tp[i] + fn[i]) if tp[i] + fn[i] != 0 else 0 for i in range(2)) / 2
+    if macro_precision == 0 and macro_recall == 0:
+        macro_f1_score = 0
+    else:
+        macro_f1_score = 2 * ((macro_precision * macro_recall) / (macro_precision + macro_recall))
+
+    # Calculate accuracy
+    accuracy = sum(1 for i in range(len(y_true)) if y_true[i] == y_pred[i]) / len(y_true)
+
+    return {
+        'micro_f1_score': micro_f1_score,
+        'micro_precision': micro_precision,
+        'micro_recall': micro_recall,
+        'macro_f1_score': macro_f1_score,
+        'macro_precision': macro_precision,
+        'macro_recall': macro_recall,
+        'accuracy': accuracy,
+    }
+
 
 def get_average_number_of_key_elements_by_class(labels, classes):
     num_key_elements_correct, num_key_elements_partial, num_key_elements_incorrect = [], [], []
@@ -157,11 +206,8 @@ def compute_metrics(outputs):
         for prediction, label in zip(predictions, labels)
     ]
     hard_labels = [silver2target(labels) for labels in true_labels]
-    labels_string = [[idx2label[l] for l in label] for label in hard_labels]
-    predictions_string = [[idx2label[l] for l in label] for label in true_predictions]
     # Token Metrics
-    ner_metrics = ner_metric.compute(references=labels_string, predictions=predictions_string, mode='strict',
-                                     scheme='IOB1')
+    ner_metrics = micro_macro_f1(predictions=true_predictions, labels=hard_labels)
     # Span Metrics
     true_spans = [get_spans_from_labels(l) for l in hard_labels]
     predicted_spans = [get_spans_from_labels(l) for l in true_predictions]
@@ -172,10 +218,13 @@ def compute_metrics(outputs):
     tn_correct, tn_partial, tn_incorrect = get_average_number_of_tokens_per_key_element_by_class(true_predictions,
                                                                                                  classes)
     metrics = {
-        "seqeval_precision": ner_metrics["overall_precision"],
-        "seqeval_recall": ner_metrics["overall_recall"],
-        "seqeval_f1": ner_metrics["overall_f1"],
-        "seqeval_accuracy": ner_metrics["overall_accuracy"],
+        "macro_precision": ner_metrics["macro_precision"],
+        "macro_recall": ner_metrics["macro_recall"],
+        "macro_f1": ner_metrics["macro_f1"],
+        "micro_precision": ner_metrics["micro_precision"],
+        "micro_recall": ner_metrics["micro_recall"],
+        "micro_f1": ner_metrics["micro_f1"],
+        "accuracy": ner_metrics["accuracy"],
         'val_loss': avg_loss,
         'partial_match': pm,
         'average_number_of_key_elements_correct': n_correct,

@@ -75,7 +75,10 @@ def _main():
             for a in data:
                 y = aggregate_soft_labels(a, mode)
                 if not GLOBAL_NORMALIZE:
-                    y = normalize(y)
+                    if mode == 'sum':
+                        y = normalize(y)
+                    else:
+                        y = y
                 silver_labels.append(y)
             if GLOBAL_NORMALIZE:
                 silver_labels = global_normalize(silver_labels, average_outliers=False)

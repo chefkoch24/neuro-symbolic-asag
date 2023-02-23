@@ -5,8 +5,8 @@ exclude = []
 # exclude functions with low performance
 #exclude = ['LF_pos_match', 'LF_tag_match', 'LF_dep_match','LF_pos_match_without_stopwords','LF_edit_distance', 'LF_jaccard_similarity']
 th = 0.5
-GLOBAL_NORMALIZE = True
-average_outliers = False
+GLOBAL_NORMALIZE = False
+#average_outliers = False
 
 #Imports
 import metrics
