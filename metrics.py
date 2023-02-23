@@ -129,14 +129,15 @@ def get_average_realtion_by_class(labels, classes):
 def get_average_number_of_tokens_per_key_element_by_class(labels, classes):
     num_tokens_correct, num_tokens_partial, num_tokens_incorrect = [], [], []
     for label, c in zip(labels, classes):
-        idxs = get_spans_from_labels(label)
-        num_tokens = sum([end - start for start, end in idxs])
-        if c == 'CORRECT':
-            num_tokens_correct.append(num_tokens)
-        elif c == 'PARTIAL_CORRECT':
-            num_tokens_partial.append(num_tokens)
-        elif c == 'INCORRECT':
-            num_tokens_incorrect.append(num_tokens)
+        spans = get_spans_from_labels(label)
+        for start, end in spans:
+            num_tokens = end - start
+            if c == 'CORRECT':
+                num_tokens_correct.append(num_tokens)
+            elif c == 'PARTIAL_CORRECT':
+                num_tokens_partial.append(num_tokens)
+            elif c == 'INCORRECT':
+                num_tokens_incorrect.append(num_tokens)
     return np.average(num_tokens_correct) if num_tokens_correct else 0.0, np.average(
         num_tokens_partial) if num_tokens_partial else 0.0, np.average(
         num_tokens_incorrect) if num_tokens_incorrect else 0.0
