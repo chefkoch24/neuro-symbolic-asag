@@ -1,7 +1,9 @@
 import os
 
+import numpy as np
 import pandas as pd
 import skweak
+import tokenizations
 from matplotlib import pyplot as plt
 from sentence_transformers import SentenceTransformer
 from scipy.spatial.distance import cosine
@@ -16,18 +18,21 @@ def save_json(data, path, file_name):
     directory = path
     if not os.path.exists(directory):
         os.mkdir(directory)
-    with open(path+'/'+file_name, 'w') as fout:
+    with open(path + '/' + file_name, 'w') as fout:
         json.dump(data, fout)
         print('saved', file_name)
+
 
 def load_json(path):
     with open(path, 'r') as fin:
         data = json.load(fin)
     return data
 
+
 def flat_list(lst):
     x = [item for sublist in lst for item in sublist]
     return x
+
 
 def save_to_csv(X_train, X_dev, y_train, y_dev, path):
     sep = "\t"
@@ -36,12 +41,31 @@ def save_to_csv(X_train, X_dev, y_train, y_dev, path):
     if not os.path.exists(directory):
         os.mkdir(directory)
 
-    save_path = path +'/'
-    X_train.to_csv(save_path +"x_train.tsv", sep=sep)
-    X_dev.to_csv(save_path+"x_dev.tsv", sep=sep)
-    pd.DataFrame(data=y_train).to_csv(save_path+"y_train.tsv", sep=sep)
-    pd.DataFrame(data=y_dev).to_csv(save_path+ "y_dev.tsv", sep=sep)
+    save_path = path + '/'
+    X_train.to_csv(save_path + "x_train.tsv", sep=sep)
+    X_dev.to_csv(save_path + "x_dev.tsv", sep=sep)
+    pd.DataFrame(data=y_train).to_csv(save_path + "y_train.tsv", sep=sep)
+    pd.DataFrame(data=y_dev).to_csv(save_path + "y_dev.tsv", sep=sep)
     print('successfully saved')
+
+
+def align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l):
+    a2b, b2a = tokenizations.get_alignments(tokens_spacy, tokens_bert)
+    len_of_classification = len(tokens_bert)  # for CLS and end of seq
+    label_ids = np.zeros((len_of_classification))
+    previous_label_idx = 0
+    label_idx = -1
+    for j, e in enumerate(b2a):
+        if len(e) >= 1:  # Not special token
+            label_idx = e[0]
+            # if label_idx < len_of_classification:
+            label_ids[j] = l[label_idx]
+            previous_label_idx = label_idx
+        else:
+            label_ids[j] = l[previous_label_idx]
+    # label_ids[len_of_classification:] = -100
+    return label_ids
+
 
 def load_rubrics(path):
     with open(path, 'r') as f:
@@ -51,6 +75,7 @@ def load_rubrics(path):
     for key in data:
         rubrics[key] = pd.DataFrame.from_dict(data[key])
     return rubrics
+
 
 def prepare_rubrics(rubrics):
     german_question_ids = [str(i) for i in range(1, 10)]
@@ -68,11 +93,13 @@ def prepare_rubrics(rubrics):
         rubrics[key] = rubric
     return rubrics
 
+
 def save_annotated_corpus(annotated_docs, path):
     print(len(annotated_docs))
     for doc in annotated_docs:
         doc.ents = doc.spans["hmm"]
     skweak.utils.docbin_writer(annotated_docs, path)
+
 
 def tokenize_data(data):
     tokenized = []
@@ -85,6 +112,7 @@ def tokenize_data(data):
     data['tokenized'] = tokenized
     return data
 
+
 def create_labels_probability_distribution(labels):
     targets = []
     for l in labels:
@@ -94,48 +122,12 @@ def create_labels_probability_distribution(labels):
             targets.append([l, l])
     return targets
 
+
 def plot_hist(stats, bins=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0], title=""):
     plt.title(title)
     plt.xlabel('Data')
     plt.ylabel('Frequency')
-    plt.hist([stats['CORRECT'],stats['PARTIAL_CORRECT'],stats['INCORRECT']], bins=bins, label=list(stats.keys()))
+    plt.hist([stats['CORRECT'], stats['PARTIAL_CORRECT'], stats['INCORRECT']], bins=bins, label=list(stats.keys()))
     plt.legend()
     plt.show()
 
-
-
-
-class ParaphraseDetector():
-    def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
-        self.model = AutoModel.from_pretrained('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
-
-    def _encode_rubric(self, rubric):
-        sentence_embeddings = []
-        for r in rubric['key_element']:
-            encoded_input = self.tokenizer(r, padding=True, truncation=True, return_tensors='pt')
-            with torch.no_grad():
-                model_output = self.model(**encoded_input)
-                sentence_embedding = self._mean_pooling(model_output, encoded_input['attention_mask'])
-                sentence_embeddings.append(sentence_embedding)
-        return sentence_embeddings
-
-    # Mean Pooling - Take attention mask into account for correct averaging
-    def _mean_pooling(self, model_output, attention_mask):
-        token_embeddings = model_output[0]  # First element of model_output contains all token embeddings
-        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-
-    def detect_paraphrases(self, candidate, rubric):
-        rubric_elements = self._encode_rubric(rubric)
-        # encode the candidate
-        encoded_input = self.tokenizer(candidate, is_split_into_words=True, padding=True, truncation=True,
-                                       return_tensors='pt')
-        with torch.no_grad():
-            model_output = self.model(**encoded_input)
-            candidate_embedding = self._mean_pooling(model_output, encoded_input['attention_mask'])
-        similarities = []
-        for r in rubric_elements:
-            similarity = cosine(candidate_embedding[0], r[0])
-            similarities.append(similarity)
-        return similarities

@@ -10,27 +10,8 @@ from dataset import JustificationCueDataset
 import torch
 
 # Helper functions
-def _align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l):
-    a2b, b2a = tokenizations.get_alignments(tokens_spacy, tokens_bert)
-    len_of_classification = len(tokens_bert)  # for CLS and end of seq
-    label_ids = np.zeros((len_of_classification))
-    previous_label_idx = 0
-    label_idx = -1
-    for j, e in enumerate(b2a):
-        if len(e) >= 1:  # Not special token
-            label_idx = e[0]
-            # if label_idx < len_of_classification:
-            label_ids[j] = l[label_idx]
-            previous_label_idx = label_idx
-        else:
-            label_ids[j] = l[previous_label_idx]
-    #label_ids[len_of_classification:] = -100
-    return label_ids
-
-
 def create_inputs(data, with_context=False):
-    labels = []
-    bert_tokens = []
+    model_inputs = []
     for d in data:
         student_answer = d['student_answer']
         l = d['silver_labels']
@@ -41,25 +22,25 @@ def create_inputs(data, with_context=False):
         tokens_bert = [tokenizer.decode(t) for t in tokenized['input_ids']]
         if with_context:
             context = d['reference_answer']
-            length_stud_answer = len(tokenized['input_ids'])
-            tokenized = tokenizer(student_answer, context, max_length=config.MAX_LEN, truncation=True)
-            input_ids = tokenized['input_ids']
-            attention_mask = np.ones(len(input_ids), dtype=np.int64)
-            attention_mask[length_stud_answer:] = 0
+            tokenized = tokenizer(student_answer, context, max_length=config.MAX_LEN, truncation=True, padding='max_length')
 
         else:
-            tokenized = tokenizer(student_answer, max_length=config.MAX_LEN, truncation=True)
-            attention_mask = tokenized['attention_mask']
-        item = {
-            'input_ids': tokenized['input_ids'],
-            'attention_mask': attention_mask ,
-        }
-        bert_tokens.append(item)
+            tokenized = tokenizer(student_answer, max_length=config.MAX_LEN, truncation=True, padding='max_length')
         # Generating the labels
-        label_ids = _align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l)
-        labels.append([-100]+label_ids.tolist())
+        aligned_labels = utils.align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l)
+        pad_len = config.MAX_LEN - len(aligned_labels)
+        labels = [-100]+aligned_labels.tolist()
+        # Adding other model inputs
+        model_input = {
+            'input_ids': tokenized['input_ids'],
+            'attention_mask': tokenized['attention_mask'],
+            'labels': utils.create_labels_probability_distribution(torch.nn.functional.pad(torch.tensor(labels), pad=(0, pad_len), mode='constant', value=-100).detach().numpy().tolist()),
+            'class': d['label'],
+            'question_id': d['question_id']
+        }
+        model_inputs.append(model_input)
 
-    return labels, bert_tokens
+    return model_inputs
 
 parser=argparse.ArgumentParser()
 
@@ -79,27 +60,8 @@ dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
 tokenizer = AutoTokenizer.from_pretrained(args.model)
 
 # Preprocess data
-bert_labels_train, bert_tokens_train = create_inputs(train_data, with_context=args.context)
-bert_labels_dev, bert_tokens_dev = create_inputs(dev_data, with_context=args.context)
-
-def create_json_data(data, bert_tokens, silver_labels, MAX_LEN=512):
-    ''' Include the padding to MAX_LEN. '''
-    model_inputs = []
-    for i, inputs in enumerate(bert_tokens):
-        pad_len = MAX_LEN - len(inputs['input_ids'])
-        # add silverlabels as labels for the trainer
-        inputs['input_ids'] = torch.nn.functional.pad(torch.tensor(inputs['input_ids']), pad=(0, pad_len), mode='constant', value=1).detach().numpy().tolist()  # padding token for distilroberta-base = 1
-        inputs['attention_mask'] = torch.nn.functional.pad(torch.tensor(inputs['attention_mask']), pad=(0, pad_len), mode='constant', value=0).detach().numpy().tolist()
-        pad_len = MAX_LEN - len(silver_labels[i])
-        inputs['labels'] = utils.create_labels_probability_distribution(torch.nn.functional.pad(torch.tensor(silver_labels[i]), pad=(0, pad_len), mode='constant', value=-100).detach().numpy().tolist())
-        #inputs['labels'] = create_labels_probability_distribution(silver_labels[i])
-        inputs['class'] = data[i]['label']
-        inputs['question_id'] = data[i]['question_id']
-        model_inputs.append(inputs)
-    return model_inputs
-
-training_dataset = create_json_data(train_data, bert_tokens_train, bert_labels_train)
-dev_dataset = create_json_data(dev_data, bert_tokens_dev, bert_labels_dev)
+training_dataset = create_inputs(train_data, with_context=args.context)
+dev_dataset = create_inputs(dev_data, with_context=args.context)
 
 #save data
 DATASET_NAME = 'dataset'+ '_' + args.model + '_context-' + str(args.context) + '.json'

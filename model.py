@@ -8,6 +8,7 @@ from transformers import AdamW
 from torch.optim import lr_scheduler
 import metrics
 
+
 # Model
 class TokenClassificationModel(LightningModule):
     def __init__(self, model_name: str, rubrics=None):
@@ -78,6 +79,60 @@ class TokenClassificationModel(LightningModule):
 
     def test_epoch_end(self, outputs):
         metric = metrics.compute_metrics_token_classification(outputs)
+        self.log_dict(metric, on_step=False, on_epoch=True, logger=True)
+        return metric
+
+    def configure_optimizers(self):
+        #optimizer = AdamW(self.model.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)
+        optimizer = Adafactor(self.model.parameters(), lr=None, warmup_init=True, relative_step=True)
+        #scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+        return optimizer
+
+
+# Model
+class SpanPredictionModel(LightningModule):
+    def __init__(self, model_name: str):
+        super().__init__()
+        self.save_hyperparameters()
+        self.model = AutoModelForTokenClassification.from_pretrained(model_name)
+        self.loss = nn.CrossEntropyLoss()
+
+    def forward(self, input_ids, attention_mask, start_positions=None, end_positions=None):
+        outputs = self.model(input_ids, attention_mask=attention_mask, start_positions=start_positions, end_positions=end_positions, return_dict=True)
+        if start_positions is not None and end_positions is not None:
+            return outputs.start_logits, outputs.end_logits, outputs.loss
+        return outputs.start_logits, outputs.end_logits
+
+    def training_step(self, batch, batch_idx):
+        _, _, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['start_positions'], batch['end_positions'])
+        return loss
+
+    def training_epoch_end(self, outputs):
+        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        self.log('train_loss', avg_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
+
+    def validation_step(self, batch, batch_idx):
+        start_logits, end_logits, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['start_positions'], batch['end_positions'])
+        batch['start_logits'] = start_logits
+        batch['end_logits'] = end_logits
+        batch['loss'] = loss
+        return batch
+
+
+    def validation_epoch_end(self, outputs):
+        metric = metrics.compute_metrics_span_prediction(outputs)
+        self.log_dict(metric, on_step=False, on_epoch=True, logger=True)
+        return metric
+
+    def test_step(self, batch, batch_idx):
+        start_logits, end_logits, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['start_positions'], batch['end_positions'])
+        batch['start_logits'] = start_logits
+        batch['end_logits'] = end_logits
+        batch['loss'] = loss
+        return batch
+
+    def test_epoch_end(self, outputs):
+        metric = metrics.compute_metrics_span_prediction(outputs)
         self.log_dict(metric, on_step=False, on_epoch=True, logger=True)
         return metric
 

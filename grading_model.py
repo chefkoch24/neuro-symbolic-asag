@@ -110,3 +110,26 @@ class GradingModelClassification(LightningModule):
         optimizer = Adafactor(self.model.parameters(), lr=None, warmup_init=True, relative_step=True)
         scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
         return optimizer
+
+class GradingModelTrivial():
+    def __init__(self, max_score = 1, th=0.5):
+        self.max_score = max_score
+        self.th = th
+
+    #TODO: rounding on a range?
+    #TODO: think about if scoring vector is the right input
+
+    def forward(self, scoring_vector, rubric):
+        score = 0
+        for s, r in zip(scoring_vector, rubric):
+            if s > self.th:
+                score += r['points']
+        if score >= self.max_score:
+            score = self.max_score
+            classification = 0 #correct
+        elif score > 0:
+            classification = 1 #partially correct
+        else:
+            classification = 2 #incorrect
+
+        return score, classification
