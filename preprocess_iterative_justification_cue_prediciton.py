@@ -77,27 +77,20 @@ def generate_iterative_dataset(data):
 
         # inputs['rubric_elements'] = self._get_rubric_elements(spans, inputs['input_ids'], inputs['question_id'])
 
-parser=argparse.ArgumentParser()
-
-parser.add_argument("--model", help="Name of the pretrained model")
-parser.add_argument("--train_file", help="train file")
-parser.add_argument("--dev_file", help="dev file")
-parser.add_argument("--test_file", help="test file")
-args=parser.parse_args()
 
 # Load data
-training_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
-dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
+training_data = utils.load_json(config.PATH_DATA + '/' + config.TRAIN_FILE)
+dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 
 # Preprocess data
 para_detector = BertScorer()
-tokenizer = AutoTokenizer.from_pretrained(args.model)
+tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
 
 preprocessed_training_data = generate_iterative_dataset(training_data)
 preprocessed_dev_data = generate_iterative_dataset(dev_data)
 
 #save data
-DATASET_NAME = 'dataset_iterative_' + args.model+ '.json'
+DATASET_NAME = 'dataset_iterative_' + config.MODEL_NAME+ '.json'
 utils.save_json(preprocessed_training_data, config.PATH_DATA + '/', 'training_' + DATASET_NAME)
 utils.save_json(preprocessed_dev_data, config.PATH_DATA + '/', 'dev_'+DATASET_NAME)

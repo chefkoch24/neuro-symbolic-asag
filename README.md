@@ -6,6 +6,12 @@ For setup all requirements the following steps has to be done:
 
 `python -m spacy download en_core_web_lg`
 
+`python -m nltk.downloader -d /path/to/data/storage/ wordnet`
+
+`python -m nltk.downloader -d /path/to/data/storage/ omw-1.4`
+
+`python -m nltk.downloader -d /path/to/data/storage/ stopwords`
+
 `pip install -r requirements.txt`
 
 ## Configurations

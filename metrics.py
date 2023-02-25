@@ -78,7 +78,7 @@ def partial_match(predicted_spans, true_spans):
 
 def get_partial_match_score(predicted_spans, true_spans):
     # Calculate the partial match score for each predicted span
-    scores = [partial_match(p, t) for p in predicted_spans for t in true_spans]
+    scores = [partial_match(p, t) for p,t in  zip(predicted_spans, true_spans)]
 
     # Return the average over the batch
     return np.average(scores) if scores else 0
@@ -262,9 +262,10 @@ def compute_metrics_span_prediction(outputs):
     classes = [x['class'] for x in outputs]
     classes = utils.flat_list(classes)
 
-    predicted_spans = [(s.item(), e.item()) for s, e in zip(start_predictions, end_predictions)]
-    true_spans = [(s.item(), e.item()) for s, e in zip(start_positions, end_positions)]
-    pm = get_partial_match_score([true_spans], [predicted_spans])
+    # for using the same method it's wrapped in []
+    predicted_spans = [[(s.item(), e.item())] for s, e in zip(start_predictions, end_predictions)]
+    true_spans = [[(s.item(), e.item())] for s, e in zip(start_positions, end_positions)]
+    pm = get_partial_match_score(true_spans, predicted_spans)
     f1s_precisions_recalls = [compute_f1_spans(p_span, t_span) for p_span, t_span in zip(predicted_spans, true_spans)]
     f1 = np.average([v[0] for v in f1s_precisions_recalls])
     precision = np.average([v[1] for v in f1s_precisions_recalls])

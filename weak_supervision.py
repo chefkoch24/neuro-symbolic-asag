@@ -11,18 +11,10 @@ import nltk
 import myutils
 from paraphrase_scorer import ParaphraseScorerSBERT
 
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-from nltk.corpus import stopwords
-
-nltk.download('stopwords')
 from nltk.stem.porter import *
 from rouge import Rouge
 from nltk.metrics.distance import *
 from spacy.matcher import PhraseMatcher
-from sklearn.base import BaseEstimator
-# import skweak
-import json
 import warnings
 from tqdm import tqdm
 import config

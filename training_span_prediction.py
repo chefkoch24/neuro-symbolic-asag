@@ -14,20 +14,9 @@ from model import SpanPredictionModel
 torch.manual_seed(config.SEED)
 torch.cuda.manual_seed_all(config.SEED)
 
-parser=argparse.ArgumentParser()
-
-parser.add_argument("--model", help="Name of the pretrained model")
-parser.add_argument("--train_file", help="train file")
-parser.add_argument("--dev_file", help="dev file")
-args=parser.parse_args()
-
-#args.train_file = 'training_dataset_span_prediction_distilroberta-base.json'
-#args.dev_file = 'dev_dataset_span_prediction_distilroberta-base.json'
-#args.model = config.MODEL_NAME
-
 # Load data
-training_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
-dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
+training_data = utils.load_json(config.PATH_DATA + '/' + config.TRAIN_FILE)
+dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 
 training_dataset = SpanJustificationCueDataset(training_data)
@@ -35,9 +24,9 @@ dev_dataset = SpanJustificationCueDataset(dev_data)
 # Training
 train_loader = DataLoader(training_dataset, batch_size=config.BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(dev_dataset, batch_size=config.BATCH_SIZE, shuffle=False)
-model = SpanPredictionModel(args.model)
+model = SpanPredictionModel(config.MODEL_NAME)
 
-EXPERIMENT_NAME = "span_prediction" + "_" + args.model
+EXPERIMENT_NAME = "span_prediction" + "_" + config.MODEL_NAME
 logger = CSVLogger("logs", name=EXPERIMENT_NAME)
 trainer = Trainer(max_epochs=config.NUM_EPOCHS,
                   #gradient_clip_val=0.5,

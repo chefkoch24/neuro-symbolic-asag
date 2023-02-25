@@ -1,9 +1,8 @@
-from typing import (Callable, Collection, Dict, Iterable, Optional, Sequence, Set, Tuple)
+from typing import (Callable,  Iterable, Sequence, Tuple)
 
-import numpy as np
 import pandas as pd
 import skweak
-from spacy.tokens import Doc, Span, Token  # type: ignore
+from spacy.tokens import Doc, Span, Token
 from skweak import base, aggregation, utils
 from tqdm import tqdm
 import myutils
@@ -259,8 +258,8 @@ class WeakSupervisionHMM:
 
 def main():
     # Read data
-    X_train = pd.read_json(config.PATH_DATA + '/' + 'training_dataset.json')[0:10]
-    X_dev = pd.read_json(config.PATH_DATA + '/' + 'dev_dataset.json')[0:10]
+    X_train = pd.read_json(config.PATH_DATA + '/' + 'training_dataset.json')
+    X_dev = pd.read_json(config.PATH_DATA + '/' + 'dev_dataset.json')
     X_train = myutils.tokenize_data(X_train)
     X_dev = myutils.tokenize_data(X_dev)
     rubrics = myutils.load_rubrics(config.PATH_RUBRIC)
@@ -268,7 +267,7 @@ def main():
 
     th = 0.5
     ws = WeakSupervisionHMM(rubrics=rubrics, meteor_th=th, ngram_th=th, rouge_th=th, edit_dist_th=th,
-                            paraphrase_th=th, bleu_th=th, jaccard_th=th, mode='voter')
+                            paraphrase_th=th, bleu_th=th, jaccard_th=th, mode='hmm')
 
 
     train_result = ws.fit(X_train)

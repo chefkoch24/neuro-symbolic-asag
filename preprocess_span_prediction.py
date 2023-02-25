@@ -60,22 +60,10 @@ def create_inputs(data):
             model_inputs.append(model_input)
     return model_inputs
 
-parser=argparse.ArgumentParser()
-
-parser.add_argument("--model", help="Name of the pretrained model")
-parser.add_argument("--train_file", help="train file")
-parser.add_argument("--dev_file", help="dev file")
-args=parser.parse_args()
-
-
-args.train_file = 'train_labeled_data_sum.json'
-args.dev_file = 'dev_labeled_data_sum.json'
-args.model = config.MODEL_NAME
-
 #Loading
-train_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
-dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
-tokenizer = AutoTokenizer.from_pretrained(args.model)
+train_data = utils.load_json(config.PATH_DATA + '/' + config.TRAIN_FILE)
+dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)
+tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 para_detector = BertScorer()
 
@@ -83,7 +71,7 @@ training_dataset = create_inputs(train_data)
 dev_dataset = create_inputs(dev_data)
 
 #save data
-DATASET_NAME = 'dataset_span_prediction_' + args.model + '.json'
+DATASET_NAME = 'dataset_span_prediction_' + config.MODEL_NAME + '.json'
 utils.save_json(training_dataset, config.PATH_DATA + '/', 'training_' + DATASET_NAME)
 utils.save_json(dev_dataset, config.PATH_DATA + '/', 'dev_'+DATASET_NAME)
 

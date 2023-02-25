@@ -8,6 +8,7 @@ import config
 import myutils as utils
 from dataset import JustificationCueDataset
 import torch
+import utils_preprocessing
 
 # Helper functions
 def create_inputs(data, with_context=False):
@@ -27,7 +28,7 @@ def create_inputs(data, with_context=False):
         else:
             tokenized = tokenizer(student_answer, max_length=config.MAX_LEN, truncation=True, padding='max_length')
         # Generating the labels
-        aligned_labels = utils.align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l)
+        aligned_labels = utils_preprocessing.align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l)
         pad_len = config.MAX_LEN - len(aligned_labels)
         labels = [-100]+aligned_labels.tolist()
         # Adding other model inputs
@@ -42,28 +43,17 @@ def create_inputs(data, with_context=False):
 
     return model_inputs
 
-parser=argparse.ArgumentParser()
-
-parser.add_argument("--model", help="Name of the pretrained model")
-parser.add_argument("--context", help="With context or not")
-parser.add_argument("--train_file", help="train file")
-parser.add_argument("--dev_file", help="dev file")
-args=parser.parse_args()
-if args.context == 'True':
-    args.context = True
-else:
-    args.context = False
 
 #Loading
-train_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
-dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
-tokenizer = AutoTokenizer.from_pretrained(args.model)
+train_data = utils.load_json(config.PATH_DATA + '/' + config.TRAIN_FILE)
+dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)
+tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
 
 # Preprocess data
-training_dataset = create_inputs(train_data, with_context=args.context)
-dev_dataset = create_inputs(dev_data, with_context=args.context)
+training_dataset = create_inputs(train_data, with_context=config.context)
+dev_dataset = create_inputs(dev_data, with_context=config.context)
 
 #save data
-DATASET_NAME = 'dataset'+ '_' + args.model + '_context-' + str(args.context) + '.json'
+DATASET_NAME = 'dataset'+ '_' + config.MODEL_NAME + '_context-' + str(config.context) + '.json'
 utils.save_json(training_dataset, config.PATH_DATA + '/', 'training_' + DATASET_NAME)
 utils.save_json(dev_dataset, config.PATH_DATA + '/', 'dev_'+DATASET_NAME)

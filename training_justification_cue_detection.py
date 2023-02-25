@@ -18,23 +18,10 @@ warnings.filterwarnings("ignore")
 torch.manual_seed(config.SEED)
 torch.cuda.manual_seed_all(config.SEED)
 
-parser=argparse.ArgumentParser()
-
-parser.add_argument("--model", help="Name of the pretrained model")
-parser.add_argument("--train_file", help="train file")
-parser.add_argument("--dev_file", help="dev file")
-parser.add_argument("--test_file", help="test file")
-parser.add_argument("--context", help="with context or not")
-args=parser.parse_args()
-
-if args.context == 'True':
-    args.context = True
-else:
-    args.context = False
 
 # Load data
-training_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
-dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
+training_data = utils.load_json(config.PATH_DATA + '/' + config.TRAIN_FILE)
+dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 
 training_dataset = JustificationCueDataset(training_data)
@@ -42,10 +29,10 @@ dev_dataset = JustificationCueDataset(dev_data)
 # Training
 train_loader = DataLoader(training_dataset, batch_size=config.BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(dev_dataset, batch_size=config.BATCH_SIZE, shuffle=False)
-model = TokenClassificationModel(args.model, rubrics)
+model = TokenClassificationModel(config.MODEL_NAME, rubrics)
 
 
-EXPERIMENT_NAME = "justification_cue" + "_" + args.model + "_context-" + str(args.context)
+EXPERIMENT_NAME = "justification_cue" + "_" + config.MODEL_NAME + "_context-" + str(config.CONTEXT)
 logger = CSVLogger("logs", name=EXPERIMENT_NAME)
 trainer = Trainer(max_epochs=config.NUM_EPOCHS,
                   #gradient_clip_val=0.5,
