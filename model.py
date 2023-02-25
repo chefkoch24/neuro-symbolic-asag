@@ -94,8 +94,7 @@ class SpanPredictionModel(LightningModule):
     def __init__(self, model_name: str):
         super().__init__()
         self.save_hyperparameters()
-        self.model = AutoModelForTokenClassification.from_pretrained(model_name)
-        self.loss = nn.CrossEntropyLoss()
+        self.model = AutoModelForQuestionAnswering.from_pretrained(model_name)
 
     def forward(self, input_ids, attention_mask, start_positions=None, end_positions=None):
         outputs = self.model(input_ids, attention_mask=attention_mask, start_positions=start_positions, end_positions=end_positions, return_dict=True)

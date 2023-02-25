@@ -9,6 +9,7 @@ import numpy as np
 import nltk
 
 import myutils
+from paraphrase_scorer import ParaphraseScorerSBERT
 
 nltk.download('wordnet')
 nltk.download('omw-1.4')
@@ -24,7 +25,6 @@ from sklearn.base import BaseEstimator
 import json
 import warnings
 from tqdm import tqdm
-from myutils import ParaphraseDetector
 import config
 import myutils
 
@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="nltk")
 class WeakSupervisionSoft():
     def __init__(self, rubrics=None):
         self.rubrics = rubrics
-        self.para_detector = ParaphraseDetector()
+        self.para_detector = ParaphraseScorerSBERT()
         self._punctuation = ['.', ',', '?', '!', ';']
         self.rouge = Rouge(metrics=["rouge-1", "rouge-2", "rouge-3", "rouge-4", "rouge-5", "rouge-l"])
         self.labeling_functions = [
@@ -416,7 +416,7 @@ class WeakSupervisionSoft():
             labels.append(scores)
         return np.array(labels)
 
-    def LF_edit_distance(self, doc, rubric ,lang):
+    def LF_edit_distance(self, doc, rubric, lang):
         labels = []
         candidates, indicies = self._generate_candidates(doc)
         for c in candidates:

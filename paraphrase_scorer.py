@@ -1,10 +1,10 @@
 import torch
-from scipy.stats import cosine
+from scipy.spatial.distance import cosine
 from transformers import AutoTokenizer, AutoModel
 from evaluate import load
 
 
-class ParaphraseScorerSEIBERT():
+class ParaphraseScorerSBERT():
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
         self.model = AutoModel.from_pretrained('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
@@ -40,7 +40,7 @@ class ParaphraseScorerSEIBERT():
         return similarities
 
 class BertScorer():
-    def __init__(self, model_name='SpanBERT/spanbert-base-cased'):
+    def __init__(self, model_name='roberta-large'):
         self.bertscore = load("bertscore")
         self.model_name = model_name
 

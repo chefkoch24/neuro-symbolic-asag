@@ -14,6 +14,7 @@ import warnings
 from dataset import IterativeJustificationCueDataset
 from transformers import AutoTokenizer
 import metrics
+from paraphrase_scorer import ParaphraseScorerSBERT, BertScorer
 
 logging.basicConfig(level=logging.ERROR)
 warnings.filterwarnings("ignore")
@@ -36,7 +37,7 @@ def get_rubric_elements(spans, input_ids, qid):
     rubric_elements = []
     for s in spans:
         span_text = decoded[s[0]:s[1]]
-        sim = para_detector.detect_paraphrases(span_text, rubric)
+        sim = para_detector.detect_score_key_elements(span_text, rubric)
         max_index = np.argmax(sim)
         rubric_element = rubric['key_element'][max_index]
         rubric_elements.append(rubric_element)
@@ -90,7 +91,7 @@ dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 
 # Preprocess data
-para_detector = utils.ParaphraseDetector()
+para_detector = BertScorer()
 tokenizer = AutoTokenizer.from_pretrained(args.model)
 
 preprocessed_training_data = generate_iterative_dataset(training_data)

@@ -46,8 +46,8 @@ class SpanJustificationCueDataset(Dataset):
         for i, inputs in enumerate(self.data):
             inputs['input_ids'] = torch.tensor(inputs['input_ids'])
             inputs['attention_mask'] = torch.tensor(inputs['attention_mask'])
-            inputs['start_positions'] = torch.tensor(inputs['start_positions'])
-            inputs['end_positions'] = torch.tensor(inputs['end_positions'])
+            inputs['start_positions'] = torch.tensor([inputs['start_positions']]) #TODO: remove list wrapping
+            inputs['end_positions'] = torch.tensor([inputs['end_positions']]) #TODO: remove list wrapping
 
     def __len__(self):
         return len(self.data)

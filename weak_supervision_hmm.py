@@ -2,6 +2,7 @@ from typing import (Callable, Collection, Dict, Iterable, Optional, Sequence, Se
 
 import numpy as np
 import pandas as pd
+import skweak
 from spacy.tokens import Doc, Span, Token  # type: ignore
 from skweak import base, aggregation, utils
 from tqdm import tqdm
@@ -84,10 +85,12 @@ class RubricAnnotator(SpanAnnotator):
         # self.add_incompatible_sources(to_exclude)
 
 
-class WeakSupervisionMulti:
-    def __init__(self, rubrics=None, meteor_th=0.25, ngram_th=0.5, rouge_th=0.5, edit_dist_th=10, paraphrase_th=0.5,
-                 bleu_th=0.5, jaccard_th=0.5):
+class WeakSupervisionHMM:
+    def __init__(self, rubrics=None, meteor_th=0.25, ngram_th=0.5, rouge_th=0.5, edit_dist_th=0.5, paraphrase_th=0.5,
+                 bleu_th=0.5, jaccard_th=0.5, mode='hmm'):
         self.hmm = aggregation.HMM("hmm", ["CUE"], prefixes='IO')
+        self.voter = skweak.voting.SequentialMajorityVoter("maj_voter", labels=["CUE"], prefixes='IO')
+        self.mode = mode
         self.rubrics = rubrics
         self.annotated_data = []
         self.PARAPHRASE_THRESHOLD = paraphrase_th
@@ -225,7 +228,10 @@ class WeakSupervisionMulti:
             for lf in self.labeling_functions:
                 doc = lf(doc, rubric, lang)
             docs.append(doc)
-            prediction = self.hmm.pipe(docs)
+            if self.mode == 'voter':
+                prediction = self.voter.pipe(docs)
+            elif self.mode == 'hmm':
+                prediction = self.hmm.pipe(docs)
         return list(prediction)
 
     def fit(self, data):
@@ -240,37 +246,40 @@ class WeakSupervisionMulti:
                 doc = lf(doc, rubric, lang)
             docs.append(doc)
         # aggregation model
+        if self.mode == 'voter':
+            self.annotated_data = list(self.voter.pipe(docs))
+        elif self.mode == 'hmm':
+            self.annotated_data = self.hmm.fit_and_aggregate(docs)
         # for more than 4 em steps it's need a custom implementation of the aggregator model. n_iter is hardcoded to 4
-        self.annotated_data = self.hmm.fit_and_aggregate(docs)
+        #self.annotated_data = self.hmm.fit_and_aggregate(docs)
+
         # self.annotated_data = self.hmm.pipe(docs)
         return self.annotated_data
 
 
 def main():
     # Read data
-    X_train = pd.read_json(config.PATH_DATA + '/' + 'training_dataset.json')
-    X_dev = pd.read_json(config.PATH_DATA + '/' + 'dev_dataset.json')
+    X_train = pd.read_json(config.PATH_DATA + '/' + 'training_dataset.json')[0:10]
+    X_dev = pd.read_json(config.PATH_DATA + '/' + 'dev_dataset.json')[0:10]
     X_train = myutils.tokenize_data(X_train)
     X_dev = myutils.tokenize_data(X_dev)
     rubrics = myutils.load_rubrics(config.PATH_RUBRIC)
     rubrics = myutils.prepare_rubrics(rubrics)
 
     th = 0.5
-    ws = WeakSupervisionMulti(rubrics=rubrics, meteor_th=th, ngram_th=th, rouge_th=th, edit_dist_th=th,
-                              paraphrase_th=th, bleu_th=th, jaccard_th=th)
+    ws = WeakSupervisionHMM(rubrics=rubrics, meteor_th=th, ngram_th=th, rouge_th=th, edit_dist_th=th,
+                            paraphrase_th=th, bleu_th=th, jaccard_th=th, mode='voter')
 
 
     train_result = ws.fit(X_train)
     dev_result = ws.predict(X_dev)
 
-    myutils.save_annotated_corpus(train_result, "corpora/train_corpus_IO.spacy")
-    myutils.save_annotated_corpus(dev_result, "corpora/dev_corpus_IO.spacy")
+    myutils.save_annotated_corpus(train_result, "corpora/train_labeled_data_hmm.spacy")
+    myutils.save_annotated_corpus(dev_result, "corpora/dev_labeled_data_hmm.spacy")
     # create the json file from it but without the detailed LF annotations
     for j, data in enumerate([X_train, X_dev]):
         annotated_data = []
         for i, d in tqdm(data.iterrows()):
-            q_id = d['question_id']
-            x = d['tokenized']
             item = {
                 'lang': d['lang'],
                 'question_id': d['question_id'],

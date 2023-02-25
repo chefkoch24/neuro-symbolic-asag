@@ -1,16 +1,8 @@
 import os
-
-import numpy as np
 import pandas as pd
 import skweak
-import tokenizations
 from matplotlib import pyplot as plt
-from sentence_transformers import SentenceTransformer
-from scipy.spatial.distance import cosine
-from transformers import AutoTokenizer, AutoModel
-import torch
 import json
-
 import config
 
 
@@ -47,24 +39,6 @@ def save_to_csv(X_train, X_dev, y_train, y_dev, path):
     pd.DataFrame(data=y_train).to_csv(save_path + "y_train.tsv", sep=sep)
     pd.DataFrame(data=y_dev).to_csv(save_path + "y_dev.tsv", sep=sep)
     print('successfully saved')
-
-
-def align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l):
-    a2b, b2a = tokenizations.get_alignments(tokens_spacy, tokens_bert)
-    len_of_classification = len(tokens_bert)  # for CLS and end of seq
-    label_ids = np.zeros((len_of_classification))
-    previous_label_idx = 0
-    label_idx = -1
-    for j, e in enumerate(b2a):
-        if len(e) >= 1:  # Not special token
-            label_idx = e[0]
-            # if label_idx < len_of_classification:
-            label_ids[j] = l[label_idx]
-            previous_label_idx = label_idx
-        else:
-            label_ids[j] = l[previous_label_idx]
-    # label_ids[len_of_classification:] = -100
-    return label_ids
 
 
 def load_rubrics(path):

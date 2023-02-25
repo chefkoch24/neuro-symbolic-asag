@@ -242,10 +242,12 @@ def compute_metrics_token_classification(outputs):
 def compute_f1_spans(pred_span, true_span):
     pred_tokens = set(range(pred_span[0], pred_span[1] + 1))
     true_tokens = set(range(true_span[0], true_span[1] + 1))
+    if len(pred_tokens) == 0 or len(true_tokens) == 0:
+        return 0, 0, 0
     precision = len(pred_tokens & true_tokens) / len(pred_tokens)
     recall = len(pred_tokens & true_tokens) / len(true_tokens)
     if precision == 0 or recall == 0:
-        return 0
+        return 0, 0, 0 # all values are 0
     f1 = 2 * precision * recall / (precision + recall)
     return f1, precision, recall
 
@@ -255,17 +257,18 @@ def compute_metrics_span_prediction(outputs):
     start_predictions = torch.cat([x['start_logits'] for x in outputs]).argmax(dim=-1)
     end_predictions = torch.cat([x['end_logits'] for x in outputs]).argmax(dim=-1)
     start_positions= torch.cat([x['start_positions'] for x in outputs])
-    end_positions = torch.cat([x['start_positions'] for x in outputs])
+    end_positions = torch.cat([x['end_positions'] for x in outputs])
     input_ids = torch.cat([x['input_ids'] for x in outputs])
     classes = [x['class'] for x in outputs]
     classes = utils.flat_list(classes)
 
-    predicted_spans = [(s, e) for s, e in zip(start_predictions, end_predictions)]
-    true_spans = [(s, e) for s, e in zip(start_positions, end_positions)]
-    pm = get_partial_match_score(predicted_spans, true_spans)
+    predicted_spans = [(s.item(), e.item()) for s, e in zip(start_predictions, end_predictions)]
+    true_spans = [(s.item(), e.item()) for s, e in zip(start_positions, end_positions)]
+    pm = get_partial_match_score([true_spans], [predicted_spans])
     f1s_precisions_recalls = [compute_f1_spans(p_span, t_span) for p_span, t_span in zip(predicted_spans, true_spans)]
-    f1, precision, recall = np.average(zip(*f1s_precisions_recalls))
-
+    f1 = np.average([v[0] for v in f1s_precisions_recalls])
+    precision = np.average([v[1] for v in f1s_precisions_recalls])
+    recall = np.average([v[2] for v in f1s_precisions_recalls])
     return {
         'val_loss': avg_loss,
         'partial_match': pm,

@@ -1,6 +1,7 @@
 import argparse
 
-from lightning_fabric.loggers import CSVLogger
+import torch
+from pytorch_lightning.loggers import CSVLogger
 from pytorch_lightning import Trainer
 from torch.utils.data import DataLoader
 
@@ -9,6 +10,10 @@ import config
 from dataset import SpanJustificationCueDataset
 from model import SpanPredictionModel
 
+#Set seed
+torch.manual_seed(config.SEED)
+torch.cuda.manual_seed_all(config.SEED)
+
 parser=argparse.ArgumentParser()
 
 parser.add_argument("--model", help="Name of the pretrained model")
@@ -16,9 +21,9 @@ parser.add_argument("--train_file", help="train file")
 parser.add_argument("--dev_file", help="dev file")
 args=parser.parse_args()
 
-args.train_file = 'train.json'
-args.dev_file = 'dev.json'
-args.model = config.MODEL_NAME
+#args.train_file = 'training_dataset_span_prediction_distilroberta-base.json'
+#args.dev_file = 'dev_dataset_span_prediction_distilroberta-base.json'
+#args.model = config.MODEL_NAME
 
 # Load data
 training_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
@@ -32,16 +37,14 @@ train_loader = DataLoader(training_dataset, batch_size=config.BATCH_SIZE, shuffl
 val_loader = DataLoader(dev_dataset, batch_size=config.BATCH_SIZE, shuffle=False)
 model = SpanPredictionModel(args.model)
 
-EXPERIMENT_NAME = "span_prediction" + "_" + args.model + "_context-" + str(args.context)
+EXPERIMENT_NAME = "span_prediction" + "_" + args.model
 logger = CSVLogger("logs", name=EXPERIMENT_NAME)
 trainer = Trainer(max_epochs=config.NUM_EPOCHS,
                   #gradient_clip_val=0.5,
                   #accumulate_grad_batches=2,
                   #auto_scale_batch_size='power',
-                  callbacks=[
-                      config.checkpoint_callback,
-                      config.early_stop_callback
-                             ],
-                  logger=logger)
+                  callbacks=[config.checkpoint_callback, config.early_stop_callback],
+                  logger=logger,
+                  )
 trainer.fit(model, train_loader, val_loader)
 trainer.test(model, val_loader)

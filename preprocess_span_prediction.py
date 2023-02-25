@@ -6,6 +6,8 @@ import myutils as utils
 import config
 from transformers import AutoTokenizer
 import warnings
+from paraphrase_scorer import ParaphraseScorerSBERT, BertScorer
+from tqdm import tqdm
 warnings.filterwarnings("ignore")
 
 #Set seed
@@ -18,7 +20,7 @@ def get_rubric_elements(spans, input_ids, qid):
     rubric_elements = []
     for s in spans:
         span_text = decoded[s[0]:s[1]]
-        sim = para_detector.detect_paraphrases(span_text, rubric)
+        sim = para_detector.detect_score_key_elements(''.join(span_text), rubric)
         max_index = np.argmax(sim)
         rubric_element = rubric['key_element'][max_index]
         rubric_elements.append(rubric_element)
@@ -27,7 +29,7 @@ def get_rubric_elements(spans, input_ids, qid):
 
 def create_inputs(data):
     model_inputs = []
-    for d in data:
+    for d in tqdm(data):
         student_answer = d['student_answer']
         labels = d['silver_labels']
         q_id = d['question_id']
@@ -49,9 +51,8 @@ def create_inputs(data):
             model_input = {
                 'input_ids': tokenized['input_ids'],
                 'attention_mask': tokenized['attention_mask'],
-                'token_type_ids': tokenized['token_type_ids'],
-                'start_positions': span[0],
-                'end_positions': span[1],
+                'start_positions': [span[0]],
+                'end_positions': [span[1]],
                 'question_id': q_id,
                 'rubric_element': re,
                 'class': d['label']
@@ -66,12 +67,17 @@ parser.add_argument("--train_file", help="train file")
 parser.add_argument("--dev_file", help="dev file")
 args=parser.parse_args()
 
+
+args.train_file = 'train_labeled_data_sum.json'
+args.dev_file = 'dev_labeled_data_sum.json'
+args.model = config.MODEL_NAME
+
 #Loading
 train_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
 dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
 tokenizer = AutoTokenizer.from_pretrained(args.model)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
-para_detector = utils.ParaphraseDetector()
+para_detector = BertScorer()
 
 training_dataset = create_inputs(train_data)
 dev_dataset = create_inputs(dev_data)

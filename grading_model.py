@@ -16,6 +16,7 @@ import sklearn
 import myutils as utils
 from incremental_trees.models.classification.streaming_rfc import StreamingRFC
 from torchmetrics import Accuracy, F1Score, Precision, Recall
+from paraphrase_scorer import ParaphraseScorerSBERT
 
 
 from model import TokenClassificationModel
@@ -29,7 +30,7 @@ class GradingModelClassification(LightningModule):
         self.loss = nn.CrossEntropyLoss()
         self.rubrics = rubrics
         self.symbolic_models = self.__init_learners__(symbolic_learner)
-        self.para_detector = utils.ParaphraseDetector()
+        self.para_detector = ParaphraseScorerSBERT()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
 
         #metrics
