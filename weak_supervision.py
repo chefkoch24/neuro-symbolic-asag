@@ -9,7 +9,7 @@ import numpy as np
 import nltk
 
 import myutils
-from paraphrase_scorer import ParaphraseScorerSBERT
+from paraphrase_scorer import BertScorer
 
 from nltk.stem.porter import *
 from rouge import Rouge
@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="nltk")
 class WeakSupervisionSoft():
     def __init__(self, rubrics=None):
         self.rubrics = rubrics
-        self.para_detector = ParaphraseScorerSBERT()
+        self.para_detector = BertScorer()
         self._punctuation = ['.', ',', '?', '!', ';']
         self.rouge = Rouge(metrics=["rouge-1", "rouge-2", "rouge-3", "rouge-4", "rouge-5", "rouge-l"])
         self.labeling_functions = [

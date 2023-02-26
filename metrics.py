@@ -4,6 +4,7 @@ from transformers import AutoTokenizer
 import config
 import numpy as np
 import myutils as utils
+import statistics
 
 tokenizer = AutoTokenizer.from_pretrained(config.TOKENIZER_NAME)
 
@@ -143,6 +144,42 @@ def micro_macro_f1(predictions, labels):
         'macro_recall': macro_recall,
         'accuracy': accuracy,
     }
+def get_statistical_metrics(labels, classes):
+    corrects, partial_corrects, incorrects = [],[],[]
+    for label, c in zip(labels, classes):
+        if c == 'CORRECT':
+            corrects.append(label)
+        elif c == 'PARTIAL_CORRECT':
+            partial_corrects.append(label)
+        elif c == 'INCORRECT':
+            incorrects.append(label)
+    corrects = utils.flat_list(corrects)
+    partial_corrects = utils.flat_list(partial_corrects)
+    incorrects = utils.flat_list(incorrects)
+    metrics ={
+        'average_correct': np.average(corrects) if corrects else 0.0,
+        'average_partial': np.average(partial_corrects) if partial_corrects else 0.0,
+        'average_incorrect': np.average(incorrects) if incorrects else 0.0,
+        'std_correct': np.std(corrects) if corrects else 0.0,
+        'std_partial': np.std(partial_corrects) if partial_corrects else 0.0,
+        'std_incorrect': np.std(incorrects) if incorrects else 0.0,
+        'median_correct': np.median(corrects) if corrects else 0.0,
+        'median_partial': np.median(partial_corrects) if partial_corrects else 0.0,
+        'median_incorrect': np.median(incorrects) if incorrects else 0.0,
+        'mode_correct': statistics.mode(corrects) if corrects else 0.0,
+        'mode_partial': statistics.mode(partial_corrects) if partial_corrects else 0.0,
+        'mode_incorrect': statistics.mode(incorrects) if incorrects else 0.0,
+        'min_correct': min(corrects) if corrects else 0.0,
+        'min_partial': min(partial_corrects) if partial_corrects else 0.0,
+        'min_incorrect': min(incorrects) if incorrects else 0.0,
+        'max_correct': max(corrects) if corrects else 0.0,
+        'max_partial': max(partial_corrects) if partial_corrects else 0.0,
+        'max_incorrect': max(incorrects) if incorrects else 0.0,
+        'support_correct': len(corrects),
+        'support_partial': len(partial_corrects),
+        'support_incorrect': len(incorrects),
+    }
+    return metrics
 
 
 def get_average_number_of_key_elements_by_class(labels, classes):
