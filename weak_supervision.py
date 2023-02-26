@@ -93,7 +93,7 @@ class WeakSupervisionSoft():
         candidates, indicies = self._generate_candidates(doc)
         for c, i in zip(candidates, indicies):
             c = [t.text for t in c]
-            sim = self.para_detector.detect_paraphrases(c, rubric)
+            sim = self.para_detector.detect_score_key_elements(c, rubric)
             max_index = np.argmax(sim)
             max_value = sim[max_index]
             yield i[0], i[-1], 'CUE', max_value
@@ -102,7 +102,7 @@ class WeakSupervisionSoft():
         candidates, indicies = self._generate_sentences(doc)
         for c, i in zip(candidates, indicies):
             c = [t.text for t in c]
-            sim = self.para_detector.detect_paraphrases(c, rubric)
+            sim = self.para_detector.detect_score_key_elements(c, rubric)
             max_index = np.argmax(sim)
             max_value = sim[max_index]
             yield i[0], i[-1], 'CUE', max_value

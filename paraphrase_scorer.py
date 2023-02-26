@@ -25,7 +25,7 @@ class ParaphraseScorerSBERT():
         input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
         return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
-    def detect_paraphrases(self, candidate, rubric):
+    def detect_score_key_elements(self, candidate, rubric):
         rubric_elements = self._encode_rubric(rubric)
         # encode the candidate
         encoded_input = self.tokenizer(candidate, is_split_into_words=True, padding=True, truncation=True,
@@ -40,7 +40,7 @@ class ParaphraseScorerSBERT():
         return similarities
 
 class BertScorer():
-    def __init__(self, model_name='roberta-large'):
+    def __init__(self, model_name='xlm-roberta-large'):
         self.bertscore = load("bertscore")
         self.model_name = model_name
 

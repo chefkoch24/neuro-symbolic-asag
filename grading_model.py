@@ -70,7 +70,7 @@ class GradingModelClassification(LightningModule):
             max_idxs, max_vals = [], []
             for span in jus_cue:
                 span_text = student_answer[span[0]:span[1]]
-                sim = self.para_detector.detect_paraphrases(span_text, rubric)
+                sim = self.para_detector.detect_score_key_elements(span_text, rubric)
                 max_idxs.append(np.argmax(sim))
                 max_vals.append(np.max(sim))
             # make sure that the absolute maximum is taken
