@@ -1,12 +1,7 @@
 # This script preprocesses the data for the justification cue detection training
-import argparse
-import tokenizations
-import numpy as np
-import pandas as pd
 from transformers import AutoTokenizer
 import config
 import myutils as utils
-from dataset import JustificationCueDataset
 import torch
 import utils_preprocessing
 
@@ -45,15 +40,15 @@ def create_inputs(data, with_context=False):
 
 
 #Loading
-train_data = utils.load_json(config.PATH_DATA + '/' + config.TRAIN_FILE)
-dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)
+train_data = utils.load_json(config.PATH_DATA + '/' + config.ANNOTATED_TRAIN_FILE)
+dev_data = utils.load_json(config.PATH_DATA + '/' + config.ANNOTATED_DEV_FILE)
 tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
 
 # Preprocess data
-training_dataset = create_inputs(train_data, with_context=config.context)
-dev_dataset = create_inputs(dev_data, with_context=config.context)
+training_dataset = create_inputs(train_data, with_context=config.CONTEXT)
+dev_dataset = create_inputs(dev_data, with_context=config.CONTEXT)
 
 #save data
-DATASET_NAME = 'dataset'+ '_' + config.MODEL_NAME + '_context-' + str(config.context) + '.json'
+DATASET_NAME = 'dataset'+ '_' + config.MODEL_NAME + '_context-' + str(config.CONTEXT) + '.json'
 utils.save_json(training_dataset, config.PATH_DATA + '/', 'training_' + DATASET_NAME)
 utils.save_json(dev_dataset, config.PATH_DATA + '/', 'dev_'+DATASET_NAME)

@@ -25,13 +25,13 @@ from model import TokenClassificationModel
 class GradingModelClassification(LightningModule):
     def __init__(self, checkpoint: str, symbolic_learner, model_name, rubrics):
         super().__init__()
-        self.save_hyperparameters()
         self.model = TokenClassificationModel(config.MODEL_NAME).load_from_checkpoint(checkpoint) #("/path/to/checkpoint.ckpt")
         self.loss = nn.CrossEntropyLoss()
         self.rubrics = rubrics
         self.symbolic_models = self.__init_learners__(symbolic_learner)
         self.para_detector = ParaphraseScorerSBERT()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.save_hyperparameters()
 
         #metrics
         self.f1 = F1Score(num_classes=3, average='micro')

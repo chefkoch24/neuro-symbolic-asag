@@ -136,10 +136,10 @@ def micro_macro_f1(predictions, labels):
     accuracy = sum(1 for i in range(len(y_true)) if y_true[i] == y_pred[i]) / len(y_true)
 
     return {
-        'micro_f1_score': micro_f1_score,
+        'micro_f1': micro_f1_score,
         'micro_precision': micro_precision,
         'micro_recall': micro_recall,
-        'macro_f1_score': macro_f1_score,
+        'macro_f1': macro_f1_score,
         'macro_precision': macro_precision,
         'macro_recall': macro_recall,
         'accuracy': accuracy,
@@ -175,9 +175,9 @@ def get_statistical_metrics(labels, classes):
         'max_correct': max(corrects) if corrects else 0.0,
         'max_partial': max(partial_corrects) if partial_corrects else 0.0,
         'max_incorrect': max(incorrects) if incorrects else 0.0,
-        'support_correct': len(corrects),
-        'support_partial': len(partial_corrects),
-        'support_incorrect': len(incorrects),
+        'labeled_tokens_correct': len([c for c in corrects if c > 0]),
+        'labeled_tokens_partial': len([c for c in partial_corrects if c > 0]),
+        'labeled_tokens_incorrect': len([c for c in incorrects if c > 0]),
     }
     return metrics
 

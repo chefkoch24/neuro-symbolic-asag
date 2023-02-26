@@ -11,16 +11,15 @@ import metrics
 
 # Model
 class TokenClassificationModel(LightningModule):
-    def __init__(self, model_name: str, rubrics=None):
+    def __init__(self, model_name: str):
         super().__init__()
-        self.save_hyperparameters()
         self.model = AutoModelForTokenClassification.from_pretrained(model_name)
         self.loss = nn.CrossEntropyLoss()
         #self.loss = NLLLoss()
         #self.loss = nn.BCEWithLogitsLoss()
         #self.loss = nn.KLDivLoss() #reduction='none' for attention mask
         #kl loss and cross entropy loss are working with probabilities in labels and logits
-        self.rubrics = rubrics
+        self.save_hyperparameters()
 
 
     def remove_paddings(self, logits, target):
@@ -93,8 +92,8 @@ class TokenClassificationModel(LightningModule):
 class SpanPredictionModel(LightningModule):
     def __init__(self, model_name: str):
         super().__init__()
-        self.save_hyperparameters()
         self.model = AutoModelForQuestionAnswering.from_pretrained(model_name)
+        self.save_hyperparameters()
 
     def forward(self, input_ids, attention_mask, start_positions=None, end_positions=None):
         outputs = self.model(input_ids, attention_mask=attention_mask, start_positions=start_positions, end_positions=end_positions, return_dict=True)

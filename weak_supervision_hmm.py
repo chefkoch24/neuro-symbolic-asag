@@ -266,8 +266,8 @@ def main():
     rubrics = myutils.prepare_rubrics(rubrics)
 
     th = 0.5
-    ws = WeakSupervisionHMM(rubrics=rubrics, meteor_th=th, ngram_th=th, rouge_th=th, edit_dist_th=th,
-                            paraphrase_th=th, bleu_th=th, jaccard_th=th, mode='hmm')
+    ws = WeakSupervisionHMM(rubrics=rubrics, meteor_th=0.05, ngram_th=0.10, rouge_th=0.15, edit_dist_th=th,
+                            paraphrase_th=0.9, bleu_th=th, jaccard_th=th, mode='hmm')
 
 
     train_result = ws.fit(X_train)

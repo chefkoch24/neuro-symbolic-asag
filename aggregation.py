@@ -3,7 +3,7 @@ import numpy as np
 import config
 import myutils as utils
 
-GLOBAL_NORMALIZE = True
+GLOBAL_NORMALIZE = False
 
 # Functions
 def mean_nonzero(col):
@@ -11,13 +11,13 @@ def mean_nonzero(col):
 
 def aggregate_soft_labels(soft_labels, mode:str):
     if mode == 'average':
-        return np.average(soft_labels, axis=0)
+        return np.average(soft_labels, axis=0).tolist()
     elif mode == 'max':
-        return np.max(soft_labels, axis=0)
+        return np.max(soft_labels, axis=0).tolist()
     elif mode == 'average_nonzero':
-        return np.apply_along_axis(mean_nonzero, axis=0, arr=soft_labels)
+        return np.apply_along_axis(mean_nonzero, axis=0, arr=soft_labels).tolist()
     elif mode == 'sum':
-        return np.sum(soft_labels, axis=0)
+        return np.sum(soft_labels, axis=0).tolist()
 
 def normalize(sequence):
     min_value = min(sequence)
