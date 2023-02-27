@@ -104,7 +104,7 @@ def micro_macro_f1(predictions, labels):
     tp = [0] * 2
     fp = [0] * 2
     fn = [0] * 2
-    for i in range(len(y_true)):
+    for i in range(0,len(y_pred)):
         if y_true[i] == y_pred[i]:
             tp[y_true[i]] += 1
         else:
@@ -133,7 +133,7 @@ def micro_macro_f1(predictions, labels):
         macro_f1_score = 2 * ((macro_precision * macro_recall) / (macro_precision + macro_recall))
 
     # Calculate accuracy
-    accuracy = sum(1 for i in range(len(y_true)) if y_true[i] == y_pred[i]) / len(y_true)
+    accuracy = sum(1 for i in range(len(y_pred)) if y_true[i] == y_pred[i]) / len(y_pred)
 
     return {
         'micro_f1': micro_f1_score,
@@ -277,14 +277,14 @@ def compute_metrics_token_classification(outputs):
     return metrics
 
 def compute_f1_spans(pred_span, true_span):
-    pred_tokens = set(range(pred_span[0], pred_span[1] + 1))
-    true_tokens = set(range(true_span[0], true_span[1] + 1))
+    pred_tokens = set(range(pred_span[0][0], pred_span[0][1] + 1))
+    true_tokens = set(range(true_span[0][0], true_span[0][1] + 1))
     if len(pred_tokens) == 0 or len(true_tokens) == 0:
         return 0, 0, 0
     precision = len(pred_tokens & true_tokens) / len(pred_tokens)
     recall = len(pred_tokens & true_tokens) / len(true_tokens)
     if precision == 0 or recall == 0:
-        return 0, 0, 0 # all values are 0
+        return 0, 0, 0  # all values are 0
     f1 = 2 * precision * recall / (precision + recall)
     return f1, precision, recall
 

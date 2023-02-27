@@ -8,6 +8,7 @@ from transformers import AutoTokenizer
 import warnings
 from paraphrase_scorer import ParaphraseScorerSBERT, BertScorer
 from tqdm import tqdm
+import utils_preprocessing
 warnings.filterwarnings("ignore")
 
 #Set seed
@@ -38,7 +39,7 @@ def create_inputs(data):
         # Tokenize the input to generate alignment
         tokenized = tokenizer(student_answer, add_special_tokens=False, return_offsets_mapping=True)
         tokens_bert = [tokenizer.decode(t) for t in tokenized['input_ids']] # used for alingment
-        aligned_labels = utils.align_generate_labels_all_tokens(tokens_spacy, tokens_bert, labels).tolist()
+        aligned_labels = utils_preprocessing.align_generate_labels_all_tokens(tokens_spacy, tokens_bert, labels).tolist()
         # get the offset mappings from the tokenized input without special tokens
         offset_mapping = tokenized['offset_mapping']
         # get the spans from the aligned labels
@@ -61,8 +62,8 @@ def create_inputs(data):
     return model_inputs
 
 #Loading
-train_data = utils.load_json(config.PATH_DATA + '/' + config.TRAIN_FILE)
-dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)
+train_data = utils.load_json(config.PATH_DATA + '/' + config.ANNOTATED_TRAIN_FILE)
+dev_data = utils.load_json(config.PATH_DATA + '/' + config.ANNOTATED_DEV_FILE)
 tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 para_detector = BertScorer()
