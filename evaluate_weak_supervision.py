@@ -69,7 +69,7 @@ def main():
                 'mode': statistical_metrics['mode_correct'],
                 'min': statistical_metrics['min_correct'],
                 'max': statistical_metrics['max_correct'],
-                'support': statistical_metrics['support_correct'],
+                'labeled_tokens': statistical_metrics['labeled_tokens_correct'],
             })
             results.append({
                 'id': file + '-PARTIAL_CORRECT-' + language.upper(),
@@ -82,7 +82,7 @@ def main():
                 'mode': statistical_metrics['mode_partial'],
                 'min': statistical_metrics['min_partial'],
                 'max': statistical_metrics['max_partial'],
-                'support': statistical_metrics['support_partial'],
+                'labeled_tokens': statistical_metrics['labeled_tokens_partial'],
             })
             results.append({
                 'id': file + '-INCORRECT-' + language.upper(),
@@ -95,7 +95,7 @@ def main():
                 'mode': statistical_metrics['mode_incorrect'],
                 'min': statistical_metrics['min_incorrect'],
                 'max': statistical_metrics['max_incorrect'],
-                'support': statistical_metrics['support_incorrect'],
+                'labeled_tokens': statistical_metrics['labeled_tokens_incorrect'],
             })
 
 

@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from incremental_trees.models.regression.streaming_rfr import StreamingRFR
 from pytorch_lightning import LightningModule
 from scipy.stats import cosine
 from sklearn import clone
@@ -16,61 +17,77 @@ import sklearn
 import myutils as utils
 from incremental_trees.models.classification.streaming_rfc import StreamingRFC
 from torchmetrics import Accuracy, F1Score, Precision, Recall
-from paraphrase_scorer import ParaphraseScorerSBERT
-
+from paraphrase_scorer import BertScorer
 
 from model import TokenClassificationModel
 
 
 class GradingModelClassification(LightningModule):
-    def __init__(self, checkpoint: str, symbolic_learner, model_name, rubrics):
+    def __init__(self, checkpoint: str, model_name, rubrics):
         super().__init__()
-        self.model = TokenClassificationModel(config.MODEL_NAME).load_from_checkpoint(checkpoint) #("/path/to/checkpoint.ckpt")
+        self.model = TokenClassificationModel.load_from_checkpoint(checkpoint) #("/path/to/checkpoint.ckpt")
         self.loss = nn.CrossEntropyLoss()
         self.rubrics = rubrics
-        self.symbolic_models = self.__init_learners__(symbolic_learner)
-        self.para_detector = ParaphraseScorerSBERT()
+        self.symbolic_models = self.__init_learners__()
+        self.para_detector = BertScorer()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.classes = np.array([0,1,2])
+        self.f1_score = F1Score(task='multiclass', num_classes=3, average='none')
+        self.accuracy = Accuracy(task='multiclass', num_classes=3, average='none')
+        self.prec = Precision(task='multiclass', num_classes=3, average='none')
+        self.recall = Recall(task='multiclass', num_classes=3, average='none')
         self.save_hyperparameters()
 
-        #metrics
-        self.f1 = F1Score(num_classes=3, average='micro')
-        self.accuracy = Accuracy()
 
-    def __init_learners__(self, symbolic_learner):
-            symbolic_models = {}
-            for qid in list(self.rubrics.keys()):
-                symbolic_models[qid] = clone(symbolic_learner)
-            return symbolic_models
-
-
-    def forward(self, input_ids, attention_mask, qid):
-        outputs = self.model(input_ids, attention_mask=attention_mask)[0]
+    def forward(self, input_ids, attention_mask, question_ids, labels=None):
+        q_id = question_ids[0]
+        outputs = self.model(input_ids=input_ids.squeeze(1), attention_mask=attention_mask.squeeze(1)) #remove one unnecessary dimension
         predictions = torch.argmax(outputs, dim=-1)
-        justification_cues = self.get_justification_cues(predictions)
-        scoring_vectors = self.get_scoring_vectors(justification_cues, input_ids, question_id=qid)
-        return scoring_vectors
+        true_predictions, true_input_ids = [], []
+        attention_mask = attention_mask.squeeze(1)
+        input_ids = input_ids.squeeze(1)
+        for i in range(len(predictions)):
+            temp, inp= [], []
+            for j in range(len(predictions[i])):
+                if attention_mask[i][j].item() == 1:
+                    inp.append(input_ids[i][j].item())
+                    temp.append(predictions[i][j].item())
+            true_predictions.append(temp)
+            true_input_ids.append(inp)
+        justification_cues = self.get_justification_cues(true_predictions)
+        scoring_vectors = self.get_scoring_vectors(justification_cues, true_input_ids, question_ids)
+        symbolic_model = self.symbolic_models[q_id]
+        self.symbolic_models[q_id] = symbolic_model.partial_fit(scoring_vectors,labels.detach().numpy(),
+                                                                self.classes)
+        y_pred = self.symbolic_models[q_id].predict_proba(scoring_vectors)
+        if labels is not None:
+            loss = self.loss(torch.tensor(y_pred, requires_grad=True), labels)
+            return torch.tensor(y_pred), loss
+        return torch.tensor(y_pred)
+
+    def __init_learners__(self, ):
+        symbolic_models = {}
+        for qid in list(self.rubrics.keys()):
+            symbolic_models[qid] = StreamingRFC()
+        return symbolic_models
 
     def get_justification_cues(self, predictions):
         justification_cues = []
         for p in predictions:
-            true_predictions = metrics.silver2target(p)
-            spans = metrics.get_spans_from_labels(true_predictions)
+            spans = metrics.get_spans_from_labels(p)
             justification_cues.append(spans)
         return justification_cues
 
-    def get_scoring_vectors(self, justification_cues, input_ids, question_id):
+    def get_scoring_vectors(self, justification_cues, input_ids, question_ids):
         # get batched data
-        rubric = self.rubrics[question_id] #expects the same question_id
+        qid = question_ids[0]
+        rubric = self.rubrics[qid] #expects the same question_id
         scoring_vectors = []
         for jus_cue, input_id in zip(justification_cues, input_ids):
-            qid = jus_cue['qid']
-            cue = jus_cue['text']
-            student_answer = self.tokenizer.decode(input_id)
             max_idxs, max_vals = [], []
             for span in jus_cue:
-                span_text = student_answer[span[0]:span[1]]
-                sim = self.para_detector.detect_score_key_elements(span_text, rubric)
+                cue_text = self.tokenizer.decode(input_id[span[0]:span[1]], skip_special_tokens=True)
+                sim = self.para_detector.detect_score_key_elements(cue_text, rubric)
                 max_idxs.append(np.argmax(sim))
                 max_vals.append(np.max(sim))
             # make sure that the absolute maximum is taken
@@ -79,32 +96,42 @@ class GradingModelClassification(LightningModule):
                 if scoring_vector[mi] < mv:
                     scoring_vector[mi] = mv
             scoring_vectors.append(scoring_vector)
-            return scoring_vectors
+        return np.array(scoring_vectors)
 
 
     def training_step(self, batch, batch_idx):
-        qid = batch['question_id'][0]
-        scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], qid)
-        self.symbolic_models[qid].fit(scoring_vectors, batch['labels'])
-        y_pred = self.symbolic_models[qid].predict(scoring_vectors)
-        loss = self.loss(y_pred, batch['class'])
+        _, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['class'])
         return loss
 
     def validation_step(self, batch, batch_idx):
-        qid = batch['qid']
-        scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], qid)
-        y_pred = self.symbolic_models[qid].predict(scoring_vectors)
-        loss = self.loss_function(y_pred, batch['class'])
+        y_pred, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['class'])
         batch['prediction'] = y_pred
-        batch['scoring_vectors'] = scoring_vectors
+        batch['loss'] = loss
         return batch
 
 
     def validation_epoch_end(self, outputs):
-        acc = self.accuracy(outputs['prediction'], outputs['class'])
-        f1 = self.f1(outputs['prediction'], outputs['class'])
-        self.log('val_acc', acc)
-        self.log('val_f1', f1)
+        predictions = torch.cat([x['prediction'] for x in outputs])
+        labels = torch.cat([x['class'] for x in outputs])
+        f1 = self.f1_score(predictions, labels)
+        acc = self.accuracy(predictions, labels)
+        precision = self.prec(predictions, labels)
+        recall = self.recall(predictions, labels)
+        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
+        self.log('val_loss', avg_loss)
+        self.log('val_f1_correct', f1[0].item())
+        self.log('val_f1_partial', f1[1].item())
+        self.log('val_f1_incorrect', f1[2].item())
+        self.log('val_acc_correct', acc[0].item())
+        self.log('val_acc_partial', acc[1].item())
+        self.log('val_acc_incorrect', acc[2].item())
+        self.log('val_precision_correct', precision[0].item())
+        self.log('val_precision_partial', precision[1].item())
+        self.log('val_precision_incorrect', precision[2].item())
+        self.log('val_recall_correct', recall[0].item())
+        self.log('val_recall_partial', recall[1].item())
+        self.log('val_recall_incorrect', recall[2].item())
+        return avg_loss
 
     def configure_optimizers(self):
         # optimizer = AdamW(self.model.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)

@@ -13,7 +13,7 @@ from dataset import GradingDataset
 from grading_model import GradingModelClassification
 import myutils as utils
 
-model_checkpoint = 'logs/justification_cue_distilroberta-base_context-False/version_8/checkpoints/checkpoint-epoch=03-val_loss=0.45.ckpt'
+model_checkpoint = 'logs/justification_cue_distilbert-base-multilingual-cased_context-False/version_7/checkpoints/checkpoint-epoch=04-val_loss=0.64.ckpt'
 tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
 
 
@@ -41,9 +41,6 @@ class CustomBatchSampler(Sampler):
         self.filtered_data = filtered_data
         return iter(combined)
 
-    def __len__(self):
-        return sum([len(d) for d in self.filtered_data]) // self.batch_size
-
 def preprocess(data, class2idx={'CORRECT': 0, 'PARTIAL_CORRECT': 1, 'INCORRECT': 2}):
     for d in data:
         tokenized = tokenizer(d['student_answer'], truncation=True, padding='max_length', max_length=512, return_tensors='pt')
@@ -67,9 +64,9 @@ dev_dataset = GradingDataset(dev_data)
 
 train_loader = DataLoader(training_dataset, batch_sampler=CustomBatchSampler(training_dataset, config.BATCH_SIZE))
 val_loader = DataLoader(dev_dataset, batch_sampler=CustomBatchSampler(dev_dataset, config.BATCH_SIZE))
-model = GradingModelClassification(model_checkpoint, StreamingRFC(), rubrics=rubrics, model_name=config.MODEL_NAME)
+model = GradingModelClassification(model_checkpoint, rubrics=rubrics, model_name=config.MODEL_NAME)
 
-EXPERIMENT_NAME = "grading"
+EXPERIMENT_NAME = "grading_" + config.MODEL_NAME
 logger = CSVLogger("logs", name=EXPERIMENT_NAME)
 trainer = Trainer(max_epochs=config.NUM_EPOCHS,
                   #gradient_clip_val=0.5,
@@ -77,8 +74,10 @@ trainer = Trainer(max_epochs=config.NUM_EPOCHS,
                   #auto_scale_batch_size='power',
                   callbacks=[
                       config.checkpoint_callback,
-                      # early_stop_callback
+                      config.early_stop_callback
                              ],
-                  logger=logger)
+                  logger=logger,
+                  num_sanity_val_steps=0,
+                  )
 trainer.fit(model, train_loader, val_loader)
 trainer.test(model, val_loader)

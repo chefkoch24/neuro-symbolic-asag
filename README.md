@@ -2,6 +2,8 @@
 ## Requirements
 For setup all requirements the following steps has to be done:
 
+`pip install -r requirements.txt`
+
 `python -m spacy download de_core_news_lg`
 
 `python -m spacy download en_core_web_lg`
@@ -12,7 +14,6 @@ For setup all requirements the following steps has to be done:
 
 `python -m nltk.downloader -d /path/to/data/storage/ stopwords`
 
-`pip install -r requirements.txt`
 
 ## Configurations
 The configurations that are shared between all scripts are set in the file `config.py`.

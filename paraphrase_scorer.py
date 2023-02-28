@@ -47,6 +47,8 @@ class BertScorer():
     def detect_score_key_elements(self, key_element, rubric):
         references = [key_element] * len(rubric['key_element'])
         predictions = rubric['key_element'].tolist()
+        if len(key_element) == 0:
+            return [0] * len(rubric['key_element'])
         try:
             return self. bertscore.compute(predictions=predictions, references=references,
                           model_type=self.model_name)['f1']
