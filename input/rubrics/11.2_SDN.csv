@@ -1,13 +1,13 @@
 ID,key_element,points
-1,Benefit: Reduced complexity of the switches,"0,25"
-2,Benefit: converge faster,"0,25"
-3,Benefit: Increased flexibility,"0,125"
-4,Increased flexibility: update the route logic,"0,125"
+1,Benefit: Reduced complexity of the switches,0.25
+2,Benefit: converge faster,0.25
+3,Benefit: Increased flexibility,0.125
+4,Increased flexibility: update the route logic,0.125
 5,"Increased flexibility: Software (application) “defines” the
-network","0,125"
-6,Increased flexibility: High-level programming languages,"0,125"
-7,Drawback: High complexity of the control servers,"0,25"
-8,Drawback: CAP problem,"0,25"
-9,Drawback: New technology adoption challenges:,"0,125"
-10,Security-related concerns: Lack of hardware security,"0,125"
-11,"Security-related concerns: Vulnerability of the Control Plane Network monitoring, IP address spoofing, DDoS attack, Virus, worm, and Trojan attack","0,125"
+network",0.125
+6,Increased flexibility: High-level programming languages,0.125
+7,Drawback: High complexity of the control servers,0.25
+8,Drawback: CAP problem,0.25
+9,Drawback: New technology adoption challenges:,0.125
+10,Security-related concerns: Lack of hardware security,0.125
+11,"Security-related concerns: Vulnerability of the Control Plane Network monitoring, IP address spoofing, DDoS attack, Virus, worm, and Trojan attack",0.125

@@ -1,7 +1,7 @@
 ID,key_element,points
-1,"additional, optional information","0,25"
-2,location: between header payload,"0,25"
-3,advantage: without changing the header,"0,5"
-4,advantage: typically processed faster/simpler,"0,5"
-5,advantage: main header has a fixed size,"0,25"
-6,advantage: always (=without exception) ignored,"0,25"
+1,"additional, optional information",0.25
+2,location: between header payload,0.25
+3,advantage: without changing the header,0.5
+4,advantage: typically processed faster/simpler,0.5
+5,advantage: main header has a fixed size,0.25
+6,advantage: always (=without exception) ignored,0.25

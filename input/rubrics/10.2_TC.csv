@@ -1,8 +1,8 @@
 ID,key_element,points
-1,"cwnd is incremented by one every time a segment is acknowledged, this results in an exponential growth","0,125"
-2,until either a packet is lost or ss_thresh is reached,"0,125"
-3,after a packet is lost / congestion both phases ss_thresh = cwnd / 2 reset to 1,"0,125"
-4,Congestion Avoidance,"0,125"
-5,cwnd is incremented more slowly,"0,125"
-6,grow linearly until a packet is lost,"0,125"
-7,ss_thresh = cwnd / 2 then cwnd reset to 1,"0,125"
+1,"cwnd is incremented by one every time a segment is acknowledged, this results in an exponential growth",0.125
+2,until either a packet is lost or ss_thresh is reached,0.125
+3,after a packet is lost / congestion both phases ss_thresh = cwnd / 2 reset to 1,0.125
+4,Congestion Avoidance,0.125
+5,cwnd is incremented more slowly,0.125
+6,grow linearly until a packet is lost,0.125
+7,ss_thresh = cwnd / 2 then cwnd reset to 1,0.125

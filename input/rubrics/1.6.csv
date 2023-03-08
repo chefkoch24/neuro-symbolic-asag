@@ -1,6 +1,6 @@
 ID,key_element,points
-1,binary encoding,"0,5"
-2,as it is the most efficient in terms of bandwidth ,1
-3,not to deal with clock drift and various ticking rates as all clocks are perfect,1
-4,self-clocking / clock recovery is not as necessary,1
-5,simple and cheap,1
+1,binary encoding,0.5
+2,as it is the most efficient in terms of bandwidth ,1.0
+3,not to deal with clock drift and various ticking rates as all clocks are perfect,1.0
+4,self-clocking / clock recovery is not as necessary,1.0
+5,simple and cheap,1.0

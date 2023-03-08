@@ -1,5 +1,6 @@
 import torch
 import evaluate
+from torchmetrics import F1Score, Accuracy
 from transformers import AutoTokenizer
 import config
 import numpy as np
@@ -313,4 +314,30 @@ def compute_metrics_span_prediction(outputs):
         'f1': f1,
         'precision': precision,
         'recall': recall,
+    }
+
+def compute_grading_classification_metrics(outputs):
+    predictions = torch.cat([x['prediction'] for x in outputs])
+    labels = torch.cat([x['class'] for x in outputs])
+    langs = torch.cat([x['lang'] for x in outputs])
+    macro_f1_score = F1Score(task='multiclass', num_classes=3, average='macro')
+    weighted_f1_score = F1Score(task='multiclass', num_classes=3, average='weighted')
+    accuracy = Accuracy(task='multiclass', num_classes=3)
+    mf1s, wf1s, accs = [], [], []
+    for language in ['de', 'en']:
+        tmp_predictions = predictions[langs == language]
+        tmp_labels = labels[langs == language]
+        mf1 = macro_f1_score(tmp_predictions, tmp_labels)
+        wf1 = weighted_f1_score(tmp_predictions, tmp_labels)
+        acc = accuracy(tmp_predictions, tmp_labels)
+        mf1s.append(mf1)
+        wf1s.append(wf1)
+        accs.append(acc)
+    return {
+        'macro_f1_de': mf1s[0],
+        'macro_f1_en': mf1s[1],
+        'weighted_f1_de': wf1s[0],
+        'weighted_f1_en': wf1s[1],
+        'accuracy_de': accs[0],
+        'accuracy_en': accs[1],
     }

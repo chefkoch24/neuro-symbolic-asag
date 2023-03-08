@@ -1,4 +1,4 @@
 ID,key_element,points
-1,No,"0,5"
+1,No,0.5
 2,"probability of an arrival happening at a node is influenced by
-previous arrivals at the node","0,5"
+previous arrivals at the node",0.5

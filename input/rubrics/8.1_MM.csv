@@ -1,22 +1,22 @@
 ID,key_element,points
-1,Adaptation,"0,25"
-2,dynamic topology changes,"0,25"
-3,Security,"0,25"
-4,Interception or injection,"0,25"
-5,Medium Access Control,"0,25"
+1,Adaptation,0.25
+2,dynamic topology changes,0.25
+3,Security,0.25
+4,Interception or injection,0.25
+5,Medium Access Control,0.25
 6,"Hidden Terminal: may collide at other nodes, they are out of
-detection range of each other","0,25"
-7,"Exposed Terminal: detect the medium as busy, out of the detection range of destination","0,25"
-8,Near and Far Terminal,"0,25"
-9,Quality of Service (QoS),"0,25"
-10,rapidly changing signal quality,"0,25"
-11,Scalability,"0,25"
+detection range of each other",0.25
+7,"Exposed Terminal: detect the medium as busy, out of the detection range of destination",0.25
+8,Near and Far Terminal,0.25
+9,Quality of Service (QoS),0.25
+10,rapidly changing signal quality,0.25
+11,Scalability,0.25
 12,"is not possible to know the number of participating nodes
-beforehand","0,25"
-13,Heterogeneity,"0,25"
+beforehand",0.25
+13,Heterogeneity,0.25
 14,"different capabilities, responsibilities, and
-constraints","0,25"
-15,Dependability,"0,25"
-16, higher-level services can trust,"0,25"
-17,Power Consumption,"0,25"
-18,battery-powered,"0,25"
+constraints",0.25
+15,Dependability,0.25
+16, higher-level services can trust,0.25
+17,Power Consumption,0.25
+18,battery-powered,0.25

@@ -59,7 +59,7 @@ def generate_iterative_dataset(data):
             for i, l in enumerate(label):
                 if i >= span[0] and i < span[1]:
                     label[i] = inputs['labels'][i][1]
-            input = tokenizer(student_answer, re, add_special_tokens=True, padding='max_length', truncation=True, max_length=config.MAX_LEN)
+            input = tokenizer(student_answer, re, add_special_tokens=True, padding='max_length', truncation=True, max_length=config.MAX_LEN, return_token_type_ids=True)
             final_input_len = len(input['input_ids'])
             labels = label.tolist() + ([-100] * (final_input_len - input_len))
             labels[0] = -100 #because the first item is the CLS token
@@ -67,10 +67,12 @@ def generate_iterative_dataset(data):
             item = {
                     'input_ids': input['input_ids'],
                     'attention_mask': input['attention_mask'],
+                    'token_type_ids': input['token_type_ids'],
                     'labels': labels,
                     'question_id': q_id,
                     'rubric_element': re,
                     'class': inputs['class'],
+                    'student_answer': student_answer,
                 }
             dataset.append(item)
     return dataset

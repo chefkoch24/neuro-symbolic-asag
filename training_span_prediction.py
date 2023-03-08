@@ -21,6 +21,10 @@ parser.add_argument("--dev_file", type=str,help="dev file")
 parser.add_argument("--test_file", type=str, help="test file", default=None)
 args=parser.parse_args()
 
+args.train_file = 'training_dataset_span_prediction_distilbert-base-multilingual-cased.json'
+args.dev_file= 'dev_dataset_span_prediction_distilbert-base-multilingual-cased.json'
+
+
 # Load data
 training_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
 dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)

@@ -14,6 +14,7 @@ For setup all requirements the following steps has to be done:
 
 `python -m nltk.downloader -d /path/to/data/storage/ stopwords`
 
+for Slurm cluster: `pip uninstall nvidia_cublas_cu11`
 
 ## Configurations
 The configurations that are shared between all scripts are set in the file `config.py`.

@@ -8,9 +8,11 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 #args.dev_file = 'dev_dataset_distilbert-base-multilingual-cased_context-False.json'
 #args.model='distilbert-base-multilingual-cased'
 
-MODEL_NAME = "distilbert-base-multilingual-cased"
+MODEL_NAME = "SpanBERT/spanbert-base-cased" #"distilbert-base-multilingual-cased"
 ANNOTATED_TRAIN_FILE = 'train_labeled_data_sum.json'
 ANNOTATED_DEV_FILE = 'dev_labeled_data_sum.json'
+ALIGNED_TRAIN_FILE = 'training_dataset_aligned_labels_distilbert-base-multilingual-cased.json'
+ALIGNED_DEV_FILE = 'dev_dataset_aligned_labels_distilbert-base-multilingual-cased.json'
 TEST_FILE = None
 NUM_EPOCHS = 8
 BATCH_SIZE = 8
@@ -29,7 +31,7 @@ nlp_de = spacy.load("de_core_news_lg")
 
 checkpoint_callback = ModelCheckpoint(
     filename='checkpoint-{epoch:02d}-{val_loss:.2f}',
-    save_top_k=3,
+    save_top_k=2,
     verbose=True,
     monitor='val_loss',
     mode='min',

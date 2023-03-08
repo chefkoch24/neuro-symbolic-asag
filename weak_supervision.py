@@ -28,7 +28,7 @@ class WeakSupervisionSoft():
     def __init__(self, rubrics=None):
         self.rubrics = rubrics
         self.para_detector = BertScorer()
-        self._punctuation = ['.', ',', '?', '!', ';']
+        self._punctuation = ['.', ',', '?', '!', ';', ':']
         self.rouge = Rouge(metrics=["rouge-1", "rouge-2", "rouge-3", "rouge-4", "rouge-5", "rouge-l"])
         self.labeling_functions = [
             {'name': 'LF_noun_phrases', 'function': self.LF_noun_phrases},

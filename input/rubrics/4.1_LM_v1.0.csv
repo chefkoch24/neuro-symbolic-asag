@@ -1,4 +1,4 @@
 ID,key_element,points
-1,the collision to be detected diameter decreases,"0,5"
-2,factor of 10,"0,5"
-3,scale of 10,"0,5"
+1,the collision to be detected diameter decreases,0.5
+2,factor of 10,0.5
+3,scale of 10,0.5

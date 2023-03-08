@@ -1,6 +1,6 @@
 ID,key_element,points
-1,Slow start,"0,125"
-2,Congestion Avoidance,"0,125"
-3,Slow start: increment cwnd by one every time a segment is acknowledged until ss_tresh is reached,"0,25"
-4,then slowed increase of cwnd,"0,25"
-5,Congestion Avoidance: cwnd is reset to 1 after adjusting ss_tresh = cwnd / 2,"0,25"
+1,Slow start,0.125
+2,Congestion Avoidance,0.125
+3,Slow start: increment cwnd by one every time a segment is acknowledged until ss_tresh is reached,0.25
+4,then slowed increase of cwnd,0.25
+5,Congestion Avoidance: cwnd is reset to 1 after adjusting ss_tresh = cwnd / 2,0.25

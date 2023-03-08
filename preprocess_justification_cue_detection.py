@@ -18,10 +18,10 @@ def create_inputs(data, with_context=False):
         tokens_bert = [tokenizer.decode(t) for t in tokenized['input_ids']]
         if with_context:
             context = d['reference_answer']
-            tokenized = tokenizer(student_answer, context, max_length=config.MAX_LEN, truncation=True, padding='max_length')
+            tokenized = tokenizer(student_answer, context, max_length=config.MAX_LEN, truncation=True, padding='max_length', return_token_type_ids=True)
 
         else:
-            tokenized = tokenizer(student_answer, max_length=config.MAX_LEN, truncation=True, padding='max_length')
+            tokenized = tokenizer(student_answer, max_length=config.MAX_LEN, truncation=True, padding='max_length', return_token_type_ids=True)
         # Generating the labels
         aligned_labels = utils_preprocessing.align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l)
         pad_len = config.MAX_LEN - len(aligned_labels)
@@ -30,9 +30,12 @@ def create_inputs(data, with_context=False):
         model_input = {
             'input_ids': tokenized['input_ids'],
             'attention_mask': tokenized['attention_mask'],
+            'token_type_ids': tokenized['token_type_ids'],
             'labels': utils.create_labels_probability_distribution(torch.nn.functional.pad(torch.tensor(labels), pad=(0, pad_len), mode='constant', value=-100).detach().numpy().tolist()),
             'class': d['label'],
-            'question_id': d['question_id']
+            'question_id': d['question_id'],
+            'student_answer': d['student_answer'],
+            'reference_answer': d['reference_answer'],
         }
         model_inputs.append(model_input)
 

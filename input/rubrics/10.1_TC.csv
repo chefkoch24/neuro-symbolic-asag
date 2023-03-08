@@ -1,12 +1,12 @@
 ID,key_element,points
-1,UDP header shorter than TCP header,"0,25"
-2,TCP header field sequence number,"0,25"
-3,TCP header field acknowledgment number ,"0,25"
-4,TCP header field reserved,"0,25"
-5,TCP header field flags/control bits ,"0,25"
-6,TCP header field advertised window,"0,25"
-7,TCP header field urgent pointer ,"0,25"
-8,TCP header field options + padding if the options are,"0,25"
-9,UDP includes packet length,"0,25"
-10,TCP header length/data offset ,"0,25"
-11,UDP sender port field is optional,"0,25"
+1,UDP header shorter than TCP header,0.25
+2,TCP header field sequence number,0.25
+3,TCP header field acknowledgment number ,0.25
+4,TCP header field reserved,0.25
+5,TCP header field flags/control bits ,0.25
+6,TCP header field advertised window,0.25
+7,TCP header field urgent pointer ,0.25
+8,TCP header field options + padding if the options are,0.25
+9,UDP includes packet length,0.25
+10,TCP header length/data offset ,0.25
+11,UDP sender port field is optional,0.25

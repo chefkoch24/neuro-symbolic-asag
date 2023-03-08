@@ -95,17 +95,18 @@ data = {'question_id': question_ids, 'tutor_feedback': tutor_feedbacks, 'label':
 
 answer_data = pd.DataFrame(data=data)
 
-rubric_elemenets = []
+rubric_elements = []
 question_ids = []
 for file in os.listdir(config.PATH_RAW_RUBRIC):
     filename = file.rsplit('.', maxsplit=1)[0]
     question_ids.append(clean_text(filename))
     df = pd.read_csv(config.PATH_RAW_RUBRIC + '/' + filename + ".csv", delimiter=',', header=0)
-    rubric_elemenets.append(df)
+    rubric_elements.append(df)
 
 rubrics = {}
-for qi, r in zip(question_ids, rubric_elemenets):
+for qi, r in zip(question_ids, rubric_elements):
     r['key_element'] = clean_text(r['key_element'].str)
+    r['points'] = [float(i) for i in r['points']]
     rubrics[qi] = r
 
 reference_answers = {}

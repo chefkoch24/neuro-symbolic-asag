@@ -17,6 +17,7 @@ class JustificationCueDataset(Dataset):
             inputs['input_ids'] = torch.tensor(inputs['input_ids'])
             inputs['attention_mask'] = torch.tensor(inputs['attention_mask'])
             inputs['labels'] = torch.tensor(inputs['labels'])
+            inputs['token_type_ids'] = torch.tensor(inputs['token_type_ids'])
 
     def __len__(self):
         return len(self.data)
@@ -32,6 +33,7 @@ class IterativeJustificationCueDataset(Dataset):
             inputs['input_ids'] = torch.tensor(inputs['input_ids'])
             inputs['attention_mask'] = torch.tensor(inputs['attention_mask'])
             inputs['labels'] = torch.tensor(inputs['labels'])
+            inputs['token_type_ids'] = torch.tensor(inputs['token_type_ids'])
 
     def __len__(self):
         return len(self.data)
@@ -48,6 +50,7 @@ class SpanJustificationCueDataset(Dataset):
             inputs['attention_mask'] = torch.tensor(inputs['attention_mask'])
             inputs['start_positions'] = torch.tensor(inputs['start_positions'])
             inputs['end_positions'] = torch.tensor(inputs['end_positions'])
+            inputs['token_type_ids'] = torch.tensor(inputs['token_type_ids'])
 
     def __len__(self):
         return len(self.data)
