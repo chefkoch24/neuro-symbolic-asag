@@ -41,12 +41,16 @@ class CustomBatchSampler(Sampler):
         self.filtered_data = filtered_data
         return iter(combined)
 
-def preprocess(data, class2idx={'CORRECT': 0, 'PARTIAL_CORRECT': 1, 'INCORRECT': 2}):
+def preprocess(data, class2idx={'CORRECT': 0, 'PARTIAL_CORRECT': 1, 'INCORRECT': 2}, with_context=False):
     for d in data:
-        tokenized = tokenizer(d['student_answer'], truncation=True, padding='max_length', max_length=512, return_tensors='pt')
+        if with_context:
+            tokenized = tokenizer(d['student_answer'], d['reference_answer'] , truncation=True, padding='max_length', max_length=512, return_tensors='pt', return_token_type_ids=True)
+        else:
+            tokenized = tokenizer(d['student_answer'], truncation=True, padding='max_length', max_length=512, return_tensors='pt', return_token_type_ids=True)
         d['input_ids'] = tokenized['input_ids']
         d['attention_mask'] = tokenized['attention_mask']
         d['class'] = class2idx[d['label']]
+        d['token_type_ids'] = tokenized['token_type_ids']
     return data
 
 train_file = 'training_dataset.json'
@@ -56,15 +60,15 @@ training_data = utils.load_json(config.PATH_DATA + '/' + train_file)
 dev_data = utils.load_json(config.PATH_DATA + '/' + dev_file)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 
-training_data = preprocess(training_data)
-dev_data = preprocess(dev_data)
+training_data = preprocess(training_data, with_context=True)
+dev_data = preprocess(dev_data, with_context=True)
 
-training_dataset = GradingDataset(training_data)
-dev_dataset = GradingDataset(dev_data)
+training_dataset = GradingDataset(training_data[0:4])
+dev_dataset = GradingDataset(dev_data[0:4])
 
 train_loader = DataLoader(training_dataset, batch_sampler=CustomBatchSampler(training_dataset, config.BATCH_SIZE))
 val_loader = DataLoader(dev_dataset, batch_sampler=CustomBatchSampler(dev_dataset, config.BATCH_SIZE))
-model = GradingModel(model_checkpoint, rubrics=rubrics, model_name=config.MODEL_NAME, mode='regression')
+model = GradingModel(model_checkpoint, rubrics=rubrics, model_name=config.MODEL_NAME, mode='classification')
 
 EXPERIMENT_NAME = "grading_" + config.MODEL_NAME
 logger = CSVLogger("logs", name=EXPERIMENT_NAME)

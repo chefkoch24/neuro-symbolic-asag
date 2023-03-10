@@ -319,7 +319,7 @@ def compute_metrics_span_prediction(outputs):
 def compute_grading_classification_metrics(outputs):
     predictions = torch.cat([x['prediction'] for x in outputs])
     labels = torch.cat([x['class'] for x in outputs])
-    langs = torch.cat([x['lang'] for x in outputs])
+    langs = utils.flat_list([x['lang'] for x in outputs])
     f1_score = F1Score(task='multiclass', num_classes=3, average='none')
     accuracy = Accuracy(task='multiclass', num_classes=3, average='none')
     precision = Precision(task='multiclass', num_classes=3, average='none')
@@ -332,9 +332,13 @@ def compute_grading_classification_metrics(outputs):
     weighted_f1_score = F1Score(task='multiclass', num_classes=3, average='weighted')
     accuracy = Accuracy(task='multiclass', num_classes=3)
     mf1s, wf1s, accs = [], [], []
+    predictions = predictions.argmax(-1).detach().numpy().tolist()
+    labels = labels.detach().numpy().tolist()
     for language in ['de', 'en']:
-        tmp_predictions = predictions[langs == language]
-        tmp_labels = labels[langs == language]
+        tmp_predictions = [p for p,l in zip(predictions, langs) if l == language]
+        tmp_labels = [p for p,l in zip(labels, langs) if l == language]
+        tmp_labels = torch.tensor(tmp_labels)
+        tmp_predictions = torch.tensor(tmp_predictions)
         mf1 = macro_f1_score(tmp_predictions, tmp_labels)
         wf1 = weighted_f1_score(tmp_predictions, tmp_labels)
         acc = accuracy(tmp_predictions, tmp_labels)
@@ -364,19 +368,21 @@ def compute_grading_classification_metrics(outputs):
     }
 
 def compute_grading_regression_metrics(outputs):
-    predictions = torch.cat([x['prediction'] for x in outputs])
-    targets = torch.cat([x['score'] for x in outputs])
-    langs = torch.cat([x['lang'] for x in outputs])
+    predictions = torch.cat([x['prediction'] for x in outputs]).numpy().tolist()
+    targets = torch.cat([x['score'] for x in outputs]).numpy().tolist()
+    langs = utils.flat_list([x['lang'] for x in outputs])
     rmse_calc = MeanSquaredError(squared=False)
     cohenkappa = CohenKappa(task="multiclass", num_classes=2, weights="quadratic")
     rmses, qwks = [], []
     for language in ['de', 'en']:
-        tmp_predictions = predictions[langs == language]
-        tmp_labels = targets[langs == language]
+        tmp_predictions = [p for p,l in zip(predictions, langs) if l == language]
+        tmp_labels = [p for p,l in zip(targets, langs) if l == language]
+        tmp_labels = torch.tensor(tmp_labels)
+        tmp_predictions = torch.tensor(tmp_predictions)
         rmse = rmse_calc(tmp_predictions, tmp_labels)
         qwk = cohenkappa(tmp_predictions, tmp_labels)
-        rmses.append(rmse)
-        qwks.append(qwk)
+        rmses.append(rmse.item())
+        qwks.append(qwk.item())
 
     return {
         'rmse_de': rmses[0],

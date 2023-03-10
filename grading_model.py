@@ -154,23 +154,24 @@ class GradingModel(LightningModule):
         self.save_hyperparameters()
 
 
-    def forward(self, input_ids, attention_mask, question_ids, labels=None):
+    def forward(self, input_ids, attention_mask, question_ids, token_type_ids, labels=None):
         q_id = question_ids[0]
         outputs = self.model(input_ids=input_ids.squeeze(1), attention_mask=attention_mask.squeeze(1)) #remove one unnecessary dimension
         predictions = torch.argmax(outputs, dim=-1)
         true_predictions, true_input_ids = [], []
         attention_mask = attention_mask.squeeze(1)
+        token_type_ids = token_type_ids.squeeze(1)
         input_ids = input_ids.squeeze(1)
-        for i in range(len(predictions)):
-            temp, inp= [], []
-            for j in range(len(predictions[i])):
-                if attention_mask[i][j].item() == 1:
-                    inp.append(input_ids[i][j].item())
-                    temp.append(predictions[i][j].item())
-            true_predictions.append(temp)
-            true_input_ids.append(inp)
+        # logic for setting up that only the inputs from the student answer are used
+        true_predictions = [[predictions[i][j].item() for j in range(len(predictions[i])) if
+                             token_type_ids[i][j].item() == 0 and attention_mask[i][j].item() == 1] for i in
+                            range(len(predictions))]
+        true_input_ids = [[input_ids[i][j].item() for j in range(len(predictions[i])) if
+                           token_type_ids[i][j].item() == 0 and attention_mask[i][j].item() == 1] for i in
+                          range(len(predictions))]
         # remove special tokens
-        true_predictions = true_predictions[1:-1]
+        true_predictions = [x[1:-1] for x in true_predictions]
+        true_input_ids = [x[1:-1] for x in true_input_ids]
         justification_cues = self.get_justification_cues(true_predictions)
         scoring_vectors = self.get_scoring_vectors(justification_cues, true_input_ids, question_ids)
         symbolic_model = self.symbolic_models[q_id]
@@ -224,16 +225,16 @@ class GradingModel(LightningModule):
 
     def training_step(self, batch, batch_idx):
         if self.mode == 'classification':
-            _, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['class'])
+            _, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['token_type_ids'], batch['class'])
         elif self.mode == 'regression':
-            _, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['score'])
+            _, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['token_type_ids'], batch['score'])
         return loss
 
     def validation_step(self, batch, batch_idx):
         if self.mode == 'classification':
-            y_pred, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['class'])
+            y_pred, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['token_type_ids'], batch['class'])
         elif self.mode == 'regression':
-            y_pred, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['score'])
+            y_pred, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['token_type_ids'], batch['score'])
         batch['prediction'] = y_pred
         batch['loss'] = loss
         return batch
@@ -247,6 +248,12 @@ class GradingModel(LightningModule):
             metric = metrics.compute_grading_regression_metrics(outputs)
         self.log_dict(metric)
         return metric
+
+    def test_step(self, batch, batch_idx):
+        self.validation_step(batch, batch_idx)
+
+    def test_epoch_end(self, outputs):
+        self.validation_epoch_end(outputs)
 
     def configure_optimizers(self):
         # optimizer = AdamW(self.model.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)
