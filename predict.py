@@ -28,11 +28,15 @@ model_wo_context.eval()
 with torch.no_grad():
     results = []
     for i, data in tqdm(enumerate(test_dataset)):
+        len_student_answer = len(tokenizer(data['student_answer'])['input_ids'])
         # WITHOUT CONTEXT
         x = tokenizer(data['student_answer'], return_tensors='pt', return_token_type_ids=True, padding='max_length', max_length=512, truncation=True)
         logits = model_wo_context(x['input_ids'], x['attention_mask'])
         y_hat = torch.argmax(logits, dim=-1).detach().numpy()[0]
         input_ids = x['input_ids'].detach().numpy()[0]
+        # only keep student answer
+        y_hat = y_hat[:len_student_answer]
+        input_ids = input_ids[:len_student_answer]
         # remove CLS and SEP
         input_ids = input_ids[1:-1]
         y_hat=y_hat[1:-1]
@@ -49,9 +53,9 @@ with torch.no_grad():
         logits = model_w_context(x['input_ids'], x['attention_mask'])
         y_hat = torch.argmax(logits, dim=-1).detach().numpy()[0]
         input_ids = x['input_ids'].detach().numpy()[0]
-        len_student_answer = len(tokenizer(data['student_answer'])['input_ids'])
         # only keep student answer
         y_hat = y_hat[:len_student_answer]
+        input_ids = input_ids[:len_student_answer]
         # remove CLS and SEP
         input_ids = input_ids[1:-1]
         y_hat = y_hat[1:-1]
