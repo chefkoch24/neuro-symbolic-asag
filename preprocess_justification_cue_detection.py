@@ -1,21 +1,16 @@
 # This script preprocesses the data for the justification cue detection training
+from tqdm import tqdm
 from transformers import AutoTokenizer
 import config
 import myutils as utils
 import torch
-import utils_preprocessing
 
 # Helper functions
 def create_inputs(data, with_context=False):
     model_inputs = []
-    for d in data:
+    for d in tqdm(data):
         student_answer = d['student_answer']
-        l = d['silver_labels']
-        nlp = config.nlp_de if d['lang'] == 'de' else config.nlp
-        tokens_spacy = [t.text for t in nlp(student_answer)]
         # Tokenize the input
-        tokenized = tokenizer(student_answer, add_special_tokens=False)
-        tokens_bert = [tokenizer.decode(t) for t in tokenized['input_ids']]
         if with_context:
             context = d['reference_answer']
             tokenized = tokenizer(student_answer, context, max_length=config.MAX_LEN, truncation=True, padding='max_length', return_token_type_ids=True)
@@ -23,9 +18,9 @@ def create_inputs(data, with_context=False):
         else:
             tokenized = tokenizer(student_answer, max_length=config.MAX_LEN, truncation=True, padding='max_length', return_token_type_ids=True)
         # Generating the labels
-        aligned_labels = utils_preprocessing.align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l)
-        pad_len = config.MAX_LEN - len(aligned_labels)
-        labels = [-100]+aligned_labels.tolist()
+        aligned_labels = d['aligned_labels']
+        pad_len = config.MAX_LEN - len(aligned_labels) -2
+        labels = [-100]+aligned_labels + [-100]
         # Adding other model inputs
         model_input = {
             'input_ids': tokenized['input_ids'],
@@ -43,8 +38,8 @@ def create_inputs(data, with_context=False):
 
 
 #Loading
-train_data = utils.load_json(config.PATH_DATA + '/' + config.ANNOTATED_TRAIN_FILE)
-dev_data = utils.load_json(config.PATH_DATA + '/' + config.ANNOTATED_DEV_FILE)
+train_data = utils.load_json(config.PATH_DATA + '/' + config.ALIGNED_TRAIN_FILE)
+dev_data = utils.load_json(config.PATH_DATA + '/' + config.ALIGNED_DEV_FILE)
 tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
 
 # Preprocess data

@@ -10,7 +10,7 @@ from incremental_trees.models.classification.streaming_rfc import StreamingRFC
 # Define the model checkpoint
 import config
 from dataset import GradingDataset
-from grading_model import GradingModelClassification
+from grading_model import GradingModel
 import myutils as utils
 
 model_checkpoint = 'logs/justification_cue_distilbert-base-multilingual-cased_context-False/version_7/checkpoints/checkpoint-epoch=04-val_loss=0.64.ckpt'
@@ -64,7 +64,7 @@ dev_dataset = GradingDataset(dev_data)
 
 train_loader = DataLoader(training_dataset, batch_sampler=CustomBatchSampler(training_dataset, config.BATCH_SIZE))
 val_loader = DataLoader(dev_dataset, batch_sampler=CustomBatchSampler(dev_dataset, config.BATCH_SIZE))
-model = GradingModelClassification(model_checkpoint, rubrics=rubrics, model_name=config.MODEL_NAME)
+model = GradingModel(model_checkpoint, rubrics=rubrics, model_name=config.MODEL_NAME, mode='regression')
 
 EXPERIMENT_NAME = "grading_" + config.MODEL_NAME
 logger = CSVLogger("logs", name=EXPERIMENT_NAME)

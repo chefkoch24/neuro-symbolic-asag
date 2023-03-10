@@ -1,6 +1,6 @@
 import torch
 import evaluate
-from torchmetrics import F1Score, Accuracy
+from torchmetrics import F1Score, Accuracy, Precision, Recall, MeanSquaredError, CohenKappa
 from transformers import AutoTokenizer
 import config
 import numpy as np
@@ -320,6 +320,14 @@ def compute_grading_classification_metrics(outputs):
     predictions = torch.cat([x['prediction'] for x in outputs])
     labels = torch.cat([x['class'] for x in outputs])
     langs = torch.cat([x['lang'] for x in outputs])
+    f1_score = F1Score(task='multiclass', num_classes=3, average='none')
+    accuracy = Accuracy(task='multiclass', num_classes=3, average='none')
+    precision = Precision(task='multiclass', num_classes=3, average='none')
+    recall = Recall(task='multiclass', num_classes=3, average='none')
+    f1 = f1_score(predictions, labels)
+    accu = accuracy(predictions, labels)
+    prec = precision(predictions, labels)
+    rec = recall(predictions, labels)
     macro_f1_score = F1Score(task='multiclass', num_classes=3, average='macro')
     weighted_f1_score = F1Score(task='multiclass', num_classes=3, average='weighted')
     accuracy = Accuracy(task='multiclass', num_classes=3)
@@ -334,10 +342,46 @@ def compute_grading_classification_metrics(outputs):
         wf1s.append(wf1)
         accs.append(acc)
     return {
+        'val_f1_correct': f1[0].item(),
+        'val_f1_partial': f1[1].item(),
+        'val_f1_incorrect': f1[2].item(),
+        'val_acc_correct': accu[0].item(),
+        'val_acc_partial': accu[1].item(),
+        'val_acc_incorrect': accu[2].item(),
+        'val_precision_correct': prec[0].item(),
+        'val_precision_partial': prec[1].item(),
+        'val_precision_incorrect': prec[2].item(),
+        'val_recall_correct': rec[0].item(),
+        'val_recall_partial': rec[1].item(),
+        'val_recall_incorrect': rec[2].item(),
         'macro_f1_de': mf1s[0],
         'macro_f1_en': mf1s[1],
         'weighted_f1_de': wf1s[0],
         'weighted_f1_en': wf1s[1],
         'accuracy_de': accs[0],
         'accuracy_en': accs[1],
+        'val_loss': torch.stack([x['loss'] for x in outputs]).mean(),
+    }
+
+def compute_grading_regression_metrics(outputs):
+    predictions = torch.cat([x['prediction'] for x in outputs])
+    targets = torch.cat([x['score'] for x in outputs])
+    langs = torch.cat([x['lang'] for x in outputs])
+    rmse_calc = MeanSquaredError(squared=False)
+    cohenkappa = CohenKappa(task="multiclass", num_classes=2, weights="quadratic")
+    rmses, qwks = [], []
+    for language in ['de', 'en']:
+        tmp_predictions = predictions[langs == language]
+        tmp_labels = targets[langs == language]
+        rmse = rmse_calc(tmp_predictions, tmp_labels)
+        qwk = cohenkappa(tmp_predictions, tmp_labels)
+        rmses.append(rmse)
+        qwks.append(qwk)
+
+    return {
+        'rmse_de': rmses[0],
+        'rmse_en': rmses[1],
+        'qwk_de': qwks[0],
+        'qwk_en': qwks[1],
+        'val_loss': torch.stack([x['loss'] for x in outputs]).mean(),
     }

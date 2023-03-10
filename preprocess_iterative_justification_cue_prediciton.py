@@ -1,20 +1,15 @@
 import argparse
 import numpy as np
-from pytorch_lightning.loggers import CSVLogger
 from tqdm import tqdm
 
-from model import TokenClassificationModel
-from torch.utils.data import DataLoader
-from pytorch_lightning import Trainer
 import logging
 import torch
 import config
 import myutils as utils
 import warnings
-from dataset import IterativeJustificationCueDataset
 from transformers import AutoTokenizer
 import metrics
-from paraphrase_scorer import ParaphraseScorerSBERT, BertScorer
+from paraphrase_scorer import BertScorer
 
 logging.basicConfig(level=logging.ERROR)
 warnings.filterwarnings("ignore")

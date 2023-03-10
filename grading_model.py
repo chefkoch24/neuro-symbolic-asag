@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from incremental_trees.models.regression.streaming_rfr import StreamingRFR
 from pytorch_lightning import LightningModule
 from transformers import Adafactor, AutoTokenizer, AdamW
 from torch.optim import lr_scheduler
@@ -138,20 +139,18 @@ class GradingModelTrivial(LightningModule):
         return optimizer
 
 
-class GradingModelClassification(LightningModule):
-    def __init__(self, checkpoint: str, model_name, rubrics):
+class GradingModel(LightningModule):
+    def __init__(self, checkpoint: str, model_name, rubrics, mode='classification'):
         super().__init__()
         self.model = TokenClassificationModel.load_from_checkpoint(checkpoint) #("/path/to/checkpoint.ckpt")
-        self.loss = nn.CrossEntropyLoss()
+        self.cross_entropy_loss = nn.CrossEntropyLoss()
+        self.mse_loss = nn.MSELoss()
         self.rubrics = rubrics
+        self.mode = mode
         self.symbolic_models = self.__init_learners__()
         self.para_detector = BertScorer()
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.classes = np.array([0,1,2])
-        self.f1_score = F1Score(task='multiclass', num_classes=3, average='none')
-        self.accuracy = Accuracy(task='multiclass', num_classes=3, average='none')
-        self.prec = Precision(task='multiclass', num_classes=3, average='none')
-        self.recall = Recall(task='multiclass', num_classes=3, average='none')
         self.save_hyperparameters()
 
 
@@ -175,16 +174,25 @@ class GradingModelClassification(LightningModule):
         symbolic_model = self.symbolic_models[q_id]
         self.symbolic_models[q_id] = symbolic_model.partial_fit(scoring_vectors,labels.detach().numpy(),
                                                                 self.classes)
-        y_pred = self.symbolic_models[q_id].predict_proba(scoring_vectors)
+        if self.mode == 'classification':
+            y_pred = self.symbolic_models[q_id].predict_proba(scoring_vectors)
+        elif self.mode == 'regression':
+            y_pred = self.symbolic_models[q_id].predict(scoring_vectors)
         if labels is not None:
-            loss = self.loss(torch.tensor(y_pred, requires_grad=True), labels)
+            if self.mode == 'classification':
+                loss = self.cross_entropy_loss(torch.tensor(y_pred, requires_grad=True), labels)
+            elif self.mode == 'regression':
+                loss = self.mse_loss(torch.tensor(y_pred, requires_grad=True), labels)
             return torch.tensor(y_pred), loss
         return torch.tensor(y_pred)
 
     def __init_learners__(self):
         symbolic_models = {}
         for qid in list(self.rubrics.keys()):
-            symbolic_models[qid] = StreamingRFC()
+            if self.mode == 'classification':
+                symbolic_models[qid] = StreamingRFC()
+            elif self.mode == 'regression':
+                symbolic_models[qid] = StreamingRFR()
         return symbolic_models
 
     def get_justification_cues(self, predictions):
@@ -216,38 +224,30 @@ class GradingModelClassification(LightningModule):
 
 
     def training_step(self, batch, batch_idx):
-        _, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['class'])
+        if self.mode == 'classification':
+            _, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['class'])
+        elif self.mode == 'regression':
+            _, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['score'])
         return loss
 
     def validation_step(self, batch, batch_idx):
-        y_pred, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['class'])
+        if self.mode == 'classification':
+            y_pred, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['class'])
+        elif self.mode == 'regression':
+            y_pred, loss = self.forward(batch['input_ids'], batch['attention_mask'], batch['question_id'], batch['score'])
         batch['prediction'] = y_pred
         batch['loss'] = loss
         return batch
 
 
     def validation_epoch_end(self, outputs):
-        predictions = torch.cat([x['prediction'] for x in outputs])
-        labels = torch.cat([x['class'] for x in outputs])
-        f1 = self.f1_score(predictions, labels)
-        acc = self.accuracy(predictions, labels)
-        precision = self.prec(predictions, labels)
-        recall = self.recall(predictions, labels)
-        avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
-        self.log('val_loss', avg_loss)
-        self.log('val_f1_correct', f1[0].item())
-        self.log('val_f1_partial', f1[1].item())
-        self.log('val_f1_incorrect', f1[2].item())
-        self.log('val_acc_correct', acc[0].item())
-        self.log('val_acc_partial', acc[1].item())
-        self.log('val_acc_incorrect', acc[2].item())
-        self.log('val_precision_correct', precision[0].item())
-        self.log('val_precision_partial', precision[1].item())
-        self.log('val_precision_incorrect', precision[2].item())
-        self.log('val_recall_correct', recall[0].item())
-        self.log('val_recall_partial', recall[1].item())
-        self.log('val_recall_incorrect', recall[2].item())
-        return avg_loss
+        metric = {}
+        if self.mode == 'classification':
+            metric = metrics.compute_grading_classification_metrics(outputs)
+        elif self.mode == 'regression':
+            metric = metrics.compute_grading_regression_metrics(outputs)
+        self.log_dict(metric)
+        return metric
 
     def configure_optimizers(self):
         # optimizer = AdamW(self.model.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)

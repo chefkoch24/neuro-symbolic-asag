@@ -32,8 +32,8 @@ training_data = utils.load_json(config.PATH_DATA + '/' + args.train_file)
 dev_data = utils.load_json(config.PATH_DATA + '/' + args.dev_file)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 
-training_dataset = JustificationCueDataset(training_data)
-dev_dataset = JustificationCueDataset(dev_data)
+training_dataset = JustificationCueDataset(training_data[0:8])
+dev_dataset = JustificationCueDataset(dev_data[0:8])
 # Training
 train_loader = DataLoader(training_dataset, batch_size=config.BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(dev_dataset, batch_size=config.BATCH_SIZE, shuffle=False)
