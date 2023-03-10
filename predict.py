@@ -61,11 +61,11 @@ with torch.no_grad():
         results.append({
                 'question_id': data['question_id'],
                 'student_answer': data['student_answer'],
-                'true_spans': spans,
+                'true_spans': true_spans,
                 'pred_spans_wo_context': pred_spans_wo_context,
                 'pred_spans_w_context': pred_spans_w_context,
                 'class': data['class']
             })
 results = pd.DataFrame(columns=results[0].keys(), data=results)
-result_file_name = 'predicitons' + config.MODEL_NAME
+result_file_name = 'predicitons_' + config.MODEL_NAME
 results.to_csv('results/' + result_file_name + '.csv', index=False)
