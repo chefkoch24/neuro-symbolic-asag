@@ -169,6 +169,8 @@ class GradingModel(LightningModule):
                     temp.append(predictions[i][j].item())
             true_predictions.append(temp)
             true_input_ids.append(inp)
+        # remove special tokens
+        true_predictions = true_predictions[1:-1]
         justification_cues = self.get_justification_cues(true_predictions)
         scoring_vectors = self.get_scoring_vectors(justification_cues, true_input_ids, question_ids)
         symbolic_model = self.symbolic_models[q_id]
@@ -208,17 +210,14 @@ class GradingModel(LightningModule):
         rubric = self.rubrics[qid] #expects the same question_id
         scoring_vectors = []
         for jus_cue, input_id in zip(justification_cues, input_ids):
-            max_idxs, max_vals = [], []
+            # fuzzy matching
+            scoring_vector = [0] * len(rubric['key_element'])
             for span in jus_cue:
                 cue_text = self.tokenizer.decode(input_id[span[0]:span[1]], skip_special_tokens=True)
                 sim = self.para_detector.detect_score_key_elements(cue_text, rubric)
-                max_idxs.append(np.argmax(sim))
-                max_vals.append(np.max(sim))
-            # make sure that the absolute maximum is taken
-            scoring_vector = np.zeros((len(self.rubrics[qid])))
-            for mi, mv in zip(max_idxs, max_vals):
-                if scoring_vector[mi] < mv:
-                    scoring_vector[mi] = mv
+                for i, s in enumerate(sim):
+                    if s > scoring_vector[i]:
+                        scoring_vector[i] = s
             scoring_vectors.append(scoring_vector)
         return np.array(scoring_vectors)
 
