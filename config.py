@@ -11,8 +11,8 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 MODEL_NAME = "distilbert-base-multilingual-cased" #"SpanBERT/spanbert-base-cased"
 ANNOTATED_TRAIN_FILE = 'train_labeled_data_sum.json'
 ANNOTATED_DEV_FILE = 'dev_labeled_data_sum.json'
-ALIGNED_TRAIN_FILE = 'training_dataset_aligned_labels_distilbert-base-multilingual-cased.json'
-ALIGNED_DEV_FILE = 'dev_dataset_aligned_labels_distilbert-base-multilingual-cased.json'
+TRAIN_FILE = 'training_dataset_aligned_labels_distilbert-base-multilingual-cased.json'
+DEV_FILE = 'dev_dataset_aligned_labels_distilbert-base-multilingual-cased.json'
 TEST_FILE = None
 NUM_EPOCHS = 8
 BATCH_SIZE = 8
