@@ -32,6 +32,6 @@ training_dataset = create_aligned_labels(train_data)
 dev_dataset = create_aligned_labels(dev_data)
 
 #save data
-DATASET_NAME = 'dataset_aligned_labels_' + config.MODEL_NAME + '.json'
+DATASET_NAME = 'dataset_aligned_labels_' + config.MODEL_NAME.replace('/','_') + '.json'
 utils.save_json(training_dataset, config.PATH_DATA + '/', 'training_' + DATASET_NAME)
 utils.save_json(dev_dataset, config.PATH_DATA + '/', 'dev_'+DATASET_NAME)

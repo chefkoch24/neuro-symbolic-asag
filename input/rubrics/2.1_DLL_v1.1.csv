@@ -1,0 +1,7 @@
+ID,key_element,points
+1,unconfirmed connectionless,0.25
+2,confirmed connectionless,0.25
+3,connection-oriented,0.25
+4,"unconfirmed connectionless: no ACK, loss of data possible, no flow control, no connect or disconnect",0.25
+5,"confirmed connectionless: with ACK, no loss of data, no flow control, no connect or disconnect",0.25
+6,"connection-oriented: no data loss, duplication or sequencing errors, communication with connect and disconnect, with flow control",0.25
