@@ -8,10 +8,9 @@ import pandas as pd
 import config
 import myutils as utils
 
-def main():
-    results = []
-    files = ['training_ws_lfs.json']
-    for file in files:
+results = []
+files = ['training_ws_lfs.json']
+for file in files:
         print('Analyzing.. ' + file)
         annotated_train_data = utils.load_json(config.PATH_DATA + '/' + file)
         # setup statistic dicts
@@ -95,9 +94,6 @@ def main():
                     'labeled_token': statistical_metrics['labeled_tokens_incorrect'],
                 })
 
-    results = pd.DataFrame(columns=results[0].keys(), data=results)
-    result_file_name = 'labeling_functions_results'
-    results.to_csv('results/' + result_file_name + '.csv', index=False)
-
-if __name__ == '__main__':
-    main()
+results = pd.DataFrame(columns=results[0].keys(), data=results)
+result_file_name = 'labeling_functions_results'
+results.to_csv('results/' + result_file_name + '.csv', index=False)

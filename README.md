@@ -24,12 +24,9 @@ For preprocessing the raw data from xml and csv files, run the following command
 
 `python preprocess_raw_data.py`
 
-Saves the splitted datasets train and dev data in json format. 
-In addition the rubrics are stored as json file containing
-all key elements. 
 
 ## Weak Supervision
-I have two options for weak supervision. 
+The raw data is used in the weak supervision by applying the different labeling functions. 
 
 The first one is based on learning a HMM. The other option is to annotate the data with labeling functions without learning an additional model.
 
@@ -37,10 +34,13 @@ The first one is based on learning a HMM. The other option is to annotate the da
 
 `python weak_supervision.py`
 
-Outputs the annotated data for every labeling function and all 
-attributes from the raw data as json file.
+The labeling functions are evaluated by running
+
+`python evaluate_labeling_functions.py`
 
 ## Aggregate Labels
+All labels are aggregated by running the following scripts.
+
 For HMM learned model:
 
 `python aggregation_hmm.py`
@@ -49,40 +49,24 @@ For labeling functions:
 
 `python aggregation.py`
 
-## Analyze Data
-The script outputs the evaluation results for the different weak supervision methods:
+The aggregation is evaluated by running
 
-`python analyze_aggregation.py`
+`python evaluate_weak_supervision.py`
 
-## Preprocess Data for Justification Cue Detection Model
+## Align Labels
+because the alignment library can't be exectued on the ML Server, the alignment has to be done locally.
+The alignment is done by running the following script:
 
-Needed because the alignment library is implemented in Rust and does not work on the ML Server.
-There exists two scripts for preprocessing the data. One for the combined predcition of all justification cues and
-one for the prediction of each cue iterativley.
+`python align_labels.py --tokenizer_name tokenizer_name`
 
-Combined:
-The reference answer is added as context with the context flag set to True.
-
-`python preprocess_justification_cue_detection.py --model name_of_model --context True_or_False --train_file train_file --dev_file dev_file`
-
-Iterative:
-`python preprocess_iterative_justification_cue_detection.py --model name_of_model --train_file train_file --dev_file dev_file`
 
 ## Train Justification Cue Detection Model
-Trains the justification cue detection model
+Trains the justification cue detection model, 
+all configurations are set in the file `config.py`.
 
-Combined (important to add the correct preprocessed file):
-`python training_justification_cue_detection.py \
---model model_name \
---context True_or_False \
---train_file train_file \
---dev_file  dev_file`
+`python training_justification_cue_detection.py`
 
-Iterative:
-`python iterative_prediction.py \
---model model_name \
---train_file train_file \
---dev_file  dev_file`
+`python training_span_prediction.py`
 
 ## Grading
 Trains the final grading model

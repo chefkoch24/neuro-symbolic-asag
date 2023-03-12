@@ -1,16 +1,14 @@
 import torch
 import evaluate
 from torchmetrics import F1Score, Accuracy, Precision, Recall, MeanSquaredError, CohenKappa
-from transformers import AutoTokenizer
-import config
 import numpy as np
 import myutils as utils
 import statistics
 
-tokenizer = AutoTokenizer.from_pretrained(config.TOKENIZER_NAME)
 
 idx2label = {0: 'O', 1: 'I-CUE'}
 span_metric = evaluate.load("squad")
+rubrics = utils.load_json('data/rubrics.json')
 
 def relation(y):
     # relation of how many tokens are class 1 compared to all tokens
@@ -255,6 +253,7 @@ def compute_metrics_token_classification(outputs):
     r_correct, r_partial, r_incorrect = get_average_realtion_by_class(true_predictions, classes)
     tn_correct, tn_partial, tn_incorrect = get_average_number_of_tokens_per_key_element_by_class(true_predictions,
                                                                                                  classes)
+
     metrics = {
         "macro_precision": ner_metrics["macro_precision"],
         "macro_recall": ner_metrics["macro_recall"],

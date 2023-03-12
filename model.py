@@ -2,19 +2,20 @@
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
-from torch.nn import CrossEntropyLoss, NLLLoss, BCEWithLogitsLoss, KLDivLoss
 from transformers import AutoModelForTokenClassification, AutoModelForQuestionAnswering, Adafactor
-from transformers import AdamW
-from torch.optim import lr_scheduler
 import metrics
 
 
 # Model
 class TokenClassificationModel(LightningModule):
-    def __init__(self, model_name: str):
+    def __init__(self, model_name: str, lr: float = 1e-5, weight_decay: float = 0.0, warmup_steps: int = 0):
         super().__init__()
         self.model = AutoModelForTokenClassification.from_pretrained(model_name)
         self.loss = nn.CrossEntropyLoss()
+        self.lr = lr
+        self.weight_decay = weight_decay
+        self.warmup_steps = warmup_steps
+        self.warmup_steps = warmup_steps
         #self.loss = NLLLoss()
         #self.loss = nn.BCEWithLogitsLoss()
         #self.loss = nn.KLDivLoss() #reduction='none' for attention mask
@@ -82,7 +83,7 @@ class TokenClassificationModel(LightningModule):
         return metric
 
     def configure_optimizers(self):
-        #optimizer = AdamW(self.model.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)
+        #optimizer = AdamW(self.model.parameters(), lr=self.lr)
         optimizer = Adafactor(self.model.parameters(), lr=None, warmup_init=True, relative_step=True)
         #scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
         return optimizer
@@ -135,7 +136,7 @@ class SpanPredictionModel(LightningModule):
         return metric
 
     def configure_optimizers(self):
-        #optimizer = AdamW(self.model.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)
+        #optimizer = AdamW(self.model.parameters(), lr=self.lr)
         optimizer = Adafactor(self.model.parameters(), lr=None, warmup_init=True, relative_step=True)
-        #scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
-        return optimizer
+        #lr_scheduler=get_linear_schedule_with_warmup(optimizer, num_warmup_steps=self.warmup_steps)
+        return optimizer #, lr_scheduler
