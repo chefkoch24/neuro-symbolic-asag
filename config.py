@@ -5,20 +5,28 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint, Learning
 
 class Config:
     def __init__(self,
-                model="distilbert-base-multilingual-cased",
-                train_file='train_file.json',
-                dev_file='dev_file.json',
-                test_file='test_file.json',
-                aligned_train_file='aligned_train_file.json',
-                aligned_dev_file='aligned_dev_file.json',
-                aligned_test_file='aligned_test_file.json',
-                task= 'token_classification',
-                num_epochs=8,
-                batch_size=8,
-                context=False,
-                max_len=512,
-                seed=42,
-                ):
+                 model="distilbert-base-multilingual-cased",
+                 train_file='train_file.json',
+                 dev_file='dev_file.json',
+                 test_file='test_file.json',
+                 aligned_train_file='aligned_train_file.json',
+                 aligned_dev_file='aligned_dev_file.json',
+                 aligned_test_file='aligned_test_file.json',
+                 task= 'token_classification',
+                 num_epochs=8,
+                 batch_size=8,
+                 context=False,
+                 max_len=512,
+                 seed=42,
+                 gpus=2,
+                 lr=None,
+                 checkpoint_path=None,
+                 aggregation_method='sum',
+                 excluded_lfs=[],
+                 mode='classification',
+                 ):
+        self.AGGREGATION_METHOD = aggregation_method
+        self.EXCLUDED_LFS= excluded_lfs
         self.MODEL_NAME = model
         self.ANNOTATED_TRAIN_FILE = 'train_labeled_data_sum.json'
         self.ANNOTATED_DEV_FILE = 'dev_labeled_data_sum.json'
@@ -38,17 +46,17 @@ class Config:
         self.PATH_RUBRIC = "data/rubrics.json"
         self.PATH_RAW_DATA = "input/safdataset/training"
         self.PATH_RAW_RUBRIC = "input/rubrics"
-        self.PATH_CHECKPOINT = "checkpoints"
+        self.PATH_CHECKPOINT = checkpoint_path
         self.TASK = task
-
+        self.LR = lr
+        self.GPUS = gpus
+        self.MODE = mode
         self.nlp = spacy.load("en_core_web_lg")
         self.nlp_de = spacy.load("de_core_news_lg")
-
-        self.lr_callback = LearningRateMonitor(logging_interval='step', log_momentum=True)
-
+        self.lr_callback = LearningRateMonitor(logging_interval='epoch', log_momentum=True)
         self.checkpoint_callback = ModelCheckpoint(
             filename='checkpoint-{epoch:02d}-{val_loss:.2f}',
-            save_top_k=2,
+            save_top_k=1,
             verbose=True,
             monitor='val_loss',
             mode='min',

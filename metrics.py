@@ -291,10 +291,20 @@ def compute_f1_spans(pred_span, true_span):
 
 def compute_metrics_span_prediction(outputs):
     avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
-    start_predictions = torch.cat([x['start_logits'] for x in outputs]).argmax(dim=-1)
-    end_predictions = torch.cat([x['end_logits'] for x in outputs]).argmax(dim=-1)
     start_positions= torch.cat([x['start_positions'] for x in outputs])
     end_positions = torch.cat([x['end_positions'] for x in outputs])
+    attention_mask = torch.cat([x['attention_mask'] for x in outputs])
+    token_type_ids = torch.cat([x['token_type_ids'] for x in outputs])
+    # mask the start and end predictions with attention mask and token type ids
+    start_logits = torch.cat([x['start_logits'] for x in outputs])
+    end_logits = torch.cat([x['end_logits'] for x in outputs])
+    mask = (attention_mask == 1) & (token_type_ids == 1)
+    start_logits_masked = start_logits.masked_fill(~mask, float('-inf'))
+    end_logits_masked = end_logits.masked_fill(~mask, float('-inf'))
+
+    start_predictions = start_logits_masked.argmax(dim=-1)
+    end_predictions = end_logits_masked.argmax(dim=-1)
+
     input_ids = torch.cat([x['input_ids'] for x in outputs])
     classes = [x['class'] for x in outputs]
     classes = utils.flat_list(classes)

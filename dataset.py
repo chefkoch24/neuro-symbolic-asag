@@ -2,7 +2,7 @@
 #Imports
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, Sampler
 from transformers import AutoTokenizer
 
 import config
@@ -68,3 +68,28 @@ class GradingDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.data[idx]
+
+
+def chunk(indices, chunk_size):
+    return torch.split(torch.tensor(indices), chunk_size)
+
+
+class CustomBatchSampler(Sampler):
+    def __init__(self, dataset, batch_size):
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.rubrics = np.unique([d['question_id'] for d in self.dataset])
+        self.filtered_data = []
+
+    def __iter__(self):
+        filtered_data = []
+        for r in self.rubrics:
+            data = [i for i, d in enumerate(self.dataset) if d['question_id'] == r]
+            if len(data) > 0:
+                filtered_data.append(data)
+        data = []
+        for fd in filtered_data:
+            data += chunk(fd, self.batch_size)
+        combined = [batch.tolist() for batch in data]
+        self.filtered_data = filtered_data
+        return iter(combined)

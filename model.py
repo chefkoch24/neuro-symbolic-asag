@@ -2,24 +2,17 @@
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
-from transformers import AutoModelForTokenClassification, AutoModelForQuestionAnswering, Adafactor
+from transformers import AutoModelForTokenClassification, AutoModelForQuestionAnswering, Adafactor, \
+    get_constant_schedule_with_warmup, AdamW
 import metrics
 
 
 # Model
 class TokenClassificationModel(LightningModule):
-    def __init__(self, model_name: str, lr: float = 1e-5, weight_decay: float = 0.0, warmup_steps: int = 0):
+    def __init__(self, model_name: str):
         super().__init__()
         self.model = AutoModelForTokenClassification.from_pretrained(model_name)
         self.loss = nn.CrossEntropyLoss()
-        self.lr = lr
-        self.weight_decay = weight_decay
-        self.warmup_steps = warmup_steps
-        self.warmup_steps = warmup_steps
-        #self.loss = NLLLoss()
-        #self.loss = nn.BCEWithLogitsLoss()
-        #self.loss = nn.KLDivLoss() #reduction='none' for attention mask
-        #kl loss and cross entropy loss are working with probabilities in labels and logits
         self.save_hyperparameters()
 
 
@@ -84,9 +77,9 @@ class TokenClassificationModel(LightningModule):
 
     def configure_optimizers(self):
         #optimizer = AdamW(self.model.parameters(), lr=self.lr)
-        optimizer = Adafactor(self.model.parameters(), lr=None, warmup_init=True, relative_step=True)
-        #scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
-        return optimizer
+        # replace AdamW with Adafactor
+        optimizer = Adafactor(self.model.parameters(), scale_parameter=True, relative_step=True, warmup_init=True, lr=None)
+        return optimizer #get_constant_schedule_with_warmup(optimizer, num_warmup_steps=self.warmup_steps)
 
 
 # Model
@@ -136,7 +129,7 @@ class SpanPredictionModel(LightningModule):
         return metric
 
     def configure_optimizers(self):
-        #optimizer = AdamW(self.model.parameters(), lr=self.lr)
-        optimizer = Adafactor(self.model.parameters(), lr=None, warmup_init=True, relative_step=True)
-        #lr_scheduler=get_linear_schedule_with_warmup(optimizer, num_warmup_steps=self.warmup_steps)
+        #lr_scheduler=get_constant_schedule_with_warmup(optimizer, num_warmup_steps=self.warmup_steps)
+        #ptimizer = AdamW(self.model.parameters(), lr=0.001)
+        optimizer = Adafactor(self.model.parameters(), scale_parameter=True, relative_step=True, warmup_init=True, lr=None)
         return optimizer #, lr_scheduler

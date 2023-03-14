@@ -1,3 +1,5 @@
+import logging
+
 import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import CSVLogger
@@ -15,10 +17,12 @@ warnings.filterwarnings("ignore")
 class Training:
     def __init__(self, config):
         self.config = config
-        EXPERIMENT_NAME = config.TASK + "_" + self.config.MODEL_NAME.replace('/', '_') +  "_bs-" + str(self.config.BATCH_SIZE)
-        if config.TASK == 'token_classification':
-            EXPERIMENT_NAME += "_context-" + str(self.config.CONTEXT)
-        logger = CSVLogger("logs", name=EXPERIMENT_NAME)
+        num_gpus = self.config.GPUS
+        total_batch_size = self.config.BATCH_SIZE * num_gpus
+        self.EXPERIMENT_NAME = config.TASK + "_" + self.config.MODEL_NAME.replace('/', '_') +  "_bs-" + str(total_batch_size)
+        if self.config.TASK == 'token_classification':
+            self. EXPERIMENT_NAME += "_context-" + str(self.config.CONTEXT)
+        logger = CSVLogger("logs", name=self.EXPERIMENT_NAME)
         self.trainer = Trainer(max_epochs=self.config.NUM_EPOCHS,
                   #gradient_clip_val=0.5,
                   #accumulate_grad_batches=2,
@@ -27,7 +31,9 @@ class Training:
                       self.config.early_stop_callback,
                       self.config.lr_callback
                              ],
-                  logger=logger)
+                  logger=logger,
+                               gpus=self.config.GPUS,
+                               )
 
     def run_training(self):
         # Load data
@@ -68,6 +74,7 @@ class Training:
         torch.manual_seed(self.config.SEED)
         torch.cuda.manual_seed_all(self.config.SEED)
         # Training
+        logging.info("Start training", self.EXPERIMENT_NAME)
         self.trainer.fit(model, train_loader, val_loader)
         self.trainer.test(model, val_loader)
 
