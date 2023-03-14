@@ -85,7 +85,7 @@ class PreprocessorSpanPrediction(Preprocessor):
             rubric_elements, rubric_sims = self.get_rubric_elements(spans, tokenized['input_ids'], q_id)
             # generate final input for every span individually
             for span, re, sim in zip(spans, rubric_elements, rubric_sims):
-                tokenized = self.tokenizer(student_answer, re, max_length=self.max_len, truncation=True,
+                tokenized = self.tokenizer(re, student_answer, max_length=self.max_len, truncation=True,
                                       padding='max_length', return_token_type_ids=True)
                 model_input = {
                     'input_ids': tokenized['input_ids'],
@@ -101,3 +101,52 @@ class PreprocessorSpanPrediction(Preprocessor):
                 }
                 model_inputs.append(model_input)
         return model_inputs
+
+class GradingPreprocessorTokenClassification(Preprocessor):
+    def __init__(self, tokenizer, max_len=512, with_context=False, class2idx={'CORRECT': 0, 'PARTIAL_CORRECT': 1, 'INCORRECT': 2}):
+        super().__init__(tokenizer, max_len)
+        self.with_context = with_context
+        self.class2idx = class2idx
+
+    def preprocess(self, data):
+        model_inputs = []
+        for d in data:
+            if self.with_context:
+                tokenized = self.tokenizer(d['student_answer'], d['reference_answer'], truncation=True, padding='max_length',
+                                      max_length=self.max_len, return_tensors='pt', return_token_type_ids=True)
+            else:
+                tokenized = self.tokenizer(d['student_answer'], truncation=True, padding='max_length', max_length=self.max_len,
+                                      return_tensors='pt', return_token_type_ids=True)
+            d['input_ids'] = tokenized['input_ids']
+            d['attention_mask'] = tokenized['attention_mask']
+            d['class'] = self.class2idx[d['label']]
+            d['token_type_ids'] = tokenized['token_type_ids']
+        return model_inputs
+
+class GradingPreprocessorSpanPrediction(Preprocessor):
+    def __int__(self, tokenizer, max_len=512, rubrics=None, class2idx={'CORRECT': 0, 'PARTIAL_CORRECT': 1, 'INCORRECT': 2}):
+        super().__init__(tokenizer, max_len)
+        self.rubrics = rubrics
+        self.class2idx = class2idx
+
+    def preprocess(self, data):
+        model_inputs = []
+        max_scores = {}
+        for k in self.rubrics.keys():
+            max_scores[k] = np.max([d['score'] for d in data if d['question_id'] == k])
+        for d in data:
+            q_id = d['question_id']
+            for re in self.rubrics[q_id]['key_element']:
+                tokenized = self.tokenizer(re, d['student_answer'], truncation=True,
+                                           padding='max_length',
+                                           max_length=self.max_len, return_tensors='pt', return_token_type_ids=True)
+            d['input_ids'] = tokenized['input_ids']
+            d['attention_mask'] = tokenized['attention_mask']
+            d['class'] = self.class2idx[d['label']]
+            d['token_type_ids'] = tokenized['token_type_ids']
+            d['score'] = self.normalize_score(d['score'], max_scores[q_id])
+        return model_inputs
+
+    def normalize_score(self,score,  max_score):
+        #min max normalization of the scores
+        return score / max_score
