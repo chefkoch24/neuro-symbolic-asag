@@ -24,11 +24,12 @@ import myutils
 warnings.filterwarnings("ignore", category=UserWarning, module="nltk")
 
 
-class WeakSupervisionSoft():
-    def __init__(self, rubrics=None):
+class WeakSupervisionSoft:
+    def __init__(self, rubrics, config):
         self.rubrics = rubrics
         self.para_detector = BertScorer()
         self._punctuation = ['.', ',', '?', '!', ';', ':']
+        self.config = config
         self.rouge = Rouge(metrics=["rouge-1", "rouge-2", "rouge-3", "rouge-4", "rouge-5", "rouge-l"])
         self.labeling_functions = [
             {'name': 'LF_noun_phrases', 'function': self.LF_noun_phrases},
@@ -227,7 +228,7 @@ class WeakSupervisionSoft():
                 yield i[0], i[-1], 'CUE', 1.0
 
     def LF_lemma_match(self, doc, rubric, lang):
-        nlp = config.nlp_de if lang == 'de' else config.nlp
+        nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
         matcher = PhraseMatcher(nlp.vocab, attr="LEMMA")
         patterns = rubric['tokenized'].tolist()
         matcher.add("Lemma_Match", patterns)
@@ -237,7 +238,7 @@ class WeakSupervisionSoft():
                 yield start, end, "CUE", 1.0
 
     def LF_pos_match(self, doc, rubric, lang):
-        nlp = config.nlp_de if lang == 'de' else config.nlp
+        nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
         matcher = PhraseMatcher(nlp.vocab, attr="POS")
         patterns = rubric['tokenized'].tolist()
         matcher.add("POS_Match", patterns)
@@ -247,7 +248,7 @@ class WeakSupervisionSoft():
                 yield start, end, "CUE", 1.0
 
     def LF_dep_match(self, doc, rubric, lang):
-        nlp = config.nlp_de if lang == 'de' else config.nlp
+        nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
         matcher = PhraseMatcher(nlp.vocab, attr="DEP")
         patterns = rubric['tokenized'].tolist()
         matcher.add("DEP_Match", patterns)
@@ -257,7 +258,7 @@ class WeakSupervisionSoft():
                 yield start, end, "CUE", 1.0
 
     def LF_shape_match(self, doc, rubric, lang):
-        nlp = config.nlp_de if lang == 'de' else config.nlp
+        nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
         matcher = PhraseMatcher(nlp.vocab, attr="SHAPE")
         patterns = rubric['tokenized'].tolist()
         matcher.add("Shape_Match", patterns)
@@ -267,7 +268,7 @@ class WeakSupervisionSoft():
                 yield start, end, "CUE", 1.0
 
     def LF_tag_match(self, doc, rubric, lang):
-        nlp = config.nlp_de if lang == 'de' else config.nlp
+        nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
         matcher = PhraseMatcher(nlp.vocab, attr="TAG")
         patterns = rubric['tokenized'].tolist()
         matcher.add("Tag_Match", patterns)
@@ -277,7 +278,7 @@ class WeakSupervisionSoft():
                 yield start, end, "CUE", 1.0
 
     def _remove_stopwords(self, tokenized_sequence, lang):
-        nlp = config.nlp_de if lang == 'de' else config.nlp
+        nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
         # TODO: custom list, remove negations from stop words
         stop_words = nlp.Defaults.stop_words
         return [t for t in tokenized_sequence if t.text not in stop_words]

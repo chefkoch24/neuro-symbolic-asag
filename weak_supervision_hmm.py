@@ -86,7 +86,7 @@ class RubricAnnotator(SpanAnnotator):
 
 class WeakSupervisionHMM:
     def __init__(self, rubrics=None, meteor_th=0.25, ngram_th=0.5, rouge_th=0.5, edit_dist_th=0.5, paraphrase_th=0.5,
-                 bleu_th=0.5, jaccard_th=0.5, mode='hmm'):
+                 bleu_th=0.5, jaccard_th=0.5, mode='hmm', config=config):
         self.hmm = aggregation.HMM("hmm", ["CUE"], prefixes='IO')
         self.voter = skweak.voting.SequentialMajorityVoter("maj_voter", labels=["CUE"], prefixes='IO')
         self.mode = mode
@@ -99,7 +99,7 @@ class WeakSupervisionHMM:
         self.BLEU_THRESHOLD = bleu_th
         self.JACCARD_THRESHOLD = jaccard_th
         self.EDIT_DISTANCE_THRESHOLD = edit_dist_th
-        self.ws = WeakSupervisionSoft(self.rubrics)
+        self.ws = WeakSupervisionSoft(self.rubrics, config)
         self.labeling_functions = [
             RubricAnnotator('LF_meteor_sentences', self.LF_meteor_sentences),
             RubricAnnotator('LF_meteor_candidates', self.LF_meteor_candidates),

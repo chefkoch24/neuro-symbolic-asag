@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -34,6 +35,7 @@ def apply_lfs(data, model, rubrics, file_name, path):
         }
         annotated_data.append(item)
     myutils.save_json(annotated_data, path, file_name + '.json')
+    return annotated_data
 
 def apply_hmm(data, model, rubrics, file_name, path):
     result = model.predict(data)
@@ -52,26 +54,30 @@ def apply_hmm(data, model, rubrics, file_name, path):
                 'labeling_functions': {},
         }
         annotated_data.append(item)
-    myutils.save_json(annotated_data, path, file_name +  '.json')
+    myutils.save_json(annotated_data, path, file_name + '.json')
+    return annotated_data, result
 
 
 # LOAD DATA
+logging.info("Loading data...")
 config = Config()
-rubrics = myutils.load_json(config.PATH_RUBRIC)
-rubrics = myutils.prepare_rubrics(rubrics)
+rubrics = myutils.load_rubrics(config.PATH_RUBRIC)
+rubrics = myutils.prepare_rubrics(rubrics, config)
 X_train = pd.read_json(config.PATH_DATA + '/' + 'training_dataset.json')
 X_dev = pd.read_json(config.PATH_DATA + '/' + 'dev_dataset.json')
-X_train = myutils.tokenize_data(X_train)
-X_dev = myutils.tokenize_data(X_dev)
+X_train = myutils.tokenize_data(X_train, config)
+X_dev = myutils.tokenize_data(X_dev, config)
 
 # STANDARD WEAK SUPERVISION
-ws = WeakSupervisionSoft(rubrics=rubrics)
+logging.info("Start Standard Weak Supervision...")
+ws = WeakSupervisionSoft(rubrics=rubrics, config=config)
 apply_lfs(X_train, ws, rubrics, file_name='training_ws_lfs', path=config.PATH_DATA)
 apply_lfs(X_dev, ws, rubrics, file_name='dev_ws_lfs', path=config.PATH_DATA)
 
 # HMM WEAK SUPERVISION
+logging.info("Start HMM Weak Supervision...")
 ws = WeakSupervisionHMM(rubrics=rubrics, meteor_th=0.05, ngram_th=0.10, rouge_th=0.15, edit_dist_th=0.5,
-                            paraphrase_th=0.9, bleu_th=0.5, jaccard_th=0.5, mode='hmm')
+                            paraphrase_th=0.9, bleu_th=0.5, jaccard_th=0.5, mode='hmm', config=config)
 ws.fit(X_train)
 apply_hmm(X_train, ws, rubrics, file_name='training_ws_hmm', path=config.PATH_DATA)
 apply_hmm(X_dev, ws, rubrics, file_name='dev_ws_hmm', path=config.PATH_DATA)
