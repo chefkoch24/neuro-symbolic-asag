@@ -3,7 +3,7 @@ import tokenizations
 from tqdm import tqdm
 from transformers import AutoTokenizer
 
-import config
+from config import Config
 import myutils as utils
 
 def align_generate_labels_all_tokens(tokens_spacy, tokens_bert, l):
@@ -34,22 +34,31 @@ def create_aligned_labels(data):
         # Tokenize the input to generate alignment
         tokenized = tokenizer(student_answer, add_special_tokens=False, return_offsets_mapping=True)
         tokens_bert = [tokenizer.decode(t) for t in tokenized['input_ids']] # used for alingment
-        aligned_labels = utils_preprocessing.align_generate_labels_all_tokens(tokens_spacy, tokens_bert, labels).tolist()
+        aligned_labels = align_generate_labels_all_tokens(tokens_spacy, tokens_bert, labels).tolist()
         # get the spans from the aligned labels
         d['aligned_labels'] = aligned_labels
         aligned_data.append(d)
     return aligned_data
 
+for model in ['distilbert-base-multilingual-cased', 'SpanBERT/spanbert-base-cased']:
+    for aggregation in ['hmm', 'lfs_sum']:
+        config = Config(train_file='aggregated_training_ws_' + aggregation + '.json',
+                        dev_file='aggregated_dev_ws_' + aggregation + '.json',
+                        test_file=None,
+                        model=model,)
+        tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
+        rubrics = utils.load_rubrics(config.PATH_RUBRIC)
+        DATASET_NAME = 'dataset_aligned_labels_' + config.MODEL_NAME.replace('/','_') + '_' + aggregation + '.json'
 
-train_data = utils.load_json(config.PATH_DATA + '/' + config.ANNOTATED_TRAIN_FILE)
-dev_data = utils.load_json(config.PATH_DATA + '/' + config.ANNOTATED_DEV_FILE)
-tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
-rubrics = utils.load_rubrics(config.PATH_RUBRIC)
+        # load data
+        train_data = utils.load_json(config.PATH_DATA + '/' + config.TRAIN_FILE)
+        dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)
+        training_dataset = create_aligned_labels(train_data)
+        dev_dataset = create_aligned_labels(dev_data)
+        utils.save_json(training_dataset, config.PATH_DATA + '/', 'training_' + DATASET_NAME)
+        utils.save_json(dev_dataset, config.PATH_DATA + '/', 'dev_'+DATASET_NAME)
 
-training_dataset = create_aligned_labels(train_data)
-dev_dataset = create_aligned_labels(dev_data)
-
-#save data
-DATASET_NAME = 'dataset_aligned_labels_' + config.MODEL_NAME.replace('/','_') + '.json'
-utils.save_json(training_dataset, config.PATH_DATA + '/', 'training_' + DATASET_NAME)
-utils.save_json(dev_dataset, config.PATH_DATA + '/', 'dev_'+DATASET_NAME)
+        if config.TEST_FILE is not None:
+            test_data = utils.load_json(config.PATH_DATA + '/' + config.TEST_FILE)
+            test_dataset = create_aligned_labels(dev_data)
+            utils.save_json(dev_dataset, config.PATH_DATA + '/', 'test_' + DATASET_NAME)
