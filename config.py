@@ -54,16 +54,13 @@ class Config:
         self.checkpoint_callback = ModelCheckpoint(
             filename='checkpoint-{epoch:02d}-{val_loss:.2f}',
             save_top_k=1,
-            verbose=True,
             monitor='val_loss',
             mode='min',
-
         )
 
         self.early_stop_callback = EarlyStopping(
             monitor='val_loss',
             min_delta=0.00,
             patience=3,
-            verbose=False,
             mode='min'
         )
