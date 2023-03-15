@@ -1,4 +1,6 @@
 # This script finally grades the student answers
+from abc import abstractmethod
+
 import numpy as np
 import torch
 from pytorch_lightning import Trainer
@@ -8,80 +10,75 @@ from transformers import AutoTokenizer, AutoModelForTokenClassification
 from incremental_trees.models.classification.streaming_rfc import StreamingRFC
 
 # Define the model checkpoint
-import config
-from dataset import GradingDataset
-from grading_model import GradingModel
+from config import Config
+from dataset import GradingDataset, CustomBatchSampler
+from grading_model import *
 import myutils as utils
-
-model_checkpoint = 'logs/justification_cue_distilbert-base-multilingual-cased_context-False/version_7/checkpoints/checkpoint-epoch=04-val_loss=0.64.ckpt'
-tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
+from preprocessor import *
 
 
-def chunk(indices, chunk_size):
-    return torch.split(torch.tensor(indices), chunk_size)
+class Grading:
+    def __init__(self, config):
+        self.config = config
+        self.tokenizer = AutoTokenizer.from_pretrained(self.config.MODEL_NAME)
+        self.rubrics = utils.load_rubrics(self.config.PATH_RUBRIC)
+        self.model = GradingModel(
+            model_name=self.config.MODEL_NAME,
+            checkpoint=self.config.PATH_CHECKPOINT,
+            mode=self.config.MODE,
+            rubrics=self.rubrics,
+        )
+        EXPERIMENT_NAME = "grading_" + config.MODEL_NAME + self.config.MODE
+        logger = CSVLogger("logs", name=EXPERIMENT_NAME)
+        self.trainer = Trainer(
+            max_epochs=self.config.NUM_EPOCHS,
+            callbacks=[
+                self.config.checkpoint_callback,
+                self.config.early_stop_callback
+            ],
+            logger=logger,
+            num_sanity_val_steps=0,
+            )
 
+    def training(self):
+        train_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.TRAIN_FILE)
+        dev_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.DEV_FILE)
+        if self.config.TASK == 'token_classification':
+            preprocessor = GradingPreprocessorTokenClassification(self.tokenizer, with_context=self.config.CONTEXT)
+            training_dataset = preprocessor.preprocess(train_data)
+            dev_dataset = preprocessor.preprocess(dev_data)
+        elif self.config.TASK == 'span_prediction':
+            preprocessor = GradingPreprocessorSpanPrediction(self.tokenizer, self.rubrics)
+            training_dataset = preprocessor.preprocess(train_data)
+            dev_dataset = preprocessor.preprocess(dev_data)
+        training_dataset = GradingDataset(training_dataset)
+        dev_dataset = GradingDataset(dev_dataset)
+        train_loader = DataLoader(training_dataset,
+                                  batch_sampler=CustomBatchSampler(training_dataset, self.config.BATCH_SIZE))
+        val_loader = DataLoader(dev_dataset, batch_sampler=CustomBatchSampler(dev_dataset, self.config.BATCH_SIZE))
+        self.trainer.fit(self.model, train_loader, val_loader)
 
-class CustomBatchSampler(Sampler):
-    def __init__(self, dataset, batch_size):
-        self.dataset = dataset
-        self.batch_size = batch_size
-        self.rubrics = np.unique([d['question_id'] for d in self.dataset])
-        self.filtered_data = []
+    def test(self):
+        self.model = self.model.load_from_checkpoint(self.config.CHECKPOINT_PATH)
+        test_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.TEST_FILE)
+        if self.config.TASK == 'token_classification':
+            preprocessor = GradingPreprocessorTokenClassification(with_context=self.config.CONTEXT)
+            test_dataset = preprocessor.preprocess(test_data)
 
-    def __iter__(self):
-        filtered_data = []
-        for r in rubrics:
-            data = [i for i, d in enumerate(self.dataset) if d['question_id'] == r]
-            if len(data) > 0:
-                filtered_data.append(data)
-        data = []
-        for fd in filtered_data:
-            data += chunk(fd, self.batch_size)
-        combined = [batch.tolist() for batch in data]
-        self.filtered_data = filtered_data
-        return iter(combined)
+        elif self.config.TASK == 'span_prediction':
+            preprocessor = GradingPreprocessorSpanPrediction(self.rubrics)
+            test_dataset = preprocessor.preprocess(test_data)
+        test_dataset = GradingDataset(test_dataset)
+        test_loader = DataLoader(test_dataset, batch_sampler=CustomBatchSampler(test_dataset, self.config.BATCH_SIZE))
+        self.trainer.test(self.model, test_loader)
 
-def preprocess(data, class2idx={'CORRECT': 0, 'PARTIAL_CORRECT': 1, 'INCORRECT': 2}, with_context=False):
-    for d in data:
-        if with_context:
-            tokenized = tokenizer(d['student_answer'], d['reference_answer'] , truncation=True, padding='max_length', max_length=512, return_tensors='pt', return_token_type_ids=True)
-        else:
-            tokenized = tokenizer(d['student_answer'], truncation=True, padding='max_length', max_length=512, return_tensors='pt', return_token_type_ids=True)
-        d['input_ids'] = tokenized['input_ids']
-        d['attention_mask'] = tokenized['attention_mask']
-        d['class'] = class2idx[d['label']]
-        d['token_type_ids'] = tokenized['token_type_ids']
-    return data
-
-train_file = 'training_dataset.json'
-dev_file = 'dev_dataset.json'
-# Create dataset and dataloader
-training_data = utils.load_json(config.PATH_DATA + '/' + train_file)
-dev_data = utils.load_json(config.PATH_DATA + '/' + dev_file)
-rubrics = utils.load_rubrics(config.PATH_RUBRIC)
-
-training_data = preprocess(training_data, with_context=True)
-dev_data = preprocess(dev_data, with_context=True)
-
-training_dataset = GradingDataset(training_data[0:4])
-dev_dataset = GradingDataset(dev_data[0:4])
-
-train_loader = DataLoader(training_dataset, batch_sampler=CustomBatchSampler(training_dataset, config.BATCH_SIZE))
-val_loader = DataLoader(dev_dataset, batch_sampler=CustomBatchSampler(dev_dataset, config.BATCH_SIZE))
-model = GradingModel(model_checkpoint, rubrics=rubrics, model_name=config.MODEL_NAME, mode='classification')
-
-EXPERIMENT_NAME = "grading_" + config.MODEL_NAME
-logger = CSVLogger("logs", name=EXPERIMENT_NAME)
-trainer = Trainer(max_epochs=config.NUM_EPOCHS,
-                  #gradient_clip_val=0.5,
-                  #accumulate_grad_batches=2,
-                  #auto_scale_batch_size='power',
-                  callbacks=[
-                      config.checkpoint_callback,
-                      config.early_stop_callback
-                             ],
-                  logger=logger,
-                  num_sanity_val_steps=0,
-                  )
-trainer.fit(model, train_loader, val_loader)
-trainer.test(model, val_loader)
+if __name__ == '__main__':
+    config = Config(task='token_classification',
+                    gpus=2,
+                    #checkpoint_path='logs/span_prediction_SpanBERT_spanbert-base-cased_bs-8/version_0/checkpoints/checkpoint-epoch=00-val_loss=6.24.ckpt',
+                    checkpoint_path='logs/token_classification_SpanBERT_spanbert-base-cased_bs-8_context-True/version_0/checkpoints/checkpoint-epoch=05-val_loss=0.60.ckpt',
+                    dev_file='dev_dataset_aligned_labels_SpanBERT_spanbert-base-cased.json',
+                    train_file='training_dataset_aligned_labels_SpanBERT_spanbert-base-cased.json',
+                    model='SpanBERT/spanbert-base-cased'
+                    )
+    Grading(config).training()
