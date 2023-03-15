@@ -1,3 +1,5 @@
+import io
+import logging
 from abc import abstractmethod
 
 import numpy as np
@@ -8,51 +10,45 @@ from transformers import AutoTokenizer
 
 import metrics
 import myutils as utils
-from config import Config
+from dataset import *
 from model import SpanPredictionModel, TokenClassificationModel
+from preprocessor import *
+
+def save_results(results, config):
+    results = pd.DataFrame(columns=results[0].keys(), data=results)
+    result_file_name = 'predicitons_' + config.MODEL_NAME.replace('/', '_')
+    results.to_csv('results/' + result_file_name + '.csv', index=False)
 
 
-class Predict:
+class PredictToken:
     def __init__(self, config):
         self.config = config
-
-    @abstractmethod
-    def predict(self):
-        pass
-
-class PredictToken(Predict):
-    def __int__(self, config):
-        super.__init__(config)
-        self.model = TokenClassificationModel.load_from_checkpoint(self.config.PATH_CHECKPOINT)
         self.tokenizer = AutoTokenizer.from_pretrained(self.config.MODEL_NAME)
-        self.with_context = self.config.WITH_CONTEXT
+        self.model = TokenClassificationModel.load_from_checkpoint(self.config.PATH_CHECKPOINT)
+        self.with_context = self.config.CONTEXT
         self.test_dataset = utils.load_json(self.config.PATH_DATA + '/' + self.config.TEST_FILE)
+        preprocessor = PreprocessorTokenClassification(self.config.MODEL_NAME, with_context=self.config.CONTEXT)
+        self.test_dataset = preprocessor.preprocess(self.test_dataset)
+        self.test_dataset = JustificationCueDataset(self.test_dataset)
 
     def predict(self):
         self.model.eval()
         with torch.no_grad():
             results = []
             for i, data in tqdm(enumerate(self.test_dataset)):
-                len_student_answer = len(self.tokenizer(data['student_answer'])['input_ids'])
-                if self.with_context:
-                    x = self.tokenizer(data['student_answer'], data['reference_answer'], return_tensors='pt',
-                                  return_token_type_ids=True, padding='max_length', max_length=512, truncation=True)
-                else:
-                    x = self.tokenizer(data['student_answer'], return_tensors='pt', return_token_type_ids=True,
-                              padding='max_length', max_length=512, truncation=True)
-                logits = self.model(x['input_ids'], x['attention_mask'])
-                y_hat = torch.argmax(logits, dim=-1).detach().numpy()[0]
-                input_ids = x['input_ids'].detach().numpy()[0]
-                # only keep student answer
-                y_hat = y_hat[:len_student_answer]
-                input_ids = input_ids[:len_student_answer]
+                logits = self.model.forward(input_ids=data['input_ids'].unsqueeze(1), attention_mask=data['attention_mask'].unsqueeze(1))
+                attention_mask = data['attention_mask'].cpu().numpy() == 1
+                token_type_ids = data['token_type_ids'].cpu().numpy() == 0
+                valid_indices = attention_mask & token_type_ids
+                y_hat = torch.argmax(logits[valid_indices], dim=-1).detach().numpy()
+                input_ids = data['input_ids'].cpu().numpy()[valid_indices]
                 # remove CLS and SEP
                 input_ids = input_ids[1:-1]
-                y_hat = y_hat[1:-1]
+                y_hat = utils.flat_list(y_hat[1:-1])
                 pred_spans = metrics.get_spans_from_labels(y_hat)
                 pred_spans = [self.tokenizer.decode(input_ids[s[0]:s[1]]) for s in pred_spans]
                 # true spans
-                true_labels = [np.argmax(l, axis=-1) for l in data['labels'] if l[1] != -100]
+                true_labels = [torch.argmax(l, axis=-1).item() for l in data['labels'] if l[1] != -100]
                 spans = metrics.get_spans_from_labels(true_labels)
                 true_spans = [self.tokenizer.decode(input_ids[s[0]:s[1]]) for s in spans]
                 results.append({
@@ -62,15 +58,20 @@ class PredictToken(Predict):
                     'pred_spans': pred_spans,
                     'class': data['class']
                 })
+        save_results(results, self.config)
 
 
-class PredictSpan(Predict):
+class PredictSpan:
     def __init__(self, config):
-        super().__init__(config)
+        self.config = config
         self.config = config
         self.tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
         self.model = SpanPredictionModel.load_from_checkpoint(config.PATH_CHECKPOINT)
-        self.test_dataset = utils.load_json(config.PATH_DATA + '/' + config.TEST_FILE)
+        self.test_dataset = utils.load_json(self.config.PATH_DATA + '/' + self.config.TEST_FILE)
+        # TokenClassification is used intentional as it is faster and we want to predict over all rubric items
+        preprocessor = PreprocessorTokenClassification(self.config.MODEL_NAME)
+        self.test_dataset = preprocessor.preprocess(self.test_dataset)
+        self.test_dataset = JustificationCueDataset(self.test_dataset)
         self.rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 
     def predict(self):
@@ -103,6 +104,4 @@ class PredictSpan(Predict):
                         'rubric_element': re,
                         'class': data['label']
                     })
-            results = pd.DataFrame(columns=results[0].keys(), data=results)
-            result_file_name = 'predicitons_' + self.config.MODEL_NAME.replace('/', '_')
-            results.to_csv('results/' + result_file_name + '.csv', index=False)
+        save_results(results, self.config)
