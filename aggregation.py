@@ -64,8 +64,7 @@ class Aggregation:
         data_norm = [[(l - min_value) / range_val for l in d] for d in data]
         return data_norm
 
-    def aggregate_labels(self, mode:str, file_name:str):
-        data = utils.load_json(self.config.PATH_DATA + '/' + file_name)
+    def aggregate_labels(self, data, mode:str,file_name:str):
         annotated_data = self.extract_annotations(data, exclude_LFs=self.config.EXCLUDED_LFS)
         silver_labels = []
         for a in annotated_data:
@@ -75,7 +74,7 @@ class Aggregation:
             silver_labels.append(y)
         for a, labels in zip(data, silver_labels):
             a['silver_labels'] = labels
-        utils.save_json(data, self.config.PATH_DATA, file_name)
+        utils.save_json(data, self.config.PATH_DATA, file_name + '.json')
 
 class AggregationHMM:
 
@@ -91,4 +90,4 @@ class AggregationHMM:
                 label[int(k)] = v['I-CUE']
             d['silver_labels'] = label.tolist()
             annotated_data.append(d)
-        utils.save_json(annotated_data, self.config.PATH_DATA, file_name)
+        utils.save_json(annotated_data, self.config.PATH_DATA, file_name + '.json')

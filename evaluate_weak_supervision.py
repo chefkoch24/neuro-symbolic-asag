@@ -1,31 +1,19 @@
-# Settings
-exclude = []
-# exclude all hard labeling functions
-#exclude = ['LF_lemma_match_without_stopwords', 'LF_pos_match_without_stopwords', 'LF_dep_match', 'LF_pos_match', 'LF_tag_match', 'LF_bleu_candidates','LF_edit_distance', 'LF_jaccard_similarity']
-# exclude functions with low performance
-#exclude = ['LF_pos_match', 'LF_tag_match', 'LF_dep_match','LF_pos_match_without_stopwords','LF_edit_distance', 'LF_jaccard_similarity']
-th = 0.5
-GLOBAL_NORMALIZE = False
-#average_outliers = False
-
 #Imports
 import metrics
 import numpy as np
 import pandas as pd
-import config
+from config import Config
 import skweak
 import myutils as utils
+import logging
 
-def main():
+def evaluate_weak_supervision_models(files, config, th=0.5):
     results = []
     german_question_ids = [str(i) for i in range(1, 10)]
-    files = ['train_labeled_data_hmm.json', 'train_labeled_data_sum.json', 'train_labeled_data_average.json', 'train_labeled_data_max.json', 'train_labeled_data_average_nonzero.json']
-    if GLOBAL_NORMALIZE:
-        files = ['train_labeled_data_hmm.json', 'train_labeled_data_sum_global.json', 'train_labeled_data_average_global.json', 'train_labeled_data_max_global.json', 'train_labeled_data_average_nonzero_global.json']
     for file in files:
-        print('Analyzing.. ' + file)
+        logging.info('Analyzing.. ' + file)
         disable_lang_filter = False
-        annotated_train_data = utils.load_json(config.PATH_DATA + '/' + file)
+        annotated_data = utils.load_json(config.PATH_DATA + '/' + file)
         #Creating results
         for language in ['de', 'en', 'combined']:
             true_labels = []
@@ -33,7 +21,7 @@ def main():
             classes = []
             if language == 'combined':
                 disable_lang_filter = True
-            for an in annotated_train_data:
+            for an in annotated_data:
                 lang = an['lang']
                 c = an['label']
                 labels = an['silver_labels']
@@ -43,21 +31,18 @@ def main():
                     true_labels.append(true_label)
                     classes.append(c)
             # statistical metrics
-            print('Statistical Metrics')
+            logging.info('Statistical Metrics')
             statistical_metrics= metrics.get_statistical_metrics(true_labels, classes)
             # Custom metrics
             n_correct, n_partial, n_incorrect = metrics.get_average_number_of_key_elements_by_class(true_labels, classes)
             r_correct, r_partial, r_incorrect = metrics.get_average_realtion_by_class(true_labels, classes)
             tn_correct, tn_partial, tn_incorrect = metrics.get_average_number_of_tokens_per_key_element_by_class(true_labels, classes)
-            print('Custom Metrics')
-            print(language.upper() + ' Relation:', 'CORRECT', r_correct, 'PARTIAL_CORRECT',
+            logging.info('Custom Metrics')
+            logging.info(language.upper() + ' Relation:', 'CORRECT', r_correct, 'PARTIAL_CORRECT',
                   r_partial, 'INCORRECT', r_incorrect)
-            #plot_bars(['CORRECT', 'PARTIAL_CORRECT', 'INCORRECT'], [np.average(relations_correct), np.average(relations_partial), np.average(relations_incorrect)], mode.upper() + '-' + language.upper() + ' Relation')
-            print(language.upper() + ' Average len (tokens):', 'CORRECT', tn_correct, 'PARTIAL_CORRECT', tn_partial, 'INCORRECT', tn_incorrect)
-            #plot_bars(['CORRECT', 'PARTIAL_CORRECT', 'INCORRECT'], [np.average(len_rubrics_average_correct), np.average(len_rubrics_average_partial), np.average(len_rubrics_average_incorrect)], mode.upper() + '-' + language.upper() + ' Average len (tokens)')
-            print(language.upper() + ' Average number of rubrics in answer:', 'CORRECT', n_correct,
+            logging.info(language.upper() + ' Average len (tokens):', 'CORRECT', tn_correct, 'PARTIAL_CORRECT', tn_partial, 'INCORRECT', tn_incorrect)
+            logging.info(language.upper() + ' Average number of rubrics in answer:', 'CORRECT', n_correct,
                   'PARTIAL_CORRECT', n_partial, 'INCORRECT', n_incorrect)
-            #plot_bars(['CORRECT', 'PARTIAL_CORRECT', 'INCORRECT'], [n_correct,n_partial, n_incorrect], language.upper() + ' Average number of rubrics in answer')
             results.append({
                 'id': file + '-CORRECT-' + language.upper(),
                 'avg_relation': r_correct,
@@ -97,9 +82,7 @@ def main():
                 'max': statistical_metrics['max_incorrect'],
                 'labeled_tokens': statistical_metrics['labeled_tokens_incorrect'],
             })
-
-
-    # save as spacy doc
+        # save as spacy doc
         def create_averaged_labels(indicies, raw_labels):
             labels = raw_labels.copy()
             for idx in indicies:
@@ -121,7 +104,7 @@ def main():
                     ents.append(('CUE', s, e))
             return ents
         doc = []
-        for a in annotated_train_data:
+        for a in annotated_data:
             text = a['student_answer']
             qid = a['question_id']
             question = a['question']
@@ -138,17 +121,17 @@ def main():
             tokens.ents = ents
             doc.append(tokens)
 
-        results_name = file.split('.')[0]
-        if GLOBAL_NORMALIZE:
-            results_name += '_global'
-        skweak.utils.docbin_writer(doc, 'corpora/' + results_name + '.spacy')
-        print('saved to disk')
+    return results, doc
 
-    results = pd.DataFrame(columns=results[0].keys(), data=results)
-    result_file_name = 'ws_results'
-    if GLOBAL_NORMALIZE:
-        result_file_name += '_global'
-    results.to_csv('results/' + result_file_name + '.csv', index=False)
 
-if __name__ == '__main__':
-    main()
+config = Config()
+files = ['aggregated_dev_ws_lfs_average.json', 'aggregated_dev_ws_lfs_average_nonzero.json',
+         'aggregated_dev_ws_lfs_max.json', 'aggregated_dev_ws_lfs_sum.json',
+         'aggregated_dev_ws_hmm.json'
+         ]
+
+results, doc = evaluate_weak_supervision_models(files, config)
+results = pd.DataFrame(columns=results[0].keys(), data=results)
+result_file_name = 'ws_results'
+results.to_csv('results/' + result_file_name + '.csv', index=False)
+skweak.utils.docbin_writer(doc, 'corpora/' + result_file_name + '.spacy')

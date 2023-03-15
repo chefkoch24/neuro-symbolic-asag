@@ -15,7 +15,7 @@ for aggregation_method in ['sum', 'max', 'average', 'average_nonzero', 'hmm']:
         for file_name in ['training_ws_hmm', 'dev_ws_hmm']:
             data = utils.load_json(config.PATH_DATA + '/' + file_name + '.json')
             aggregation = AggregationHMM(config)
-            docs = skweak.utils.docbin_reader('corpora/' + file_name + '.spacy', spacy_model_name=config.nlp)
-            aggregation.aggregate_labels(data, docs,  'aggregated_' + file_name)
+            docs = skweak.utils.docbin_reader('corpora/' + file_name + '.spacy', spacy_model_name='en_core_web_lg')
+            aggregation.aggregate_labels(docs, data, 'aggregated_' + file_name)
 
 
