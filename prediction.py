@@ -102,6 +102,6 @@ class PredictSpan:
                         'student_answer': data['student_answer'],
                         'prediction': span,
                         'rubric_element': re,
-                        'class': data['label']
+                        'class': data['class']
                     })
         save_results(results, self.config)
