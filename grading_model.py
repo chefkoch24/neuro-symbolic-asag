@@ -20,7 +20,6 @@ class GradingModelTrivial(LightningModule):
         self.loss = nn.CrossEntropyLoss()
         self.rubrics = rubrics
         self.para_detector = BertScorer()
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.classes = [0,1,2] # 0 = correct, 1 = partially correct, 2 = incorrect
         self.f1_score = F1Score(task='multiclass', num_classes=3, average='none')
         self.accuracy = Accuracy(task='multiclass', num_classes=3, average='none')
@@ -140,7 +139,7 @@ class GradingModelTrivial(LightningModule):
 
 
 class GradingModel(LightningModule):
-    def __init__(self, checkpoint: str, model_name, rubrics, mode='classification'):
+    def __init__(self, checkpoint: str, rubrics, model_name, mode='classification', task='token_classification'):
         super().__init__()
         self.model = TokenClassificationModel.load_from_checkpoint(checkpoint) #("/path/to/checkpoint.ckpt")
         self.cross_entropy_loss = nn.CrossEntropyLoss()
@@ -149,8 +148,9 @@ class GradingModel(LightningModule):
         self.mode = mode
         self.symbolic_models = self.__init_learners__()
         self.para_detector = BertScorer()
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.classes = np.array([0,1,2])
+        self.task = task
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.save_hyperparameters()
 
 
@@ -158,7 +158,6 @@ class GradingModel(LightningModule):
         q_id = question_ids[0]
         outputs = self.model(input_ids=input_ids.squeeze(1), attention_mask=attention_mask.squeeze(1)) #remove one unnecessary dimension
         predictions = torch.argmax(outputs, dim=-1)
-        true_predictions, true_input_ids = [], []
         attention_mask = attention_mask.squeeze(1)
         token_type_ids = token_type_ids.squeeze(1)
         input_ids = input_ids.squeeze(1)
@@ -258,5 +257,4 @@ class GradingModel(LightningModule):
     def configure_optimizers(self):
         # optimizer = AdamW(self.model.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)
         optimizer = Adafactor(self.model.parameters(), lr=None, warmup_init=True, relative_step=True)
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
         return optimizer

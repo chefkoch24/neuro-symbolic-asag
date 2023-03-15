@@ -51,7 +51,7 @@ def load_rubrics(path):
     return rubrics
 
 
-def prepare_rubrics(rubrics):
+def prepare_rubrics(rubrics, config):
     german_question_ids = [str(i) for i in range(1, 10)]
     for key in rubrics:
         rubric = rubrics[key]
@@ -75,7 +75,7 @@ def save_annotated_corpus(annotated_docs, path):
     skweak.utils.docbin_writer(annotated_docs, path)
 
 
-def tokenize_data(data):
+def tokenize_data(data, config):
     tokenized = []
     for i, d in data.iterrows():
         if d['lang'] == 'en':

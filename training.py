@@ -10,7 +10,7 @@ from dataset import JustificationCueDataset, SpanJustificationCueDataset, Gradin
 from grading_model import GradingModelTrivial, GradingModel
 from model import TokenClassificationModel, SpanPredictionModel
 from paraphrase_scorer import BertScorer
-from preprocessor import PreprocessorTokenClassification, PreprocessorSpanPrediction
+from preprocessor import *
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -27,17 +27,17 @@ class TrainingJustificationCueDetection:
         if self.config.TASK == 'token_classification':
             self. EXPERIMENT_NAME += "_context-" + str(self.config.CONTEXT)
         logger = CSVLogger("logs", name=self.EXPERIMENT_NAME)
-        self.trainer = Trainer(max_epochs=self.config.NUM_EPOCHS,
-                  #gradient_clip_val=0.5,
-                  #accumulate_grad_batches=2,
-                  callbacks=[
+        self.trainer = Trainer(
+            max_epochs=self.config.NUM_EPOCHS,
+            callbacks=[
                       self.config.checkpoint_callback,
                       self.config.early_stop_callback,
                       self.config.lr_callback
                              ],
-                  logger=logger,
-                               gpus=self.config.GPUS,
-                               )
+            logger=logger,
+            gpus=self.config.GPUS,
+            accelerator=self.config.DEVICE,
+            )
 
     def run_training(self):
         # Load data
@@ -99,6 +99,7 @@ class TrainingGrading():
                                logger=logger,
                                gpus=self.config.GPUS,
                                num_sanity_val_steps=0,
+                               accelerator=config.DEVICE,
                                )
 
     def run_training(self):
@@ -106,12 +107,12 @@ class TrainingGrading():
         if self.config.GRADING_MODEL == 'trivial':
             model = GradingModelTrivial(self.config.PATH_CHECKPOINT, rubrics)
         elif self.config.GRADING_MODEL == 'decision_tree':
-            model = GradingModel(self.config.PATH_CHECKPOINT, rubrics)
+            model = GradingModel(self.config.PATH_CHECKPOINT, rubrics, self.config.MODEL_NAME, mode=self.config.MODE, task=self.config.TASK)
 
         if self.config.TASK == 'token_classification':
-            preprocessor = PreprocessorTokenClassification(self.config.MODEL_NAME, with_context=self.config.CONTEXT)
+            preprocessor = GradingPreprocessorTokenClassification(self.config.MODEL_NAME, with_context=self.config.CONTEXT, rubrics=rubrics)
         elif self.config.TASK == 'span_prediction':
-            preprocessor = PreprocessorSpanPrediction(self.config.MODEL_NAME, rubrics=rubrics)
+            preprocessor = GradingPreprocessorSpanPrediction(self.config.MODEL_NAME, rubrics=rubrics)
 
         train_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.TRAIN_FILE)
         dev_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.DEV_FILE)

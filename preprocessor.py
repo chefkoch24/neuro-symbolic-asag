@@ -103,14 +103,23 @@ class PreprocessorSpanPrediction(Preprocessor):
         return model_inputs
 
 class GradingPreprocessorTokenClassification(Preprocessor):
-    def __init__(self, tokenizer, max_len=512, with_context=False, class2idx={'CORRECT': 0, 'PARTIAL_CORRECT': 1, 'INCORRECT': 2}):
+    def __init__(self, tokenizer, max_len=512, with_context=False, rubrics=None, class2idx={'CORRECT': 0, 'PARTIAL_CORRECT': 1, 'INCORRECT': 2}):
         super().__init__(tokenizer, max_len)
+        self.rubrics = rubrics
         self.with_context = with_context
         self.class2idx = class2idx
 
     def preprocess(self, data):
         model_inputs = []
+        max_scores = {}
+        for k in self.rubrics.keys():
+            scores = [d['score'] for d in data if d['question_id'] == k]
+            if scores != []:
+                max_scores[k] = np.max(scores)
+            else:
+                max_scores[k] = 0
         for d in data:
+            q_id = d['question_id']
             if self.with_context:
                 tokenized = self.tokenizer(d['student_answer'], d['reference_answer'], truncation=True, padding='max_length',
                                       max_length=self.max_len, return_tensors='pt', return_token_type_ids=True)
@@ -121,6 +130,17 @@ class GradingPreprocessorTokenClassification(Preprocessor):
             d['attention_mask'] = tokenized['attention_mask']
             d['class'] = self.class2idx[d['label']]
             d['token_type_ids'] = tokenized['token_type_ids']
+            d['score'] = normalize_score(d['score'], max_scores[q_id])
+            model_inputs.append({
+                'input_ids': d['input_ids'],
+                'attention_mask': d['attention_mask'],
+                'token_type_ids': d['token_type_ids'],
+                'question_id': d['question_id'],
+                'student_answer': d['student_answer'],
+                'reference_answer': d['reference_answer'],
+                'class': d['class'],
+                'score': d['score']
+            })
         return model_inputs
 
 class GradingPreprocessorSpanPrediction(Preprocessor):
@@ -133,20 +153,35 @@ class GradingPreprocessorSpanPrediction(Preprocessor):
         model_inputs = []
         max_scores = {}
         for k in self.rubrics.keys():
-            max_scores[k] = np.max([d['score'] for d in data if d['question_id'] == k])
+            scores = [d['score'] for d in data if d['question_id'] == k]
+            if scores != []:
+                max_scores[k] = np.max(scores)
+            else:
+                max_scores[k] = 0
         for d in data:
             q_id = d['question_id']
             for re in self.rubrics[q_id]['key_element']:
                 tokenized = self.tokenizer(re, d['student_answer'], truncation=True,
                                            padding='max_length',
                                            max_length=self.max_len, return_tensors='pt', return_token_type_ids=True)
-            d['input_ids'] = tokenized['input_ids']
-            d['attention_mask'] = tokenized['attention_mask']
-            d['class'] = self.class2idx[d['label']]
-            d['token_type_ids'] = tokenized['token_type_ids']
-            d['score'] = self.normalize_score(d['score'], max_scores[q_id])
+                d['input_ids'] = tokenized['input_ids']
+                d['attention_mask'] = tokenized['attention_mask']
+                d['class'] = self.class2idx[d['label']]
+                d['token_type_ids'] = tokenized['token_type_ids']
+                d['score'] = normalize_score(d['score'], max_scores[q_id])
+                model_inputs.append(
+                    {
+                        'input_ids': d['input_ids'],
+                        'attention_mask': d['attention_mask'],
+                        'token_type_ids': d['token_type_ids'],
+                        'question_id': q_id,
+                        'rubric_element': re,
+                        'class': d['class'],
+                        'score': d['score'],
+                    }
+            )
         return model_inputs
 
-    def normalize_score(self,score,  max_score):
-        #min max normalization of the scores
-        return score / max_score
+def normalize_score(score,  max_score):
+    #min max normalization of the scores
+    return score / max_score
