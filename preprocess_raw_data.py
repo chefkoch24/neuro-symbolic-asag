@@ -26,15 +26,6 @@ def get_additional_data(data, dictonary):
     return ref_answers
 
 
-def save_to_csv(X_train, X_dev, path):
-    sep = "\t"  # custom seperator needed that it not make troubles while reading in the data
-    directory = path
-    if not os.path.exists(directory):
-        os.mkdir(directory)
-    X_train.to_csv(path + '/' + "x_train.csv", sep=sep)
-    X_dev.to_csv(path + '/' + "x_dev.csv", sep=sep)
-    print('successfully saved')
-
 
 def save_as_json(data, path, file_name):
     new_data = dict()

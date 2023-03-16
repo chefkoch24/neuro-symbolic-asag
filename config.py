@@ -48,6 +48,7 @@ class Config:
         self.PATH_RUBRIC = "data/rubrics.json"
         self.PATH_RAW_DATA = "input/safdataset/training"
         self.PATH_RAW_RUBRIC = "input/rubrics"
+        self.PATH_RESULTS = "results"
         self.nlp = spacy.load("en_core_web_lg")
         self.nlp_de = spacy.load("de_core_news_lg")
         self.lr_callback = LearningRateMonitor(logging_interval='epoch', log_momentum=True)

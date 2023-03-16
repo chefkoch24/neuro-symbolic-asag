@@ -1,4 +1,5 @@
 #Imports
+import time
 import metrics
 import numpy as np
 import pandas as pd
@@ -129,9 +130,8 @@ files = ['aggregated_dev_ws_lfs_average.json', 'aggregated_dev_ws_lfs_average_no
          'aggregated_dev_ws_lfs_max.json', 'aggregated_dev_ws_lfs_sum.json',
          'aggregated_dev_ws_hmm.json'
          ]
+# investigate different thresholds
+files = ['aggregated_dev_ws_hmm_0.json', 'aggregated_dev_ws_hmm_1.json', 'aggregated_dev_ws_hmm_2.json']
 
 results, doc = evaluate_weak_supervision_models(files, config)
-results = pd.DataFrame(columns=results[0].keys(), data=results)
-result_file_name = 'ws_results'
-results.to_csv('results/' + result_file_name + '.csv', index=False)
-skweak.utils.docbin_writer(doc, 'corpora/' + result_file_name + '.spacy')
+utils.save_csv(results, config.PATH_RESULTS, 'ws_results')

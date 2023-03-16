@@ -1,4 +1,7 @@
+import logging
 import os
+import time
+
 import pandas as pd
 import skweak
 from matplotlib import pyplot as plt
@@ -6,13 +9,23 @@ import json
 import config
 
 
-def save_json(data, path, file_name):
-    directory = path
-    if not os.path.exists(directory):
-        os.mkdir(directory)
+def save_json(data, path, file_name, with_timestamp=False):
+    if not os.path.exists(path):
+        os.mkdir(path)
+    if with_timestamp:
+        file_name + '_' + time.strftime("%Y_%m_%d")
+
     with open(path + '/' + file_name, 'w') as fout:
         json.dump(data, fout)
         print('saved', file_name)
+
+def save_csv(data, path, file_name, with_timestamp=True, sep=','):
+    if not os.path.exists(path):
+        os.mkdir(path)
+    if with_timestamp:
+        file_name + '_' + time.strftime("%Y_%m_%d_%H_%M")
+    data = pd.DataFrame(columns=data[0].keys(), data=data)
+    data.to_csv(path + '/' + file_name + '.csv', index=False)
 
 
 def load_json(path):
@@ -24,21 +37,6 @@ def load_json(path):
 def flat_list(lst):
     x = [item for sublist in lst for item in sublist]
     return x
-
-
-def save_to_csv(X_train, X_dev, y_train, y_dev, path):
-    sep = "\t"
-    directory = path
-
-    if not os.path.exists(directory):
-        os.mkdir(directory)
-
-    save_path = path + '/'
-    X_train.to_csv(save_path + "x_train.tsv", sep=sep)
-    X_dev.to_csv(save_path + "x_dev.tsv", sep=sep)
-    pd.DataFrame(data=y_train).to_csv(save_path + "y_train.tsv", sep=sep)
-    pd.DataFrame(data=y_dev).to_csv(save_path + "y_dev.tsv", sep=sep)
-    print('successfully saved')
 
 
 def load_rubrics(path):

@@ -75,13 +75,24 @@ apply_lfs(X_train, ws, rubrics, file_name='training_ws_lfs', path=config.PATH_DA
 apply_lfs(X_dev, ws, rubrics, file_name='dev_ws_lfs', path=config.PATH_DATA)
 
 # HMM WEAK SUPERVISION
-logging.info("Start HMM Weak Supervision...")
-ws = WeakSupervisionHMM(rubrics=rubrics, meteor_th=0.05, ngram_th=0.10, rouge_th=0.15, edit_dist_th=0.5,
-                            paraphrase_th=0.9, bleu_th=0.5, jaccard_th=0.5, mode='hmm', config=config)
-ws.fit(X_train)
-apply_hmm(X_train, ws, rubrics, file_name='training_ws_hmm', path=config.PATH_DATA)
-apply_hmm(X_dev, ws, rubrics, file_name='dev_ws_hmm', path=config.PATH_DATA)
-
+thresholds = {
+    'meteor': [0.05, 0.1, 0.2],
+    'ngram': [0.05, 0.10, 0.15],
+    'rouge': [0.1, 0.15, 0.2],
+    'edit_dist': [0.4, 0.5, 0.6],
+    'paraphrase': [0.85, 0.9, 0.95],
+    'bleu': [0.4, 0.5, 0.6],
+    'jaccard': [0.4, 0.5, 0.6],
+}
+for i in range(3):
+    logging.info("Start HMM Weak Supervision...")
+    ws = WeakSupervisionHMM(rubrics=rubrics, meteor_th=thresholds['meteor'][i], ngram_th=thresholds['ngram'][i],
+                            rouge_th=thresholds['rouge'][i], edit_dist_th=thresholds['edit_dist'][i],
+                            paraphrase_th=thresholds['paraphrase'][i], bleu_th=thresholds['bleu'][i],
+                            jaccard_th=thresholds['jaccard'][i], mode='hmm', config=config)
+    ws.fit(X_train)
+    apply_hmm(X_train, ws, rubrics, file_name='training_ws_hmm_' + str(i), path=config.PATH_DATA)
+    apply_hmm(X_dev, ws, rubrics, file_name='dev_ws_hmm_' + str(i), path=config.PATH_DATA)
 
 
 

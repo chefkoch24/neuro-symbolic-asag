@@ -14,10 +14,6 @@ from dataset import *
 from model import SpanPredictionModel, TokenClassificationModel
 from preprocessor import *
 
-def save_results(results, config):
-    results = pd.DataFrame(columns=results[0].keys(), data=results)
-    result_file_name = 'predicitons_' + config.TASK + '_' + config.MODEL_NAME.replace('/', '_')
-    results.to_csv('results/' + result_file_name + '.csv', index=False)
 
 
 class PredictToken:
@@ -58,7 +54,7 @@ class PredictToken:
                     'pred_spans': pred_spans,
                     'class': data['class']
                 })
-        save_results(results, self.config)
+        utils.save_csv(results, self.config.PATH_RESULTS, self.config.MODEL_NAME + '_results')
 
 
 class PredictSpan:
@@ -105,4 +101,4 @@ class PredictSpan:
                         'rubric_element': re,
                         'class': data['class']
                     })
-        save_results(results, self.config)
+        utils.save_csv(results, self.config.PATH_RESULTS, self.config.MODEL_NAME + '_results')

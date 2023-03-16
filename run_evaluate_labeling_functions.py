@@ -99,6 +99,4 @@ def evaluate_labeling_functions(file, config):
 # save the results to a csv file
 config = Config()
 results = evaluate_labeling_functions('dev_ws_lfs.json', config)
-results = pd.DataFrame(columns=results[0].keys(), data=results)
-result_file_name = 'dev_labeling_functions_results'
-results.to_csv('results/' + result_file_name + '.csv', index=False)
+utils.save_csv(results, config.PATH_RESULTS, 'dev_labeling_functions_results')
