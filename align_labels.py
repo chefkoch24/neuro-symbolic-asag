@@ -32,7 +32,7 @@ def create_aligned_labels(data):
         nlp = config.nlp_de if d['lang'] == 'de' else config.nlp
         tokens_spacy = [t.text for t in nlp(student_answer)]
         # Tokenize the input to generate alignment
-        tokenized = tokenizer(student_answer, add_special_tokens=False, return_offsets_mapping=True)
+        tokenized = tokenizer(student_answer, add_special_tokens=False)
         tokens_bert = [tokenizer.decode(t) for t in tokenized['input_ids']] # used for alingment
         aligned_labels = align_generate_labels_all_tokens(tokens_spacy, tokens_bert, labels).tolist()
         # get the spans from the aligned labels

@@ -78,21 +78,24 @@ class PreprocessorSpanPrediction(Preprocessor):
             aligned_labels = d['aligned_labels']
             q_id = d['question_id']
             # Tokenize the input to generate alignment
-            tokenized = self.tokenizer(student_answer, add_special_tokens=False, return_offsets_mapping=True)
+            tokenized = self.tokenizer(student_answer, add_special_tokens=False)
             # get the spans from the aligned labels
             hard_labels = metrics.silver2target(aligned_labels)
             spans = metrics.get_spans_from_labels(hard_labels)
             rubric_elements, rubric_sims = self.get_rubric_elements(spans, tokenized['input_ids'], q_id)
             # generate final input for every span individually
             for span, re, sim in zip(spans, rubric_elements, rubric_sims):
+                tokenized_len = len(self.tokenizer.tokenize(re))
                 tokenized = self.tokenizer(re, student_answer, max_length=self.max_len, truncation=True,
                                       padding='max_length', return_token_type_ids=True)
+                # calculate the start and end positions
+                offset = tokenized_len + 2 # rubric element length + CLS and SEP
                 model_input = {
                     'input_ids': tokenized['input_ids'],
                     'attention_mask': tokenized['attention_mask'],
                     'token_type_ids': tokenized['token_type_ids'],
-                    'start_positions': [span[0]],
-                    'end_positions': [span[1]],
+                    'start_positions': [span[0]+offset],
+                    'end_positions': [span[1]+offset],
                     'question_id': q_id,
                     'rubric_element': re,
                     'class': d['label'],
