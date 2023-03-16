@@ -16,7 +16,7 @@ from preprocessor import *
 
 def save_results(results, config):
     results = pd.DataFrame(columns=results[0].keys(), data=results)
-    result_file_name = 'predicitons_' + config.MODEL_NAME.replace('/', '_')
+    result_file_name = 'predicitons_' + config.TASK + '_' + config.MODEL_NAME.replace('/', '_')
     results.to_csv('results/' + result_file_name + '.csv', index=False)
 
 
@@ -93,10 +93,11 @@ class PredictSpan:
                     start = start_logits_masked.argmax(dim=-1).item()
                     end = end_logits_masked.argmax(dim=-1).item()
                     # remove CLS and SEP
-                    input_ids = x['input_ids'][0][1:-1]
+                    input_ids = x['input_ids'].masked_fill(~mask, int(-1))[0]
                     span = ''
                     if start < end:
-                        span = self.tokenizer.decode(input_ids)
+                        span = input_ids[start:end+1]
+                        span = self.tokenizer.decode(span)
                     results.append({
                         'question_id': data['question_id'],
                         'student_answer': data['student_answer'],
