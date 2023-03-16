@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='utf-8'?>
+<question id="11.4_SDN">
+  <questionText>In an SDN, switches maintain a pipeline of flow tables and a meter table. Summarize their respective functions in one sentence each. </questionText>
+  <referenceAnswers>
+    <referenceAnswer id="11.4_SDN.a1">Meter table: collects flow statistics or contains meter entry per flow (0.25) which is taken into account by the controller for management of the network like QoS operation(rate-limiting being one of them).
+Flow pipeline: consists of flow tables that contain “rules” or fields (0.25) for packet forwarding(0.25) /actions to be taken on the packets or in other words it implements the
+routing logic in the switch</referenceAnswer>
+  </referenceAnswers>
+  <studentAnswers>
+   <studentAnswer id="11.4_SDN.441">
+      <response>A flow table consists of a list of flow entries which are used to compare to the headers of the incoming packets according to which entry it is identical the packet will be handled in the way it is set in the entry.
+
+The meter table is used to store statistics.</response>
+      <response_feedback>The meter table collects statistics, but the use of the collected statistics, i.e. to achieve certain QoS goals, is not stated. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.470">
+      <response>Flow tables contain flow entries that dictate the routing action to be taken when packets matching the flow entry are encountered.
+Meter tables contain meter entries that enable OpenFlow devices to implement QoS features such as rate-limiting.</response>
+      <response_feedback>The response correctly answers the functionality of both types of tables.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.456">
+      <response>Flow tables consist of a finite number of flow entries and store the rules that get populated by the controller for controlling and directing packet flows (forwarding) in SDN. Meter tables: Is used for statistics and contains rows of meters. These meters are attached to flow entries and are used to measure and control the rate of all the flow entries to which it is attached. (Used for statistics).</response>
+      <response_feedback>The response correctly answers the functionality of both types of tables.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.471">
+      <response>The packets move through the pipeline of flow tables with multiple matching rules to finally decide where the packet should be forwarded to, whether it should be skipped or dropped, etc.
+The meter table is a table for statistics.</response>
+      <response_feedback>The meter table collects statistics, but the use of the collected statistics, i.e. to achieve certain QoS goals, is not stated. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.408">
+      <response>Meter Table: Statistics such as forwarding performance, time of packet inside the switch and other traffic statistics are saved in the meter table.
+
+Flow tables: Each flow table has a set of entries (such as matchfield, priority or counter) which govern how a packet is handled and what actions (such as dropping it or forwarding it to a different flow table) are to be executed on it, while moving through the open flow switch.</response>
+      <response_feedback>The meter table collects statistics but the use of the collected statistics, i.e. to achieve certain QoS goals, is not stated. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.424">
+      <response>The flow table contains the information regarding how a packet should be forwarded. The meter table contains information about statistics (e.g. packet rate).</response>
+      <response_feedback>The meter table collects statistics but the use of the collected statistics, i.e. to achieve certain QoS goals, is not stated. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.457">
+      <response>Flow Tables contain Flow Entries that match certain packets and apply instructions for modification and forwarding on them.
+
+The Meter Table consists of meter entries, defining per-flow meters, which enable SDN to implement various simple QoS operations, such as rate-limiting.</response>
+      <response_feedback>The response correctly answers the functionality of both types of tables.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.409">
+      <response>The flow tables hold the entries for the packet forwarding. In the Meter Table is information for statistics stored.</response>
+      <response_feedback>The meter table collects statistics but the use of the collected statistics, i.e. to achieve certain QoS goals, is not stated. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.460">
+      <response>Pipeline of Flow Tables:
+Defines the rules on how to forward something.
+Meter table is used for statistics.</response>
+      <response_feedback>In the flow table, rules are defined to forward packets/frames, not something. The meter table collects statistics, but the use of the collected statistics, i.e. to achieve certain QoS goals, is not stated. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.440">
+      <response>Flow tables:
+Store a list of flow entries which contain information about the traffic characteristics and are handed over from the controller to the network elements.
+
+Meter table: Stores meter entries, defining per-flow meters.  A meter measures the rate of packets assigned to it and enables controlling the rate of those packets.</response>
+      <response_feedback>The entries in the flow table are used for matching packet fields and performing actions accordingly. This is not mentioned. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.4_SDN.453">
+      <response>Flow table: Contains entries for redirecting the incoming packets
+Meter table: Consists of entries for defining flows for realizing for example QoS operations</response>
+      <response_feedback>The response is partially correct as the flow table can perform more actions on the packet than just redirecting the packet.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+  </studentAnswers>
+</question>

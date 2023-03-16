@@ -1,0 +1,279 @@
+<?xml version='1.0' encoding='utf-8'?>
+<question id="2">
+  <questionText>Frage 2: In welcher Reihenfolge sollen die Aufgaben abgearbeitet werden? Bitte beschreibe die Reihenfolge in 1-2 Sätzen.</questionText>
+  <referenceAnswers>
+    <referenceAnswer id="2.a1">Der Tankstellenbesuch soll grundsätzlich nach dem Schema „Tanken – Einkauf im Shop – Bezahlen – Toilettenbesuch – Fragen beantworten – Bon fotografieren“ (0.25-0.5 P) stattfinden. Zentral ist dabei, dass der Jobber die Fragen erst nach dem Toilettenbesuch beantwortet (0.5 P) und nicht durch verfrühtes Fotografieren des Bons auffällig wird.</referenceAnswer>
+  </referenceAnswers>
+  <studentAnswers>
+      <studentAnswer>
+      <response>Tanken, etwas kaufen, Sanitär anlagen besuchen, generellen Eindruck verschaffen</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Das musst du nicht unbedingt zuhause machen, sondern kannst es auch prima an deinem Fahrzeug erledigen.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Zuerst Tanken dann etwas im Shop kaufen, bezahlen, dabei auf Arbeitskleidung und Freundlichkeit... achten. Anschliesend Toilette besuchen, fotogafieren und danach die Fragen beantworten.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Ich tanke zuerst, kaufe dann im Shop ein und bezahle. Dann besuche ich die Toiletten und beantworte zuletzt die Fragen im Fragebogen.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken - Einkauf im Shop - Bezahlen - Toilette besuchen - Fragen beantworten</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>ZuerstTanken , Einkauf im Shop, Toiletten besuchen , Bezahlen ,nebenher diskret Fotos machen und Fragenbeantworten</response>
+      <response_feedback>Die Bilder müssen von dem Sanitärbereich und von der Quittung gemacht werden. In den Anlagen solltest du vermutlich alleine sein und den Bon fotografierst du einfach wieder an deinem Fahrzeug.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken - Einkauf im Shop - Bezahlen - Toilette besuchen - Fragen beantworten Das ist die aktuelle und sinnvolle Reihenfolge.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Zuerst Tanken dann im Shop einkaufen und bezahlen. Daraufhin die Toilette besuchen und im Anschluss die Fragen beantworten.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken - Einkauf im Shop - Bezahlen - Toilette besuchen - Fragen beantworten</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Zuerst tankt man an der Zapfsäule, dann bezahlt man im Shop und kauft eine Kleinigkeit. Hierbei wird Augenmerk darauf gelegt wie das Personal reagiert (Freundlichkeit, Hilfsbereitschaft etc.) zudem achtet man darauf, ob das Personal seine Arbeits Kleidung trägt und den Kauf gut handeln kann. Anschließend bittet man um den Schlüssel für die Toilette. Hier soll man kurz fotografisch aufzeigen wie der Zustand dieser ist.</response>
+      <response_feedback>Zum Abschluss sollten noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken und Shop bezahlen. Danach besuche ich die Toilette und dann fertige ich Bilder an vom Sanitär und vom Kassenbon</response>
+      <response_feedback>Vergiss nicht, dass auch noch die Fragen zu dem Job beantwortet werden müssen. Wir würden empfehlen, dies zusammen mit dem Bild des Bons zu erledigen, wenn du wieder an deinem Fahrzeug bist.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken und Eindruck von der gesamten Aussenanlage machen. Besuch im Shop mit kleinem Einkauf und danach Besuch der Toiletten mit Bildaufnahmen.</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Das musst du nicht unbedingt zuhause machen, sondern kannst es auch prima an deinem Fahrzeug erledigen.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Erst tanken, dann einkauf, danach bezahlen dann auf toilette besuchen und zu letzt fragen beantworten</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Zuerst tanke ich, dann der Einkauf im Shop, anschließend bezahlen. Danach Toilettenbesuch und zum Schluss beantworte ich die Fragen.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>tanken und etwas kaufen, danach die Toiletten prüfen und fotografieren</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Wir würden vorschlagen, dies zu erledigen sobald du wieder an deinem Fahrzeug bist.</response_feedback>
+      <score>0.5</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken - Einkaufen - Bezahlen - Toilette besuchen – Fragen</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>zuerst tanke ich mit abgestelltem Motor unter Einhaltung der örtlichen Corona Schutzmaßnahmen ( Maske). zusätzlich kaufe ich einen Artikel meiner Wahl. im Anschluss bezahle ich an der Kasse und bitte das Personal die Sanitäranlagen besuchen zu dürfen, von denen ich Übersichtsaufnahmen anfertige. Abschließend beantworte ich die im Job gelisteten Fragen.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>möglichst chronologisch. Aber so wie es ind er Situation am besten passt.</response>
+      <response_feedback>Es ging bei der Frage um das Vorgehen bei dem Job. Unserer Meinung nach ist die ideale Reihenfolge: Tanken, Einkauf im Shop, bezahlen, Aufsuchen (und natürlich zeitgleiche Prüfung) der Toilette und zum Schluss das Beantworten der Fragen und das Fotografieren des Bons.</response_feedback>
+      <score>0.0</score>
+      <verification_feedback>Incorrect</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Gesamteindruck, Dann Aufteilen in Abschnitten der Bereiche.</response>
+      <response_feedback>Es ging bei der Frage um das Vorgehen bei dem Job. Unserer Meinung nach ist die ideale Reihenfolge: Tanken, Einkauf im Shop, bezahlen, Aufsuchen (und natürlich zeitgleiche Prüfung) der Toilette und zum Schluss das Beantworten der Fragen und das Fotografieren des Bons.</response_feedback>
+      <score>0.0</score>
+      <verification_feedback>Incorrect</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken, Einkaufen, bezahlen, Toilette besuchen, Aufgaben bearbeiten. Ich richte mich grundsätzlich an die Info und Hilfe Informationen.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Ich soll tanken dann was kaufen und Bilder von der Tanke machen</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Wir würden vorschlagen, dies zu erledigen sobald du wieder an deinem Fahrzeug bist.</response_feedback>
+      <score>0.5</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Zuerst soll getankt und ein Einkauf getätigt werden. Danach soll eine Überprüfung der sanitären Einrichtung durchgeführt werden</response>
+      <response_feedback>Zum Abschluss sollten noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken, einkaufen und Toilette besuchen</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Wir würden vorschlagen, dies zu erledigen sobald du wieder an deinem Fahrzeug bist.</response_feedback>
+      <score>0.5</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken, Shopartikel aussuchen, bezahlen, Toilette testen und bewerten</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Wir würden vorschlagen, dies zu erledigen sobald du wieder an deinem Fahrzeug bist.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Als erstes fürw ich einen Teskauf durch. Dann fertige ich Bilder von den Sanitäranlagen an.</response>
+      <response_feedback>Bitte vergiss nicht, auch noch Kraftstoff zu tanken. Es müssen noch einige Fragen beantwortet werden und ein Bild des Kassenbons hochgeladen werden, wir würden empfehlen dies zum Schluss wieder an deinem Fahrzeug zu machen.</response_feedback>
+      <score>0.5</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>tanken, Einkauf im Shop und bezahlen. Danach die sanitäranlagen aufsuchen und fragen beantworten</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Zuerst tanke ich, kaufe etwas im Shop. Bezahle meine Ware und den Sprit und frage dann nach der Toilette. Anschließend beantworte ich die Fragen und fotografiere meinen Bon.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Von oben nach unten in der Reihenfolge</response>
+      <response_feedback>Hier geht es um die konkrete Reihenfolge der Aufgaben. Unserer Erfahrung nach ist die ideale Reihenfolge für zur Erledigung der Aufgaben: Tanken, Einkauf im Shop, bezahlen, Aufsuchen (und natürlich zeitgleiche Prüfung) der Toilette und zum Schluss das Beantworten der Fragen und das Fotografieren des Bons. </response_feedback>
+      <score>0.0</score>
+      <verification_feedback>Incorrect</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Zuerst soll getankt werden, dann im Shop ein weiterer Artikel ausgewählt werden. Das ganze wird bezahlt und anschließend die Toilette benutzt und fotografiert. Zum Schluss werden ein paar Fragen beantwortet und der Kassenzettel fotografiert.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>tanken kaufen bezahlen klo</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Das musst du nicht unbedingt zuhause machen, sondern kannst es auch prima an deinem Fahrzeug erledigen.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>tanken und etwas einkaufen, sanitäre Einrichtungen aufsuchen, Bon fotografieren und die Tankstelle bewerten. Alles möglichst inkognito</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Ich Tanke und Kaufe etwas und bezahle. Danach geh ich zur Toilette und anschließend  beantworte ich die Fragen.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Sie müssen die Anweisungen lesen und die Reihenfolge der Anfragen einhalten.</response>
+      <response_feedback>Es ging bei der Frage um das Vorgehen bei dem Job. Die, unserer Erfahrung nach, ideale Reihenfolge ist: Tanken, Einkauf im Shop, bezahlen, Aufsuchen (und natürlich zeitgleiche Prüfung) der Toilette und zum Schluss das Beantworten der Fragen und das Fotografieren des Bons.</response_feedback>
+      <score>0.0</score>
+      <verification_feedback>Incorrect</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>unbemerkt als "normaler Kunde" , freundlich , aufmerksam, Fotos machen, hochladen, Bewerten</response>
+      <response_feedback>Es ging bei der Frage um das Vorgehen bei dem Job. Unserer Meinung nach ist die ideale Reihenfolge: Tanken, Einkauf im Shop, bezahlen, Aufsuchen (und natürlich zeitgleiche Prüfung) der Toilette und zum Schluss das Beantworten der Fragen und das Fotografieren des Bons.</response_feedback>
+      <score>0.0</score>
+      <verification_feedback>Incorrect</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken einkaufen bezahlen Toilette besuchen</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Wir würden vorschlagen, dies zu erledigen sobald du wieder an deinem Fahrzeug bist.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken - Einkauf im Shop - Bezahlen - Toilette besuchen - Fragen beantworten</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken, Snack aussuchen, bezahlen und dann die Tankstellentoilette besuchen, Fotos machen und Kassenzettel hochladen</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Ich fahre hin, tanke und gehe in den Shop und suche etwas zum Einkaufen aus. Dann bezahle ich, gehe anschließend zur Toilette und beantworte dann die Fragen.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken, Shopeinkauf, bezahlen Sanitäreinrichtungen aufsuchen</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Wir würden vorschlagen, dies zu erledigen sobald du wieder an deinem Fahrzeug bist.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Tanken, Einkauf im Shop, bezahlen, Toilette besuchen, fragen in der app beantworten</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Erst Tanken - dann einkauf aussuchen - etwas beobachten - bezahlen - toilette begutachten und Fotos machen</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Wir würden vorschlagen, dies zu erledigen sobald du wieder an deinem Fahrzeug bist.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>tanken einkaufen Fotos machen sanitäranlagen besuchen</response>
+      <response_feedback>Zum Abschluss sollten noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Wir würden empfehlen, diese Schritte an deinem Fahrezug zu erledigen.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Ich tanke, kaufe ein und fotografiere die Sanitäreinrichtungen</response>
+      <response_feedback>Zum Abschluss müssen noch die entsprechenden Fragen zum Job beantwortet und ein Bild des Kassenbons hochgeladen werden. Das musst du nicht unbedingt zuhause machen, sondern kannst es auch prima an deinem Fahrzeug erledigen.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Zuerst in den Tankstellen-Shop gehen und dort den Kraftstoff und mindestens ein weiteren Artikel bezahlen. Shell Karte zeige ich nur auf Nachfrage vor. Danach besuche ich die Kundentoilette. Von dieser fertige ich übersichtsbilder an. Danach fotografiere ich den Kassenbeleg und beantworte die mir in der App gestellten Fragen zu der Tabkstelle.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>Ich soll erst tanken und dann einkaufen und bezahlen. Danach auf die Toilette und zum Schluss die Fragen beantworten.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer>
+      <response>tanken,einkaufen,zahlen,Toilette und danach die Fragen beantworten.</response>
+      <response_feedback>Korrekt!</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+  </studentAnswers>
+</question>

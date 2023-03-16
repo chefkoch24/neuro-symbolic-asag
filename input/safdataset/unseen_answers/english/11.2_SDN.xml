@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='utf-8'?>
+<question id="11.2_SDN">
+  <questionText>What are the benefits and drawbacks of SDN compared to traditional networking,where each switch/router has to manage forwarding and routing on its own? Describe two benefits and two drawbacks in 1-2 sentences each. </questionText>
+  <referenceAnswers>
+    <referenceAnswer id="11.2_SDN.a1">Benefits:
+● Reduced complexity of the switches: They only have to act according to their flow
+tables and do not have to make any local routing decisions.
+● Due to centralized routing, the routing can converge way faster to a global optimum
+than with decentralized routing because of a global view
+● Better Integration of application and network provides a better global view of the
+system.
+● Increased flexibility :
+1. We can update the routing logic on the fly, routers/switches are not limited
+to hard-coded routing algorithms anymore (Note: this is also possible with
+programmable switches).
+2. API to “program” the network: Software (application) “defines” the
+network
+3. High-level programming languages for implementation of logic and making
+use of powerful integrated development environments.
+Note: In case the reasoning/example sufficiently explains the benefit, naming like reduced
+complexity, increased flexibility can be omitted and response can still be granted 0.25 for
+each benefit.
+
+Drawbacks:
+● High complexity of the control servers: They have to make all the routing decisions
+for the (sub)network and can therefore be a bottleneck.
+● Centralized routing in distributed systems in general: The routing completely depends
+on the control server(s). To achieve better availability and fault tolerance, the number
+of control servers can be increased. However, this can lead to synchronization and
+consistency issues. → CAP problem (consistency, availability, partition tolerance)
+● New technology adoption challenges:
+● Switching to SDN from traditional networking.
+● Training personnel on SDN.
+All these will cost depending on the reconfiguration level but then for the long term, it
+depends upon the ROI.
+● Security-related concerns :
+○ Lack of hardware security: eliminating the use of the physical routers and
+switches, one also loses the security that comes with it.</referenceAnswer>
+  </referenceAnswers>
+    <studentAnswers>
+        <studentAnswer id="11.2_SDN.305">
+      <response>SDNs can integrate higher level languages in the packet control flow and can greatly reduce complexity.</response>
+      <response_feedback>Both the stated benefits are incomplete. The benefit derived from using high-level language is not stated and which or what component complexity decreases is also not stated. No drawbacks were mentioned.</response_feedback>
+      <score>0.25</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.310">
+      <response>Benefits:      1.SDN leverages increased flexibility.
+                    2.Reduced switch complexity.
+
+Drawbacks: 1.  SDN costs more, in order to implement SDN protocol and SDN controller, it requires complete reconfiguration of the network.
+                    2. The controller can be a single point of failure.</response>
+      <response_feedback>In the first benefit, parameters or an explanation need to be provided for what makes SDN more flexible than traditional networking. Apart from that, the response is correct.</response_feedback>
+      <score>0.875</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.300">
+      <response>Benefit 1: Software defined networking allows more flexibility, because a device's logic is not hardcoded in the hardware. Instead of designing and building a new piece of hardware, with SDN one can simply change the logic by using a high level programming language.
+Benefit 2: SDN allows us to source out the control logic of a switch, where performance is expensive, to a server where much more performance is available. This also reduces the complexity of the switch itself, because the logic is handled by the server.
+Drawback 1: The CAP problem occurs, meaning that with SDN we can only achieve two of the following attributes at a time: consistency, availability, partition tolerance. A prioritization has to be made for each network.
+Drawback 2: Because the controllers are now responsible for the control logic of the entire network, the controllers get very complex and, in case of a distributed network, even have to handle communication with each other.</response>
+      <response_feedback>The response correctly states the benefits and drawbacks of SDN over traditional networking.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.322">
+      <response>Benefit 1: Software defined networking allows more flexibility, because a device's logic is not hardcoded in the hardware. Instead of designing and building a new piece of hardware, with SDN one can simply change the logic by using a high level programming language.
+Benefit 2: SDN allows us to source out the control logic of a switch, where performance is expensive, to a server where much more performance is available. This also reduces the complexity of the switch itself, because the logic is handled by the server.
+Drawback 1: The CAP problem occurs, meaning that with SDN we can only achieve two of the following attributes at a time: consistency, availability, partition tolerance. A prioritization has to be made for each network.
+Drawback 2: Because the controllers are now responsible for the control logic of the entire network, the controllers get very complex and, in case of a distributed network, even have to handle communication with each other.</response>
+      <response_feedback>The response correctly states the benefits and drawbacks of SDN over traditional networking.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.258">
+      <response>Benefits:
+A primary advantage of SDN networking is greater visibility throughout the network. In traditional networking, any security that impacts traffic is overarching. With SDN, it's granular. This means that engineers can selectively block malicious traffic throughout your network on a granular basis.
+
+Traditional networking requires significant people power and technical expertise spread throughout your network. Each hardware component must be maintained, and connections must be monitored broadly. A SDN network allows all of these hardware components to be managed via a single touchpoint.
+
+Drawbacks:
+One of the problems with virtualizing any infrastructure is the latency that arises as a result. The speed of the interaction with an appliance is dependent on how many virtualized resources are available.
+
+One of the most significant security risk factors is the possibility of a compromised SDN controller attack at the control plane layer. Due to the centralization design of the SDN, the SDN controller becomes the brain of the SDN architecture. Attackers can focus on compromising the SDN controller in an attempt to manipulate the entire network.</response>
+      <response_feedback>The response correctly states the benefits and drawbacks of SDN over traditional networking.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.268">
+      <response>advantages SDN:
++ offers more flexibility than the traditional networking we learned so far because it is possible to modify the network control logic easily (move from "hard-coded" logic to exchangeable software).
++ Reduced switch complexity which leads to better performance.
+
+disadvantages of SDN:
+- more complex because it requires more effort to built a network with the help of SDN
+- more complex because programming skills are required, you cannot use the built-in "hard-coded" logic anymore because SDN offers an API which allows to "program" the network so that the network is defined by the software application.</response>
+      <response_feedback>It is highly debatable whether traditional networking or SDN requires more effort. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.318">
+      <response>Compared to traditional networking, one of benefits of SDN is increased flexibility of the network architecture, it can easily modify the network control logic. The other one is reduced switch complexity, because control logic is removed from switch and hosted on servers.
+One of drawbacks of SDN is that it is difficult to manage, because there's not a unified industry standard and the program provides by the equipment vendor. The other is, the functional distinction between routers and controllers is still subject to discuss, and functional configuration is still an open question.</response>
+      <response_feedback>The second drawback is the extension of the first drawback. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.298">
+      <response>SDN enables modification of the network control logic instead of hard-coded logic. Another benefit is the API to program the network where software defines the network.
+One drawback is the high cost. Another disadvantage is the vulnerability of the controller where the whole network is managed.</response>
+      <response_feedback>The first drawback does not mention why SDN will cost more than a traditional network. It is a generic statement without any explanation. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.306">
+      <response>Benefits:
+- Flexibility: In SDN, the network logic is not hard-coded in the devices and can therefore be exchanged without hardware replacement.
+- Complexity Reduction: The same performance is possible without the need to create / maintain complex issues locally on the switch / router level.
+
+Drawbacks:
+- If the topology changes, the entire set of optimal paths have to be recomputed centrally.
+- For a distributed SDN control plane, it is impossible to achieve a good level of consistency, availability and partition tolerance at the same time (CAP theorem).</response>
+      <response_feedback>The response correctly states the benefits and drawbacks of SDN over traditional networking.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.317">
+      <response>Benefits:
+Reduced Switch Complexity: By moving as much control logic away from each switch to e.g. a control server the switches are more restricted and won’t have to manage all on their own. This reduces the necessary complexity of the switches by maintaining the same level of performance.
+Operational Control: By centralizing the control logic it is able to influence the overall operations using a single console with the intention of boosting the ability to have better control over task allocation and network traffic.
+
+Drawbacks:
+Reliability: If the control server implementing the control logic for the network breaks the whole network will go down.
+CAP Problem: With SDN you will always have a tradeoff between consistency, availability and partitioning tolerance. Only two of those properties can be provided at the same time.</response>
+      <response_feedback>The response correctly states the benefits and drawbacks of SDN over traditional networking.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.2_SDN.313">
+      <response>The benefits of SDN:
+1. Reduces switch complexity by removing control logic from the switch and hosting it on servers, Preserve the same forwarding performance! Switch still supports forwarding in hardware.
+2. Provide high-level programming languages for the implementation of logic, to benefit from powerful integrated development environments.
+3. Easy modification of the network control logic. From “hard-coded” logic to exchangeable software.
+
+Drawbacks of SDN:
+1. Security is a big challenge in SDN: One of the disadvantages of an SDN network is that since you are eliminating the use of the physical routers and switches, you won't have the security that comes with them. The main one that you will be missing is the firewall. This can leave your network more vulnerable if you're not careful.
+2. CAP Problem (i.e. Only two out of the three CAP properties possible: Consistency, availability, partitioning tolerance).
+3. It requires a change in the entire network infrastructure to implement SDN protocol and SDN controller. Hence it requires a complete reconfiguration of the network. This increases cost due to reconfiguration.</response>
+      <response_feedback>The response correctly states the benefits and drawbacks of SDN over traditional networking.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    </studentAnswers>
+</question>

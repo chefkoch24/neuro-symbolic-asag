@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='utf-8'?>
+<question id="11.1_SDN">
+  <questionText>Software-defined Networking (SDN) introduces separate control and data planes to manage network flows. Please explain the responsibilities of each plane in 1-2 sentences. Further, name two tasks the SDN controller takes care of. </questionText>
+  <referenceAnswers>
+    <referenceAnswer id="11.1_SDN.a1">Control Plane: The control plane is logically centralized, but can be physically distributed
+(multiple coordinating control servers for higher availability and scalability).
+One of the following responsibilities  should be given:
+● decides the route for the packet/data
+○ Control servers manage the network graph, define routes, and update the
+flow tables of connected switches.
+● handles unprocessed packets coming in from the data plane
+Data plane: Responsible for packet forwarding. Individual switches just execute
+actions according to their flow tables decided upon by the control plane.
+
+The following are the tasks taken care of by the controller:
+● Configuration of forwarding tables
+● Injecting packets
+● Events from switch (packet-in)
+● Collection/Monitoring of traffic statistics
+● Discovery of topology
+● Inventorying what devices are within the network and the capabilities of each device
+● Interfaces with control logic (control “application”) via the northbound interface(s)
+● Implements a southbound interface to interact with the data plane.
+● Implements the control plane.</referenceAnswer>
+  </referenceAnswers>
+  <studentAnswers>
+    <studentAnswer id="11.1_SDN.204">
+      <response>Control Plane:
+Responsible for defining routes and managing the network graph.
+
+Data Plane:
+Responsible for forwarding packets.
+
+Two of the SDN controller's tasks:
+- Configure the forwarding tables
+- Discover the network topology</response>
+      <response_feedback>The response correctly states the responsibilities of both planes and the tasks of the SDN controller.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.212">
+      <response>The data plane is the actual network in which packets are sent from node to node - it’s the place where the actual forwarding happens. So the data plane consists of all end systems as well as switches who are simplified in comparison to normal networks and just handle the forwarding process very efficiently. The controlling of the switches - so to say the definition of routes by forwarding rules - happens in the control plane, which consists of different physically separated servers that run so called control logic units. Their task is to evaluate the current traffic on the data plane as well as the network graph and deciding about new routes and forwarding table entries, which are then communicated to the switches. The SDN controllers are hosts that implement the control plane and the southbound interface to the switches. They have several tasks, for example especially the configuration of the forwarding tables in the switches, but also the collection of statistical data about the network traffic from the forwarding switches.</response>
+      <response_feedback>The response correctly states the responsibilities of both planes and the tasks of the SDN controller.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.222">
+      <response>The control plane defines routes and manages the network graph.
+The data plane forwards the packets.
+The SDN controller implements control plane and southbound interface to switches.</response>
+      <response_feedback>The response correctly states the responsibilities of both planes and the tasks of the SDN controller.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.225">
+      <response>The control plane is logically centralized on the SDN controller and is responsible to define routes and manage the network graph.
+
+The data plane is in the individual switches and is responsible for the forwarding of packets.
+
+Tasks of the SDN controller:
+- Configures the forwarding tables for the switches.
+- Discovers the network topology.</response>
+      <response_feedback>The response correctly states the responsibilities of both planes and the tasks of the SDN controller.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.214">
+      <response>The control plane can be implemented via a/multiple server/s that are defining the routes the packages are going to take in the network. They also install the routing tables in the switches and therefore are managing the network graphs.
+
+Data plane manages the forwarding of the packages between the switches in general.
+
+Tasks of the SDN controller:
+- configures forwarding tables
+- injects packages</response>
+      <response_feedback>The response correctly states the responsibilities of both planes and the tasks of the SDN controller.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.219">
+      <response>Control plane need to mange the routing logic.
+The Data plane needs to act according to the routing logic of the control plane.</response>
+      <response_feedback>The response correctly states the responsibilities of both planes, but the SDN controller's tasks are missing.</response_feedback>
+      <score>0.5</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.235">
+      <response>Switches/Routers implement the data plane and forward the information.
+
+Routing tables implement the control pane and manage the network topology and where to forward information.
+
+
+
+The SDN controller manages the flow tables, injects packets, handles package receival and manages traffic statistics.</response>
+      <response_feedback>The control plane decides the routing tables, not the other way round. Apart from that, the response is correct.</response_feedback>
+      <score>0.75</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.190">
+      <response>-Control plane :
+The control plane defines the routes, manages the network graph, configures the hardware,
+creates the routing for forwarding of data packets to the target.
+
+-Data plane :
+
+The data plane forwards data packets and receives control informations
+from the network controller.</response>
+      <response_feedback>The response correctly states the responsibilities of both planes, but the SDN controller's tasks are missing.</response_feedback>
+      <score>0.5</score>
+      <verification_feedback>Partially correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.174">
+      <response>-	Responsibilities:
+      o	Data plane: Switches are responsible for pure forwarding and therefore the connectivity throughout the network.
+      o	Control plane: (Multiple) servers provide logically centralized control for routing (defining the routes/routing tables and managing the network graph)
+-	Tasks of the SDN controller:
+      o	Implements south and northbound interfaces to the Data Plane and other Control Plane Units respectively.
+      o	Provides the routing logic, defines routes (e.g. Dijkstra) and manages the network graph (e.g. collecting statistics)</response>
+      <response_feedback>The response correctly states the responsibilities of both planes and the tasks of the SDN controller.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.188">
+      <response>control plane:
+It is responsible for deciding how the routing is done over the network (configuration) and it also manages the network graph (management).
+
+data plane:
+It is responsible for forwarding the packets according to the rules (configuration) the control plane supplies.
+
+SDN controller tasks (controller implements the control plane):
+a) collects traffic statistics (network state, performance)
+b) discovers topology (responds to new devices)
+
+[of course, it also takes care of configuring the forwarding rules, but that answer seemed too obvious to me]</response>
+      <response_feedback>The response correctly states the responsibilities of both planes and the tasks of the SDN controller.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+    <studentAnswer id="11.1_SDN.183">
+      <response>The data plane, represented by the switches in the network, is responsible for forwarding packets in the network. The control plane, represented by one or more centralized controls, is responsible for calculating the routes in the network and maintaining the network structure. The SDN controller e.g. takes care of updating the forwarding tables in the switches and handling packets coming in from switches that are unable to process these packets.</response>
+      <response_feedback>The response correctly states the responsibilities of both planes and the tasks of the SDN controller.</response_feedback>
+      <score>1.0</score>
+      <verification_feedback>Correct</verification_feedback>
+    </studentAnswer>
+  </studentAnswers>
+</question>
