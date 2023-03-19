@@ -46,7 +46,7 @@ class Config:
         # FIXED SETTINGS AND PATHS
         self.PATH_DATA = "data"
         self.PATH_RUBRIC = "data/rubrics.json"
-        self.PATH_RAW_DATA = "input/safdataset/training"
+        self.PATH_RAW_DATA = "input/safdataset"
         self.PATH_RAW_RUBRIC = "input/rubrics"
         self.PATH_RESULTS = "results"
         self.nlp = spacy.load("en_core_web_lg")
