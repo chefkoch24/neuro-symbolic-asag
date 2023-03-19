@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 import myutils as utils
 from dataset import JustificationCueDataset, SpanJustificationCueDataset
-from model import TokenClassificationModel, SpanPredictionModel
+from justification_cue_model import TokenClassificationModel, SpanPredictionModel
 from paraphrase_scorer import BertScorer
 from preprocessor import PreprocessorTokenClassification, PreprocessorSpanPrediction
 

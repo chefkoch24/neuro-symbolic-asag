@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from config import Config
 import myutils as utils
 from dataset import SpanJustificationCueDataset, JustificationCueDataset
-from model import SpanPredictionModel, TokenClassificationModel
+from justification_cue_model import SpanPredictionModel, TokenClassificationModel
 
 #SHARED
 config = Config()

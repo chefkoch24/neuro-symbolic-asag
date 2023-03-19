@@ -11,7 +11,7 @@ from transformers import AutoTokenizer
 import metrics
 import myutils as utils
 from dataset import *
-from model import SpanPredictionModel, TokenClassificationModel
+from justification_cue_model import SpanPredictionModel, TokenClassificationModel
 from preprocessor import *
 
 

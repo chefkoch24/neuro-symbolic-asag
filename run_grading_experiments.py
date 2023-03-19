@@ -11,17 +11,17 @@ DEV_FILE = 'dev_dataset.json'
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 for mode in ['classification', 'regression']:
-    config = Config(task=TASK,
-                    model=MODEL,
-                    train_file=TRAIN_FILE,
-                    dev_file=DEV_FILE,
-                    checkpoint_path=CHECKPOINT_PATH,
-                    context=CONTEXT,
-                    device=DEVICE,
-                    mode=mode,
-                    )
     for grading_model in ['decision_tree']:
-        config.GRADING_MODEL = grading_model
+        config = Config(task=TASK,
+                        model=MODEL,
+                        train_file=TRAIN_FILE,
+                        dev_file=DEV_FILE,
+                        checkpoint_path=CHECKPOINT_PATH,
+                        context=CONTEXT,
+                        device=DEVICE,
+                        mode=mode,
+                        grading_model=grading_model,
+                        )
         TrainingGrading(config).run_training()
 
 

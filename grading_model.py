@@ -11,7 +11,7 @@ from torchmetrics import Accuracy, F1Score, Precision, Recall
 from paraphrase_scorer import BertScorer
 import myutils as utils
 
-from model import TokenClassificationModel
+from justification_cue_model import TokenClassificationModel
 
 
 class GradingModelTrivial(LightningModule):
