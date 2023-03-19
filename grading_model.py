@@ -251,8 +251,8 @@ class GradingModel(LightningModule):
             prediction_function = symbolic_model.predict
         scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
                                        batch['question_id'])
-        y_pred = prediction_function(scoring_vectors)
-        loss = loss_function(torch.tensor(y_pred, requires_grad=True, device=self.device), labels)
+        y_pred = torch.tensor(prediction_function(scoring_vectors), requires_grad=True, device=self.device)
+        loss = loss_function(y_pred, labels)
         batch['prediction'] = y_pred
         batch['loss'] = loss
         return batch
