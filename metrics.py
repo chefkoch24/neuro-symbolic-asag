@@ -9,6 +9,7 @@ import statistics
 idx2label = {0: 'O', 1: 'I-CUE'}
 span_metric = evaluate.load("squad")
 rubrics = utils.load_json('data/rubrics.json')
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def relation(y):
     # relation of how many tokens are class 1 compared to all tokens
@@ -329,25 +330,25 @@ def compute_grading_classification_metrics(outputs):
     predictions = torch.cat([x['prediction'] for x in outputs])
     labels = torch.cat([x['class'] for x in outputs])
     langs = utils.flat_list([x['lang'] for x in outputs])
-    f1_score = F1Score(task='multiclass', num_classes=3, average='none')
-    accuracy = Accuracy(task='multiclass', num_classes=3, average='none')
-    precision = Precision(task='multiclass', num_classes=3, average='none')
-    recall = Recall(task='multiclass', num_classes=3, average='none')
+    f1_score = F1Score(task='multiclass', num_classes=3, average='none').to(device)
+    accuracy = Accuracy(task='multiclass', num_classes=3, average='none').to(device)
+    precision = Precision(task='multiclass', num_classes=3, average='none').to(device)
+    recall = Recall(task='multiclass', num_classes=3, average='none').to(device)
     f1 = f1_score(predictions, labels)
     accu = accuracy(predictions, labels)
     prec = precision(predictions, labels)
     rec = recall(predictions, labels)
-    macro_f1_score = F1Score(task='multiclass', num_classes=3, average='macro')
-    weighted_f1_score = F1Score(task='multiclass', num_classes=3, average='weighted')
-    accuracy = Accuracy(task='multiclass', num_classes=3)
+    macro_f1_score = F1Score(task='multiclass', num_classes=3, average='macro').to(device)
+    weighted_f1_score = F1Score(task='multiclass', num_classes=3, average='weighted').to(device)
+    accuracy = Accuracy(task='multiclass', num_classes=3).to(device)
     mf1s, wf1s, accs = [], [], []
-    predictions = predictions.argmax(-1).detach().numpy().tolist()
-    labels = labels.detach().numpy().tolist()
+    predictions = predictions.argmax(-1).cpu().detach().numpy().tolist()
+    labels = labels.cpu().detach().numpy().tolist()
     for language in ['de', 'en']:
         tmp_predictions = [p for p,l in zip(predictions, langs) if l == language]
         tmp_labels = [p for p,l in zip(labels, langs) if l == language]
-        tmp_labels = torch.tensor(tmp_labels)
-        tmp_predictions = torch.tensor(tmp_predictions)
+        tmp_labels = torch.tensor(tmp_labels, device=device)
+        tmp_predictions = torch.tensor(tmp_predictions, device=device)
         mf1 = macro_f1_score(tmp_predictions, tmp_labels)
         wf1 = weighted_f1_score(tmp_predictions, tmp_labels)
         acc = accuracy(tmp_predictions, tmp_labels)
@@ -380,8 +381,8 @@ def compute_grading_regression_metrics(outputs):
     predictions = torch.cat([x['prediction'] for x in outputs]).numpy().tolist()
     targets = torch.cat([x['score'] for x in outputs]).numpy().tolist()
     langs = utils.flat_list([x['lang'] for x in outputs])
-    rmse_calc = MeanSquaredError(squared=False)
-    cohenkappa = CohenKappa(task="multiclass", num_classes=2, weights="quadratic")
+    rmse_calc = MeanSquaredError(squared=False).to(device)
+    cohenkappa = CohenKappa(task="multiclass", num_classes=2, weights="quadratic").to(device)
     rmses, qwks = [], []
     for language in ['de', 'en']:
         tmp_predictions = [p for p,l in zip(predictions, langs) if l == language]

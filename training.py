@@ -86,7 +86,7 @@ class TrainingGrading():
 
     def __init__(self, config):
         self.config = config
-        self.EXPERIMENT_NAME = config.TASK + "_" + self.config.MODEL_NAME.replace('/', '_') + "_" + self.config.GRADING_MODEL
+        self.EXPERIMENT_NAME = 'grading_' + config.TASK + "_" + self.config.MODEL_NAME.replace('/', '_') + "_" + self.config.GRADING_MODEL
         logger = CSVLogger("logs", name=self.EXPERIMENT_NAME)
         self.trainer = Trainer(max_epochs=self.config.NUM_EPOCHS,
                                # gradient_clip_val=0.5,

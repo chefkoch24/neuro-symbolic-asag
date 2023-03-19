@@ -13,7 +13,7 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # config span_prediction
 TASK = 'span_prediction'
-CHECKPOINT_PATH = 'logs/span_prediction_distilbert-base-multilingual-cased_bs-8_aggr-lfs_sum/version_0/checkpoints/checkpoint-epoch=03-val_loss=3.24.ckpt'
+CHECKPOINT_PATH = 'logs/span_prediction_distilbert-base-multilingual-cased_bs-8_aggr-lfs_sum/version_3/checkpoints/checkpoint-epoch=01-val_loss=3.27.ckpt'
 MODEL = 'distilbert-base-multilingual-cased'
 TEST_FILE = 'dev_dataset_aligned_labels_distilbert-base-multilingual-cased_lfs_sum.json'
 

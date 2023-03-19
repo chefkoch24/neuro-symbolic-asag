@@ -9,6 +9,7 @@ import metrics
 from incremental_trees.models.classification.streaming_rfc import StreamingRFC
 from torchmetrics import Accuracy, F1Score, Precision, Recall
 from paraphrase_scorer import BertScorer
+import myutils as utils
 
 from model import TokenClassificationModel
 
@@ -152,7 +153,8 @@ class GradingModel(LightningModule):
         self.task = task
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.save_hyperparameters()
-
+        self.init_scoring_vector_logging()
+        self.epoch = 1
 
     def forward(self, input_ids, attention_mask, question_ids, token_type_ids, labels=None):
         q_id = question_ids[0]
@@ -173,8 +175,10 @@ class GradingModel(LightningModule):
         true_input_ids = [x[1:-1] for x in true_input_ids]
         justification_cues = self.get_justification_cues(true_predictions)
         scoring_vectors = self.get_scoring_vectors(justification_cues, true_input_ids, question_ids)
+        self.scoring_vectors_logging[q_id].append(scoring_vectors.tolist())
         symbolic_model = self.symbolic_models[q_id]
-        self.symbolic_models[q_id] = symbolic_model.partial_fit(scoring_vectors,labels.detach().numpy(),
+        labels_cpu = torch.clone(labels).cpu().detach().numpy()
+        self.symbolic_models[q_id] = symbolic_model.partial_fit(scoring_vectors,labels_cpu,
                                                                 self.classes)
         if self.mode == 'classification':
             y_pred = self.symbolic_models[q_id].predict_proba(scoring_vectors)
@@ -182,11 +186,11 @@ class GradingModel(LightningModule):
             y_pred = self.symbolic_models[q_id].predict(scoring_vectors)
         if labels is not None:
             if self.mode == 'classification':
-                loss = self.cross_entropy_loss(torch.tensor(y_pred, requires_grad=True), labels)
+                loss = self.cross_entropy_loss(torch.tensor(y_pred, requires_grad=True, device=self.device), labels)
             elif self.mode == 'regression':
-                loss = self.mse_loss(torch.tensor(y_pred, requires_grad=True), labels)
-            return torch.tensor(y_pred), loss
-        return torch.tensor(y_pred)
+                loss = self.mse_loss(torch.tensor(y_pred, requires_grad=True, device=self.device), labels)
+            return torch.tensor(y_pred, device=self.device), loss
+        return torch.tensor(y_pred, device=self.device)
 
     def __init_learners__(self):
         symbolic_models = {}
@@ -221,6 +225,12 @@ class GradingModel(LightningModule):
             scoring_vectors.append(scoring_vector)
         return np.array(scoring_vectors)
 
+    def init_scoring_vector_logging(self):
+        self.scoring_vectors_logging = {}
+        for k in self.rubrics.keys():
+            self.scoring_vectors_logging[k] = []
+
+
 
     def training_step(self, batch, batch_idx):
         if self.mode == 'classification':
@@ -246,6 +256,10 @@ class GradingModel(LightningModule):
         elif self.mode == 'regression':
             metric = metrics.compute_grading_regression_metrics(outputs)
         self.log_dict(metric)
+        # save scoring vectors
+        utils.save_json(self.scoring_vectors_logging, 'tmp', 'scoring_vectors_epoch_{}.json'.format(self.epoch))
+        self.init_scoring_vector_logging()
+        self.epoch += 1
         return metric
 
     def test_step(self, batch, batch_idx):
@@ -255,6 +269,6 @@ class GradingModel(LightningModule):
         self.validation_epoch_end(outputs)
 
     def configure_optimizers(self):
-        # optimizer = AdamW(self.model.parameters(), lr=self.lr, eps=self.eps, betas=self.betas, weight_decay=self.weight_decay)
-        optimizer = Adafactor(self.model.parameters(), lr=None, warmup_init=True, relative_step=True)
+        optimizer = AdamW(self.model.parameters(), lr=0.1)
+        #optimizer = Adafactor(self.model.parameters(), lr=None, relative_step=True)
         return optimizer

@@ -65,7 +65,7 @@ class PredictSpan:
         self.model = SpanPredictionModel.load_from_checkpoint(config.PATH_CHECKPOINT)
         self.test_dataset = utils.load_json(self.config.PATH_DATA + '/' + self.config.TEST_FILE)
         # TokenClassification is used intentional as it is faster and we want to predict over all rubric items
-        preprocessor = PreprocessorTokenClassification(self.config.MODEL_NAME)
+        preprocessor = PreprocessorSpanPrediction(self.config.MODEL_NAME)
         self.test_dataset = preprocessor.preprocess(self.test_dataset)
         self.test_dataset = JustificationCueDataset(self.test_dataset)
         self.rubrics = utils.load_rubrics(config.PATH_RUBRIC)

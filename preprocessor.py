@@ -142,7 +142,8 @@ class GradingPreprocessorTokenClassification(Preprocessor):
                 'student_answer': d['student_answer'],
                 'reference_answer': d['reference_answer'],
                 'class': d['class'],
-                'score': d['score']
+                'score': d['score'],
+                'lang': d['lang']
             })
         return model_inputs
 
@@ -181,6 +182,7 @@ class GradingPreprocessorSpanPrediction(Preprocessor):
                         'rubric_element': re,
                         'class': d['class'],
                         'score': d['score'],
+                        'lang': d['lang']
                     }
             )
         return model_inputs
