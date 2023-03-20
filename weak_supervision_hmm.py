@@ -114,8 +114,8 @@ class WeakSupervisionHMM:
             RubricAnnotator('LF_dep_match_without_stopwords', self.LF_dep_match_without_stopwords),
             RubricAnnotator('LF_bi_gram_overlap', self.LF_bi_gram_overlap),
             RubricAnnotator('LF_tri_gram_overlap', self.LF_tri_gram_overlap),
-            RubricAnnotator('LF_tetra_gram_overlap', self.LF_tetra_gram_overlap),
-            RubricAnnotator('LF_penta_gram_overlap', self.LF_penta_gram_overlap),
+            RubricAnnotator('LF_four_gram_overlap', self.LF_four_gram_overlap),
+            RubricAnnotator('LF_five_gram_overlap', self.LF_five_gram_overlap),
             RubricAnnotator('LF_rouge_L_candidate', self.LF_rouge_L_candidate),
             RubricAnnotator('LF_rouge_1_candidate', self.LF_rouge_1_candidate),
             RubricAnnotator('LF_rouge_2_candidate', self.LF_rouge_2_candidate),
@@ -172,9 +172,6 @@ class WeakSupervisionHMM:
     def LF_shape_match(self, doc, rubric, lang):
         return self.ws.LF_shape_match(doc, rubric, lang)
 
-    def LF_tag_match(self, doc, rubric, lang):
-        return self.ws.LF_tag_match(doc, rubric, lang)
-
     def LF_word_alignment(self, doc, rubric, lang):
         return self.ws.LF_word_alignment(doc, rubric, lang)
 
@@ -184,11 +181,11 @@ class WeakSupervisionHMM:
     def LF_tri_gram_overlap(self, doc, rubric, lang):
         return self._get_spans_above_threshold(self.ws.LF_tri_gram_overlap(doc, rubric, lang), self.NGRAM_THRESHOLD)
 
-    def LF_tetra_gram_overlap(self, doc, rubric, lang):
-        return self._get_spans_above_threshold(self.ws.LF_tetra_gram_overlap(doc, rubric, lang), self.NGRAM_THRESHOLD)
+    def LF_four_gram_overlap(self, doc, rubric, lang):
+        return self._get_spans_above_threshold(self.ws.LF_four_gram_overlap(doc, rubric, lang), self.NGRAM_THRESHOLD)
 
-    def LF_penta_gram_overlap(self, doc, rubric, lang):
-        return self._get_spans_above_threshold(self.ws.LF_penta_gram_overlap(doc, rubric, lang), self.NGRAM_THRESHOLD)
+    def LF_five_gram_overlap(self, doc, rubric, lang):
+        return self._get_spans_above_threshold(self.ws.LF_five_gram_overlap(doc, rubric, lang), self.NGRAM_THRESHOLD)
 
     def LF_rouge_L_candidate(self, doc, rubric, lang):
         return self._get_spans_above_threshold(self.ws.LF_rouge_L_candidate(doc, rubric, lang), self.ROUGE_THRESHOLD)

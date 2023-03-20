@@ -9,37 +9,8 @@ from weak_supervision import WeakSupervisionSoft
 from weak_supervision_hmm import WeakSupervisionHMM
 
 
-def apply_lfs(data, model, rubrics, file_name, path):
-    annotated_data = []
-    for i, d in tqdm(data.iterrows()):
-        q_id = d['question_id']
-        x = d['tokenized']
-        lang = d['lang']
-        rubric = rubrics[q_id]
-        len_seq = len(x)
-        labeling_functions = {}
-        for i, lf in enumerate(model.labeling_functions):
-            soft_labels = np.zeros((len_seq))
-            for cue in lf['function'](x, rubric, lang):
-                soft_labels[cue[0]:cue[1] + 1] = cue[3]  # 3 is idx for soft label
-            labeling_functions[lf['name']] = soft_labels.tolist()
-        item = {
-                'lang': d['lang'],
-                'question_id': d['question_id'],
-                'question': d['question'],
-                'reference_answer': d['reference_answer'],
-                'score': d['score'],
-                'label': d['label'],
-                'student_answer': d['student_answer'],
-                'labeling_functions': labeling_functions,
-        }
-        annotated_data.append(item)
-    myutils.save_json(annotated_data, path, file_name + '.json')
-    return annotated_data
-
-def apply_hmm(data, model, rubrics, file_name, path):
+def apply_hmm(data, model, file_name, path):
     result = model.predict(data)
-
     myutils.save_annotated_corpus(result, "corpora/" + file_name + ".spacy")
     annotated_data = []
     for i, d in tqdm(data.iterrows()):
@@ -71,8 +42,11 @@ X_dev = myutils.tokenize_data(X_dev, config)
 # STANDARD WEAK SUPERVISION
 logging.info("Start Standard Weak Supervision...")
 ws = WeakSupervisionSoft(rubrics=rubrics, config=config)
-apply_lfs(X_train, ws, rubrics, file_name='training_ws_lfs', path=config.PATH_DATA)
-apply_lfs(X_dev, ws, rubrics, file_name='dev_ws_lfs', path=config.PATH_DATA)
+train_data = ws.apply(X_train)
+myutils.save_json(train_data, config.PATH_DATA, 'training_ws_lfs.json')
+
+dev_data = ws.apply(X_dev)
+myutils.save_json(dev_data, config.PATH_DATA, 'dev_ws_lfs.json')
 
 # HMM WEAK SUPERVISION
 thresholds = {
@@ -91,8 +65,8 @@ for i in range(3):
                             paraphrase_th=thresholds['paraphrase'][i], bleu_th=thresholds['bleu'][i],
                             jaccard_th=thresholds['jaccard'][i], mode='hmm', config=config)
     ws.fit(X_train)
-    apply_hmm(X_train, ws, rubrics, file_name='training_ws_hmm_' + str(i), path=config.PATH_DATA)
-    apply_hmm(X_dev, ws, rubrics, file_name='dev_ws_hmm_' + str(i), path=config.PATH_DATA)
+    apply_hmm(X_train, ws, file_name='training_ws_hmm_' + str(i), path=config.PATH_DATA)
+    apply_hmm(X_dev, ws, file_name='dev_ws_hmm_' + str(i), path=config.PATH_DATA)
 
 
 

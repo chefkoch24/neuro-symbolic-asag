@@ -1,25 +1,16 @@
 # This script annotates the student answers with the respective labeling functions
 
 # IMPORTS
-import sklearn
-import pandas as pd
-import re
-import spacy
 import numpy as np
 import nltk
+from tqdm import tqdm
 
-import myutils
 from paraphrase_scorer import BertScorer
-
 from nltk.stem.porter import *
 from rouge import Rouge
 from nltk.metrics.distance import *
 from spacy.matcher import PhraseMatcher
 import warnings
-from tqdm import tqdm
-import config
-import myutils
-
 # Filter out warnings from the NLTK package
 warnings.filterwarnings("ignore", category=UserWarning, module="nltk")
 
@@ -36,16 +27,16 @@ class WeakSupervisionSoft:
             {'name': 'LF_lemma_match', 'function': self.LF_lemma_match},
             {'name': 'LF_pos_match', 'function': self.LF_pos_match},
             {'name': 'LF_lemma_match_without_stopwords', 'function': self.LF_lemma_match_without_stopwords},
+            {'name': 'LF_stem_match_without_stopwords', 'function': self.LF_stem_match_without_stopwords},
             {'name': 'LF_pos_match_without_stopwords', 'function': self.LF_pos_match_without_stopwords},
             {'name': 'LF_shape_match', 'function': self.LF_shape_match},
             {'name': 'LF_stem_match', 'function': self.LF_stem_match},
-            {'name': 'LF_tag_match', 'function': self.LF_tag_match},
             {'name': 'LF_dep_match', 'function': self.LF_dep_match},
             {'name': 'LF_dep_match_without_stopwords', 'function': self.LF_dep_match_without_stopwords},
             {'name': 'LF_bi_gram_overlap', 'function': self.LF_bi_gram_overlap},
             {'name': 'LF_tri_gram_overlap', 'function': self.LF_tri_gram_overlap},
-            {'name': 'LF_tetra_gram_overlap', 'function': self.LF_tetra_gram_overlap},
-            {'name': 'LF_penta_gram_overlap', 'function': self.LF_penta_gram_overlap},
+            {'name': 'LF_four_gram_overlap', 'function': self.LF_four_gram_overlap},
+            {'name': 'LF_five_gram_overlap', 'function': self.LF_five_gram_overlap},
             {'name': 'LF_rouge_1_candidate', 'function': self.LF_rouge_1_candidate},
             {'name': 'LF_rouge_2_candidate', 'function': self.LF_rouge_2_candidate},
             {'name': 'LF_rouge_L_candidate', 'function': self.LF_rouge_L_candidate},
@@ -76,7 +67,6 @@ class WeakSupervisionSoft:
     def _generate_candidates(self, tokenized_sequence):
         candidate = []
         candidates, indicies = [], []
-        is_first_sentence = True
         for i, t in enumerate(tokenized_sequence):
             if t.text in self._punctuation:
                 if len(candidate) > 0:
@@ -90,10 +80,16 @@ class WeakSupervisionSoft:
         indicies = [(c[0].i, c[-1].i + 1) for c in candidates]  # +1 to get the last token
         return candidates, indicies
 
+    def _remove_stopwords(self, tokenized_sequence, lang):
+        nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
+        # TODO: custom list, remove negations from stop words
+        stop_words = nlp.Defaults.stop_words
+        return nlp(' '.join([t.text for t in tokenized_sequence if t.text not in stop_words]))
+
     def LF_paraphrase_detection_candidates(self, doc, rubric, lang):
         candidates, indicies = self._generate_candidates(doc)
         for c, i in zip(candidates, indicies):
-            c = [t.text for t in c]
+            c = ' '.join([t.text for t in c])
             sim = self.para_detector.detect_score_key_elements(c, rubric)
             max_index = np.argmax(sim)
             max_value = sim[max_index]
@@ -102,20 +98,11 @@ class WeakSupervisionSoft:
     def LF_paraphrase_detection_sentences(self, doc, rubric, lang):
         candidates, indicies = self._generate_sentences(doc)
         for c, i in zip(candidates, indicies):
-            c = [t.text for t in c]
+            c = ' '.join([t.text for t in c])
             sim = self.para_detector.detect_score_key_elements(c, rubric)
             max_index = np.argmax(sim)
             max_value = sim[max_index]
             yield i[0], i[-1], 'CUE', max_value
-
-    def LF_ner(self, doc, rubric, lang):
-        ind_dict = dict((k, i) for i, k in enumerate(doc))
-        for ents in doc.ents:
-            matches = set(doc).intersection(ents)
-            indices = [ind_dict[x] for x in matches]
-            indices = sorted(indices)
-            if indices != []:
-                yield indices[0], indices[-1], 'CUE'
 
     def LF_noun_phrases(self, doc, rubric, lang):
         noun_chunks = [chunk for chunk in doc.noun_chunks]
@@ -178,7 +165,6 @@ class WeakSupervisionSoft:
         # include stop words
         stemmer = PorterStemmer()
         doc = [stemmer.stem(token.text.lower()) for token in doc]
-        stemmed_rubric = []
         for r in rubric['tokenized']:
             stemmed_rubric = [stemmer.stem(token.text.lower()) for token in r]
             ind_dict = dict((k, i) for i, k in enumerate(doc))
@@ -188,44 +174,6 @@ class WeakSupervisionSoft:
             if indices != []:
                 if indices[0] != indices[-1]:
                     yield indices[0], indices[-1], 'CUE', 1.0
-
-    def LF_pos_match_without_stopwords(self, doc, rubric, lang):
-        # remove stop words
-        doc = [token.pos_.lower() for token in self._remove_stopwords(doc, lang)]
-        stemmed_rubric = []
-        for r in rubric['tokenized']:
-            stemmed_rubric = [token.pos_.lower() for token in self._remove_stopwords(r, lang)]
-            ind_dict = dict((k, i) for i, k in enumerate(doc))
-            matches = set(doc).intersection(stemmed_rubric)
-            indices = [ind_dict[x] for x in matches]
-            indices = sorted(indices)
-            if indices != []:
-                if indices[0] != indices[-1]:
-                    yield indices[0], indices[-1], 'CUE', 1.0
-
-    def LF_lemma_match_without_stopwords(self, doc, rubric, lang):
-        # remove stop words
-        doc = [token.lemma_.lower() for token in self._remove_stopwords(doc, lang)]
-        stemmed_rubric = []
-        for r in rubric['tokenized']:
-            stemmed_rubric = [token.lemma_.lower() for token in self._remove_stopwords(r, lang)]
-            ind_dict = dict((k, i) for i, k in enumerate(doc))
-            matches = set(doc).intersection(stemmed_rubric)
-            indices = [ind_dict[x] for x in matches]
-            indices = sorted(indices)
-            if indices != []:
-                if indices[0] != indices[-1]:
-                    yield indices[0], indices[-1], 'CUE', 1.0
-
-    def LF_dep_match_without_stopwords(self, doc, rubric, lang):
-        candidates, indicies = self._generate_candidates(doc)
-        dep_rubric = []
-        for r in rubric['tokenized']:
-            dep_rubric.append([t.dep_ for t in self._remove_stopwords(r, lang)])
-        for c, i in zip(candidates, indicies):
-            c = [t.dep_ for t in self._remove_stopwords(c, lang)]
-            if c in dep_rubric:
-                yield i[0], i[-1], 'CUE', 1.0
 
     def LF_lemma_match(self, doc, rubric, lang):
         nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
@@ -267,21 +215,6 @@ class WeakSupervisionSoft:
             for match_id, start, end in matcher(s):
                 yield start, end, "CUE", 1.0
 
-    def LF_tag_match(self, doc, rubric, lang):
-        nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
-        matcher = PhraseMatcher(nlp.vocab, attr="TAG")
-        patterns = rubric['tokenized'].tolist()
-        matcher.add("Tag_Match", patterns)
-        sentences, indices = self._generate_sentences(doc)
-        for s in sentences:
-            for match_id, start, end in matcher(s):
-                yield start, end, "CUE", 1.0
-
-    def _remove_stopwords(self, tokenized_sequence, lang):
-        nlp = self.config.nlp_de if lang == 'de' else self.config.nlp
-        # TODO: custom list, remove negations from stop words
-        stop_words = nlp.Defaults.stop_words
-        return [t for t in tokenized_sequence if t.text not in stop_words]
 
     def LF_bleu_candidates(self, doc, rubric, lang):
         candidates, indicies = self._generate_candidates(doc)
@@ -289,7 +222,7 @@ class WeakSupervisionSoft:
             c = ' '.join([t.text for t in c])
             scores = []
             for r in rubric['key_element']:
-                score = nltk.translate.bleu_score.sentence_bleu([r.lower()], c.lower(), weights=(1, 0, 0, 0))
+                score = nltk.translate.bleu_score.sentence_bleu([r.lower()], c.lower())
                 scores.append(score)
             v = np.argmax(scores)
             if scores[v] > 0.0:
@@ -324,7 +257,7 @@ class WeakSupervisionSoft:
             if labels[row, column] > 0.0:
                 yield span[0], span[1], "CUE", labels[row, column]
 
-    def LF_tetra_gram_overlap(self, doc, rubric, lang):
+    def LF_four_gram_overlap(self, doc, rubric, lang):
         candidates, indicies = self._generate_candidates(doc)
         labels = self._n_gram_lemma_overlap(candidates, rubric, n_gram=4)
         for row, column in enumerate(np.argmax(labels, axis=1)):
@@ -332,7 +265,7 @@ class WeakSupervisionSoft:
             if labels[row, column] > 0.0:
                 yield span[0], span[1], "CUE", labels[row, column]
 
-    def LF_penta_gram_overlap(self, doc, rubric, lang):
+    def LF_five_gram_overlap(self, doc, rubric, lang):
         candidates, indicies = self._generate_candidates(doc)
         labels = self._n_gram_lemma_overlap(candidates, rubric, n_gram=5)
         for row, column in enumerate(np.argmax(labels, axis=1)):
@@ -394,9 +327,10 @@ class WeakSupervisionSoft:
     def _rouge(self, candidates, rubric, rouge_val='rouge-l'):
         labels = []
         for c in candidates:
-            c = ' '.join([t.text for t in c])
+            c = ' '.join([t.text.lower() for t in c])
             scores = []
             for r in rubric['key_element']:
+                r = r.lower()
                 try:
                     score = self.rouge.get_scores(c, r)
                     score = score[0][rouge_val]['f']
@@ -413,21 +347,19 @@ class WeakSupervisionSoft:
         labels = []
         candidates, indicies = self._generate_candidates(doc)
         for c in candidates:
-            c = ' '.join([t.text for t in c])
+            c = ' '.join([t.text.lower() for t in c])
             scores = []
             for r in rubric['tokenized']:
-                r = ' '.join([t.text for t in r])
-                score = edit_distance(c, r)
+                r = ' '.join([t.text.lower() for t in r])
+                length = max(len(c), len(r))
+                score = (length - edit_distance(c, r)) / length
                 scores.append(score)
             labels.append(scores)
         labels = np.array(labels)
-        for row, column in enumerate(np.argmin(labels, axis=1)):
+        for row, column in enumerate(np.argmax(labels, axis=1)):
             span = indicies[row]
-            if labels[row, column] == 0:
-                val = 0
-            else:
-                val = 1 / labels[row, column]
-            yield span[0], span[1], "CUE", val
+            if labels[row, column] > 0.0:
+                yield span[0], span[1], "CUE", labels[row, column]
 
     def LF_jaccard_similarity(self, doc, rubric, lang):
         candidates, indicies = self._generate_candidates(doc)
@@ -445,7 +377,56 @@ class WeakSupervisionSoft:
                 scores.append(similarity)
             labels.append(scores)
         labels = np.array(labels)
-        for row, column in enumerate(np.argmin(labels, axis=1)):
+        for row, column in enumerate(np.argmax(labels, axis=1)):
             span = indicies[row]
             if labels[row, column] > 0.0:
                 yield span[0], span[1], "CUE", labels[row, column]
+
+    def LF_pos_match_without_stopwords(self, doc, rubric, lang):
+        # remove stop words
+        doc = self._remove_stopwords(doc, lang)
+        rubric['tokenized'] = [self._remove_stopwords(r, lang) for r in rubric['tokenized']]
+        self.LF_pos_match(doc, rubric, lang)
+
+    def LF_lemma_match_without_stopwords(self, doc, rubric, lang):
+        # remove stop words
+        doc = self._remove_stopwords(doc, lang)
+        rubric['tokenized'] = [self._remove_stopwords(r, lang) for r in rubric['tokenized']]
+        return self.LF_lemma_match(doc, rubric, lang)
+
+    def LF_dep_match_without_stopwords(self, doc, rubric, lang):
+        doc = self._remove_stopwords(doc, lang)
+        rubric['tokenized'] = [self._remove_stopwords(r, lang) for r in rubric['tokenized']]
+        return self.LF_dep_match(doc, rubric, lang)
+
+    def LF_stem_match_without_stopwords(self, doc, rubric, lang):
+        doc = self._remove_stopwords(doc, lang)
+        rubric['tokenized'] = [self._remove_stopwords(r, lang) for r in rubric['tokenized']]
+        return self.LF_stem_match(doc, rubric, lang)
+
+    def apply(self, data):
+        annotated_data = []
+        for i, d in tqdm(data.iterrows()):
+            q_id = d['question_id']
+            x = d['tokenized']
+            lang = d['lang']
+            rubric = self.rubrics[q_id]
+            len_seq = len(x)
+            labeling_functions = {}
+            for i, lf in enumerate(self.labeling_functions):
+                soft_labels = np.zeros((len_seq))
+                for cue in lf['function'](x, rubric, lang):
+                    soft_labels[cue[0]:cue[1] + 1] = cue[3]  # 3 is idx for soft label
+                labeling_functions[lf['name']] = soft_labels.tolist()
+            item = {
+                'lang': d['lang'],
+                'question_id': d['question_id'],
+                'question': d['question'],
+                'reference_answer': d['reference_answer'],
+                'score': d['score'],
+                'label': d['label'],
+                'student_answer': d['student_answer'],
+                'labeling_functions': labeling_functions,
+            }
+            annotated_data.append(item)
+        return annotated_data
