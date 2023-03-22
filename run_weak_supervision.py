@@ -50,20 +50,20 @@ myutils.save_json(dev_data, config.PATH_DATA, 'dev_ws_lfs.json')
 
 # HMM WEAK SUPERVISION
 thresholds = {
-    'meteor': [0.05, 0.1, 0.2],
-    'ngram': [0.05, 0.10, 0.15],
-    'rouge': [0.1, 0.15, 0.2],
-    'edit_dist': [0.4, 0.5, 0.6],
+    'meteor': 0.5,
+    'ngram': 0.5,
+    'rouge': 0.5,
+    'edit_dist': 0.5,
     'paraphrase': [0.85, 0.9, 0.95],
-    'bleu': [0.4, 0.5, 0.6],
-    'jaccard': [0.4, 0.5, 0.6],
+    'bleu': 0.5,
+    'jaccard': 0.5,
 }
 for i in range(3):
     logging.info("Start HMM Weak Supervision...")
-    ws = WeakSupervisionHMM(rubrics=rubrics, meteor_th=thresholds['meteor'][i], ngram_th=thresholds['ngram'][i],
-                            rouge_th=thresholds['rouge'][i], edit_dist_th=thresholds['edit_dist'][i],
-                            paraphrase_th=thresholds['paraphrase'][i], bleu_th=thresholds['bleu'][i],
-                            jaccard_th=thresholds['jaccard'][i], mode='hmm', config=config)
+    ws = WeakSupervisionHMM(rubrics=rubrics, meteor_th=thresholds['meteor'], ngram_th=thresholds['ngram'],
+                            rouge_th=thresholds['rouge'], edit_dist_th=thresholds['edit_dist'],
+                            paraphrase_th=thresholds['paraphrase'][i], bleu_th=thresholds['bleu'],
+                            jaccard_th=thresholds['jaccard'], mode='hmm', config=config)
     ws.fit(X_train)
     apply_hmm(X_train, ws, file_name='training_ws_hmm_' + str(i), path=config.PATH_DATA)
     apply_hmm(X_dev, ws, file_name='dev_ws_hmm_' + str(i), path=config.PATH_DATA)
