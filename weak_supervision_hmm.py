@@ -101,31 +101,39 @@ class WeakSupervisionHMM:
         self.EDIT_DISTANCE_THRESHOLD = edit_dist_th
         self.ws = WeakSupervisionSoft(self.rubrics, config)
         self.labeling_functions = [
-            RubricAnnotator('LF_meteor_sentences', self.LF_meteor_sentences),
-            RubricAnnotator('LF_meteor_candidates', self.LF_meteor_candidates),
             RubricAnnotator('LF_noun_phrases', self.LF_noun_phrases),
             RubricAnnotator('LF_lemma_match', self.LF_lemma_match),
             RubricAnnotator('LF_pos_match', self.LF_pos_match),
             RubricAnnotator('LF_shape_match', self.LF_shape_match),
             RubricAnnotator('LF_stem_match', self.LF_stem_match),
-            RubricAnnotator("LF_lemma_match_without_stopwords", self.LF_lemma_match_without_stopwords),
-            RubricAnnotator("LF_meteor_sentences", self.LF_meteor_sentences),
             RubricAnnotator("LF_dep_match", self.LF_dep_match),
+            RubricAnnotator("LF_lemma_match_without_stopwords", self.LF_lemma_match_without_stopwords),
+            RubricAnnotator('LF_stem_match_without_stopwords', self.LF_stem_match_without_stopwords),
+            RubricAnnotator('LF_pos_match_without_stopwords', self.LF_pos_match_without_stopwords),
             RubricAnnotator('LF_dep_match_without_stopwords', self.LF_dep_match_without_stopwords),
+            RubricAnnotator('LF_uni_gram_overlap', self.LF_uni_gram_overlap),
             RubricAnnotator('LF_bi_gram_overlap', self.LF_bi_gram_overlap),
             RubricAnnotator('LF_tri_gram_overlap', self.LF_tri_gram_overlap),
             RubricAnnotator('LF_four_gram_overlap', self.LF_four_gram_overlap),
             RubricAnnotator('LF_five_gram_overlap', self.LF_five_gram_overlap),
-            RubricAnnotator('LF_rouge_L_candidate', self.LF_rouge_L_candidate),
             RubricAnnotator('LF_rouge_1_candidate', self.LF_rouge_1_candidate),
             RubricAnnotator('LF_rouge_2_candidate', self.LF_rouge_2_candidate),
+            RubricAnnotator('LF_rouge_3_candidate', self.LF_rouge_3_candidate),
+            RubricAnnotator('LF_rouge_4_candidate', self.LF_rouge_4_candidate),
+            RubricAnnotator('LF_rouge_5_candidate', self.LF_rouge_5_candidate),
+            RubricAnnotator('LF_rouge_L_candidate', self.LF_rouge_L_candidate),
             RubricAnnotator('LF_rouge_L_sentences', self.LF_rouge_L_sentences),
             RubricAnnotator('LF_word_alignment', self.LF_word_alignment),
-            RubricAnnotator('LF_edit_distance', self.LF_edit_distance),
             RubricAnnotator('LF_paraphrase_detection_sentences', self.LF_paraphrase_detection_sentences),
             RubricAnnotator('LF_paraphrase_detection_candidates', self.LF_paraphrase_detection_candidates),
             RubricAnnotator('LF_bleu_candidates', self.LF_bleu_candidates),
+            RubricAnnotator('LF_bleu_sentences', self.LF_bleu_sentences),
+            RubricAnnotator('LF_meteor_candidates', self.LF_meteor_candidates),
+            RubricAnnotator('LF_meteor_sentences', self.LF_meteor_sentences),
             RubricAnnotator('LF_jaccard_similarity', self.LF_jaccard_similarity),
+            RubricAnnotator('LF_jaccard_similarity_lemmatized', self.LF_jaccard_similarity_lemmatized),
+            RubricAnnotator('LF_edit_distance', self.LF_edit_distance),
+            RubricAnnotator('LF_edit_distance_lemmatized', self.LF_edit_distance_lemmatized),
         ]
 
     def _get_rubric(self, question_id: str):
@@ -147,6 +155,9 @@ class WeakSupervisionHMM:
 
     def LF_pos_match_without_stopwords(self, doc, rubric, lang):
         return self.ws.LF_pos_match_without_stopwords(doc, rubric, lang)
+
+    def LF_stem_match_without_stopwords(self, doc, rubric, lang):
+        return self.ws.LF_stem_match_without_stopwords(doc, rubric, lang)
 
     def LF_noun_phrases(self, doc, rubric, lang):
         return self.ws.LF_noun_phrases(doc, rubric, lang)
@@ -175,6 +186,9 @@ class WeakSupervisionHMM:
     def LF_word_alignment(self, doc, rubric, lang):
         return self.ws.LF_word_alignment(doc, rubric, lang)
 
+    def LF_uni_gram_overlap(self, doc, rubric, lang):
+        return self._get_spans_above_threshold(self.ws.LF_uni_gram_overlap(doc, rubric, lang), self.NGRAM_THRESHOLD)
+
     def LF_bi_gram_overlap(self, doc, rubric, lang):
         return self._get_spans_above_threshold(self.ws.LF_bi_gram_overlap(doc, rubric, lang), self.NGRAM_THRESHOLD)
 
@@ -196,11 +210,23 @@ class WeakSupervisionHMM:
     def LF_rouge_2_candidate(self, doc, rubric, lang):
         return self._get_spans_above_threshold(self.ws.LF_rouge_2_candidate(doc, rubric, lang), self.ROUGE_THRESHOLD)
 
+    def LF_rouge_3_candidate(self, doc, rubric, lang):
+        return self._get_spans_above_threshold(self.ws.LF_rouge_3_candidate(doc, rubric, lang), self.ROUGE_THRESHOLD)
+
+    def LF_rouge_4_candidate(self, doc, rubric, lang):
+        return self._get_spans_above_threshold(self.ws.LF_rouge_4_candidate(doc, rubric, lang), self.ROUGE_THRESHOLD)
+
+    def LF_rouge_5_candidate(self, doc, rubric, lang):
+        return self._get_spans_above_threshold(self.ws.LF_rouge_5_candidate(doc, rubric, lang), self.ROUGE_THRESHOLD)
+
     def LF_rouge_L_sentences(self, doc, rubric, lang):
         return self._get_spans_above_threshold(self.ws.LF_rouge_L_sentences(doc, rubric, lang), self.ROUGE_THRESHOLD)
 
     def LF_edit_distance(self, doc, rubric, lang):
         return self._get_spans_above_threshold(self.ws.LF_edit_distance(doc, rubric, lang), self.EDIT_DISTANCE_THRESHOLD)
+
+    def LF_edit_distance_lemmatized(self, doc, rubric, lang):
+        return self._get_spans_above_threshold(self.ws.LF_edit_distance_lemmatized(doc, rubric, lang), self.EDIT_DISTANCE_THRESHOLD)
 
     def LF_paraphrase_detection_sentences(self, doc, rubric, lang):
         return self._get_spans_above_threshold(self.ws.LF_paraphrase_detection_sentences(doc, rubric, lang), self.PARAPHRASE_THRESHOLD)
@@ -211,8 +237,14 @@ class WeakSupervisionHMM:
     def LF_bleu_candidates(self, doc, rubric, lang):
         return self._get_spans_above_threshold(self.ws.LF_bleu_candidates(doc, rubric, lang), self.BLEU_THRESHOLD)
 
+    def LF_bleu_sentences(self, doc, rubric, lang):
+        return self._get_spans_above_threshold(self.ws.LF_bleu_sentences(doc, rubric, lang), self.BLEU_THRESHOLD)
+
     def LF_jaccard_similarity(self, doc, rubric, lang):
         return self._get_spans_above_threshold(self.ws.LF_jaccard_similarity(doc, rubric, lang), self.JACCARD_THRESHOLD)
+
+    def LF_jaccard_similarity_lemmatized(self, doc, rubric, lang):
+        return self._get_spans_above_threshold(self.ws.LF_jaccard_similarity_lemmatized(doc, rubric, lang), self.JACCARD_THRESHOLD)
 
     def predict(self, data):
         docs = []

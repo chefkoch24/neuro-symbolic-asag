@@ -19,36 +19,43 @@ class WeakSupervisionSoft:
     def __init__(self, rubrics, config):
         self.rubrics = rubrics
         self.para_detector = BertScorer()
-        self._punctuation = ['.', ',', '?', '!', ';', ':']
+        self._punctuation = ['.', ',', '?', '!', ';']
         self.config = config
         self.rouge = Rouge(metrics=["rouge-1", "rouge-2", "rouge-3", "rouge-4", "rouge-5", "rouge-l"])
         self.labeling_functions = [
             {'name': 'LF_noun_phrases', 'function': self.LF_noun_phrases},
             {'name': 'LF_lemma_match', 'function': self.LF_lemma_match},
             {'name': 'LF_pos_match', 'function': self.LF_pos_match},
-            {'name': 'LF_lemma_match_without_stopwords', 'function': self.LF_lemma_match_without_stopwords},
-            {'name': 'LF_stem_match_without_stopwords', 'function': self.LF_stem_match_without_stopwords},
-            {'name': 'LF_pos_match_without_stopwords', 'function': self.LF_pos_match_without_stopwords},
             {'name': 'LF_shape_match', 'function': self.LF_shape_match},
             {'name': 'LF_stem_match', 'function': self.LF_stem_match},
             {'name': 'LF_dep_match', 'function': self.LF_dep_match},
+            {'name': 'LF_lemma_match_without_stopwords', 'function': self.LF_lemma_match_without_stopwords},
+            {'name': 'LF_stem_match_without_stopwords', 'function': self.LF_stem_match_without_stopwords},
+            {'name': 'LF_pos_match_without_stopwords', 'function': self.LF_pos_match_without_stopwords},
             {'name': 'LF_dep_match_without_stopwords', 'function': self.LF_dep_match_without_stopwords},
+            {'name': 'LF_uni_gram_overlap', 'function': self.LF_uni_gram_overlap},
             {'name': 'LF_bi_gram_overlap', 'function': self.LF_bi_gram_overlap},
             {'name': 'LF_tri_gram_overlap', 'function': self.LF_tri_gram_overlap},
             {'name': 'LF_four_gram_overlap', 'function': self.LF_four_gram_overlap},
             {'name': 'LF_five_gram_overlap', 'function': self.LF_five_gram_overlap},
             {'name': 'LF_rouge_1_candidate', 'function': self.LF_rouge_1_candidate},
             {'name': 'LF_rouge_2_candidate', 'function': self.LF_rouge_2_candidate},
+            {'name': 'LF_rouge_3_candidate', 'function': self.LF_rouge_2_candidate},
+            {'name': 'LF_rouge_4_candidate', 'function': self.LF_rouge_2_candidate},
+            {'name': 'LF_rouge_5_candidate', 'function': self.LF_rouge_2_candidate},
             {'name': 'LF_rouge_L_candidate', 'function': self.LF_rouge_L_candidate},
             {'name': 'LF_rouge_L_sentences', 'function': self.LF_rouge_L_sentences},
             {'name': 'LF_word_alignment', 'function': self.LF_word_alignment},
-            {'name': 'LF_edit_distance', 'function': self.LF_edit_distance},
             {'name': 'LF_paraphrase_detection_sentences', 'function': self.LF_paraphrase_detection_sentences},
             {'name': 'LF_paraphrase_detection_candidates', 'function': self.LF_paraphrase_detection_candidates},
             {'name': 'LF_bleu_candidates', 'function': self.LF_bleu_candidates},
+            {'name': 'LF_bleu_sentences', 'function': self.LF_bleu_sentences},
             {'name': 'LF_meteor_candidates', 'function': self.LF_meteor_candidates},
             {'name': 'LF_meteor_sentences', 'function': self.LF_meteor_sentences},
             {'name': 'LF_jaccard_similarity', 'function': self.LF_jaccard_similarity},
+            {'name': 'LF_edit_distance', 'function': self.LF_edit_distance},
+            {'name': 'LF_jaccard_similarity_lemmatized', 'function': self.LF_jaccard_similarity_lemmatized},
+            {'name': 'LF_edit_distance_lemmatized', 'function': self.LF_edit_distance_lemmatized},
         ]
 
     def _get_rubric(self, question_id: str):
@@ -228,6 +235,18 @@ class WeakSupervisionSoft:
             if scores[v] > 0.0:
                 yield i[0], i[1], 'CUE', scores[v]
 
+    def LF_bleu_sentences(self, doc, rubric, lang):
+        sentences, indicies = self._generate_candidates(doc)
+        for c, i in zip(sentences, indicies):
+            c = ' '.join([t.text for t in c])
+            scores = []
+            for r in rubric['key_element']:
+                score = nltk.translate.bleu_score.sentence_bleu([r.lower()], c.lower())
+                scores.append(score)
+            v = np.argmax(scores)
+            if scores[v] > 0.0:
+                yield i[0], i[1], 'CUE', scores[v]
+
     def LF_word_alignment(self, doc, rubric, lang):
         references = []
         for r in rubric['tokenized']:
@@ -240,6 +259,14 @@ class WeakSupervisionSoft:
             a_sorted = sorted(alignment[0], key=lambda tup: tup[0])
             for a in a_sorted:
                 yield a[0], a[0] + 1, "CUE", 1.0
+
+    def LF_uni_gram_overlap(self, doc, rubric, lang):
+        candidates, indicies = self._generate_candidates(doc)
+        labels = self._n_gram_lemma_overlap(candidates, rubric, n_gram=1)
+        for row, column in enumerate(np.argmax(labels, axis=1)):
+            span = indicies[row]
+            if labels[row, column] > 0.0:
+                yield span[0], span[1], "CUE", labels[row, column]
 
     def LF_bi_gram_overlap(self, doc, rubric, lang):
         candidates, indicies = self._generate_candidates(doc)
@@ -316,8 +343,32 @@ class WeakSupervisionSoft:
             if labels[row, column] > 0.0:
                 yield span[0], span[1], "CUE", labels[row, column]
 
+    def LF_rouge_3_candidate(self, doc, rubric, lang):
+        candidates, indicies = self._generate_candidates(doc)
+        labels = self._rouge(candidates, rubric, rouge_val='rouge-3')
+        for row, column in enumerate(np.argmax(labels, axis=1)):
+            span = indicies[row]
+            if labels[row, column] > 0.0:
+                yield span[0], span[1], "CUE", labels[row, column]
+
+    def LF_rouge_4_candidate(self, doc, rubric, lang):
+        candidates, indicies = self._generate_candidates(doc)
+        labels = self._rouge(candidates, rubric, rouge_val='rouge-4')
+        for row, column in enumerate(np.argmax(labels, axis=1)):
+            span = indicies[row]
+            if labels[row, column] > 0.0:
+                yield span[0], span[1], "CUE", labels[row, column]
+
+    def LF_rouge_5_candidate(self, doc, rubric, lang):
+        candidates, indicies = self._generate_candidates(doc)
+        labels = self._rouge(candidates, rubric, rouge_val='rouge-5')
+        for row, column in enumerate(np.argmax(labels, axis=1)):
+            span = indicies[row]
+            if labels[row, column] > 0.0:
+                yield span[0], span[1], "CUE", labels[row, column]
+
     def LF_rouge_L_sentences(self, doc, rubric, lang):
-        sentences, indicies = self._generate_sentences(doc)
+        sentences, indicies = self._generate_candidates(doc)
         labels = self._rouge(sentences, rubric, rouge_val='rouge-l')
         for row, column in enumerate(np.argmax(labels, axis=1)):
             span = indicies[row]
@@ -361,6 +412,25 @@ class WeakSupervisionSoft:
             if labels[row, column] > 0.0:
                 yield span[0], span[1], "CUE", labels[row, column]
 
+    def LF_edit_distance_lemmatized(self, doc, rubric, lang):
+        labels = []
+        candidates, indicies = self._generate_candidates(doc)
+        for c in candidates:
+            c = ' '.join([t.lemma_.lower() for t in c])
+            scores = []
+            for r in rubric['tokenized']:
+                r = ' '.join([t.lemma_.lower() for t in r])
+                length = max(len(c), len(r))
+                score = (length - edit_distance(c, r)) / length
+                scores.append(score)
+            labels.append(scores)
+        labels = np.array(labels)
+        for row, column in enumerate(np.argmax(labels, axis=1)):
+            span = indicies[row]
+            if labels[row, column] > 0.0:
+                yield span[0], span[1], "CUE", labels[row, column]
+
+
     def LF_jaccard_similarity(self, doc, rubric, lang):
         candidates, indicies = self._generate_candidates(doc)
         labels = []
@@ -382,11 +452,32 @@ class WeakSupervisionSoft:
             if labels[row, column] > 0.0:
                 yield span[0], span[1], "CUE", labels[row, column]
 
+    def LF_jaccard_similarity_lemmatized(self, doc, rubric, lang):
+        candidates, indicies = self._generate_candidates(doc)
+        labels = []
+        for c in candidates:
+            c = [t.lemma_.lower() for t in c]
+            scores = []
+            for r in rubric['tokenized']:
+                r = [t.lemma_.lower() for t in r]
+                tokens1 = set(c)
+                tokens2 = set(r)
+                intersection = tokens1.intersection(tokens2)
+                union = tokens1.union(tokens2)
+                similarity = len(intersection) / len(union)
+                scores.append(similarity)
+            labels.append(scores)
+        labels = np.array(labels)
+        for row, column in enumerate(np.argmax(labels, axis=1)):
+            span = indicies[row]
+            if labels[row, column] > 0.0:
+                yield span[0], span[1], "CUE", labels[row, column]
+
     def LF_pos_match_without_stopwords(self, doc, rubric, lang):
         # remove stop words
         doc = self._remove_stopwords(doc, lang)
         rubric['tokenized'] = [self._remove_stopwords(r, lang) for r in rubric['tokenized']]
-        self.LF_pos_match(doc, rubric, lang)
+        return self.LF_pos_match(doc, rubric, lang)
 
     def LF_lemma_match_without_stopwords(self, doc, rubric, lang):
         # remove stop words
