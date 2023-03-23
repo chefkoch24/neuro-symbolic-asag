@@ -19,7 +19,7 @@ class Config:
                  lr=None,
                  checkpoint_path=None,
                  aggregation_method='sum',
-                 excluded_lfs=[],
+                 excluded_lfs=None,
                  mode='classification',
                  grading_model='decision_tree',
                  device='cpu'
