@@ -40,15 +40,16 @@ def create_aligned_labels(data):
         aligned_data.append(d)
     return aligned_data
 
-for model in ['distilbert-base-multilingual-cased', 'SpanBERT/spanbert-base-cased']:
-    for aggregation in ['hmm', 'lfs_sum']:
-        config = Config(train_file='aggregated_training_ws_' + aggregation + '.json',
-                        dev_file='aggregated_dev_ws_' + aggregation + '.json',
-                        test_file=None,
+train_file = 'aggregated/training/training_ws_lfs_sum_all_lfs.json'
+dev_file = 'aggregated/dev/dev_ws_lfs_sum_all_lfs.json'
+
+for model in ['distilbert-base-multilingual-cased', 'xlm-roberta-base']:
+        config = Config(train_file=train_file,
+                        dev_file=dev_file,
                         model=model,)
         tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
         rubrics = utils.load_rubrics(config.PATH_RUBRIC)
-        DATASET_NAME = 'dataset_aligned_labels_' + config.MODEL_NAME.replace('/','_') + '_' + aggregation + '.json'
+        DATASET_NAME = utils.get_experiment_name(['aligned_labels', config.MODEL_NAME]) + '.json'
 
         # load data
         train_data = utils.load_json(config.PATH_DATA + '/' + config.TRAIN_FILE)
@@ -57,8 +58,3 @@ for model in ['distilbert-base-multilingual-cased', 'SpanBERT/spanbert-base-case
         dev_dataset = create_aligned_labels(dev_data)
         utils.save_json(training_dataset, config.PATH_DATA + '/', 'training_' + DATASET_NAME)
         utils.save_json(dev_dataset, config.PATH_DATA + '/', 'dev_'+DATASET_NAME)
-
-        if config.TEST_FILE is not None:
-            test_data = utils.load_json(config.PATH_DATA + '/' + config.TEST_FILE)
-            test_dataset = create_aligned_labels(dev_data)
-            utils.save_json(dev_dataset, config.PATH_DATA + '/', 'test_' + DATASET_NAME)
