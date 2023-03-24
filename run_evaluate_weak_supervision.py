@@ -1,4 +1,5 @@
 #Imports
+import os
 import time
 import metrics
 import numpy as np
@@ -10,11 +11,10 @@ import logging
 
 def evaluate_weak_supervision_models(files, config, th=0.5):
     results = []
-    german_question_ids = [str(i) for i in range(1, 10)]
     for file in files:
         logging.info('Analyzing.. ' + file)
         disable_lang_filter = False
-        annotated_data = utils.load_json(config.PATH_DATA + '/' + file)
+        annotated_data = utils.load_json(config.PATH_DATA + '/aggregated/dev/' + file)
         #Creating results
         for language in ['de', 'en', 'combined']:
             true_labels = []
@@ -44,6 +44,7 @@ def evaluate_weak_supervision_models(files, config, th=0.5):
             logging.info(language.upper() + ' Average len (tokens):', 'CORRECT', tn_correct, 'PARTIAL_CORRECT', tn_partial, 'INCORRECT', tn_incorrect)
             logging.info(language.upper() + ' Average number of rubrics in answer:', 'CORRECT', n_correct,
                   'PARTIAL_CORRECT', n_partial, 'INCORRECT', n_incorrect)
+            file = file.split('.')[0]
             results.append({
                 'id': file + '-CORRECT-' + language.upper(),
                 'avg_relation': r_correct,
@@ -83,55 +84,11 @@ def evaluate_weak_supervision_models(files, config, th=0.5):
                 'max': statistical_metrics['max_incorrect'],
                 'labeled_tokens': statistical_metrics['labeled_tokens_incorrect'],
             })
-        # save as spacy doc
-        def create_averaged_labels(indicies, raw_labels):
-            labels = raw_labels.copy()
-            for idx in indicies:
-                s, e = idx[0], idx[1]
-                label_value = round(np.average(labels[s:e]), 1)
-                for i in range(s, e):
-                    labels[i] = label_value
-            return labels
 
-        def create_ents(tokens, indicies, labels=None):
-            ents = []
-            for idx in indicies:
-                text = tokens[idx[0]:idx[1]]
-                # s,e = text.start, text.end
-                s, e = idx[0], idx[1]
-                if labels != None:
-                    ents.append((str(round(np.average(labels[s:e]), 1)), s, e))
-                else:
-                    ents.append(('CUE', s, e))
-            return ents
-        doc = []
-        for a in annotated_data:
-            text = a['student_answer']
-            qid = a['question_id']
-            question = a['question']
-            l = a['label']
-            raw_labels = a['silver_labels']
-            hard_labels = metrics.silver2target(raw_labels, th=th)
-            spans = metrics.get_spans_from_labels(hard_labels)
-            if qid in german_question_ids:
-                tokens = config.nlp_de(text)
-            else:
-                tokens = config.nlp(text)
-            labels = create_averaged_labels(spans, raw_labels)
-            ents = create_ents(tokens, spans, labels)
-            tokens.ents = ents
-            doc.append(tokens)
-
-    return results, doc
+    return results
 
 
 config = Config()
-files = ['aggregated_dev_ws_lfs_average.json', 'aggregated_dev_ws_lfs_average_nonzero.json',
-         'aggregated_dev_ws_lfs_max.json', 'aggregated_dev_ws_lfs_sum.json',
-         'aggregated_dev_ws_hmm.json'
-         ]
-# investigate different thresholds
-files = ['aggregated_dev_ws_hmm_0.json', 'aggregated_dev_ws_hmm_1.json', 'aggregated_dev_ws_hmm_2.json']
-
-results, doc = evaluate_weak_supervision_models(files, config)
+files = [f for f in os.listdir('data/aggregated/dev')]
+results = evaluate_weak_supervision_models(files, config)
 utils.save_csv(results, config.PATH_RESULTS, 'ws_results')

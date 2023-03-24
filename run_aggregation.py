@@ -16,18 +16,25 @@ for experiment_name, value in experiments.items():
         excluded_lfs=value
     )
     for aggregation_method in ['sum', 'max', 'average', 'average_nonzero', 'hmm']:
-        if aggregation_method != 'hmm':
-            for file_name in ['training_ws_lfs', 'dev_ws_lfs']:
-                data = utils.load_json(config.PATH_DATA + '/' + file_name + '.json')
-                aggregation = Aggregation(config)
-                aggregation.aggregate_labels(data, aggregation_method, 'aggregated_' + file_name + '_' + aggregation_method + '_' + experiment_name)
-        # For HMM
-        else:
-            file_names_hmm = ['dev_ws_hmm_0', 'dev_ws_hmm_1', 'dev_ws_hmm_2']
-            for file_name in file_names_hmm:
-                data = utils.load_json(config.PATH_DATA + '/' + file_name + '.json')
-                aggregation = AggregationHMM(config)
-                docs = skweak.utils.docbin_reader('corpora/' + file_name + '.spacy', spacy_model_name='en_core_web_lg')
-                aggregation.aggregate_labels(docs, data, 'aggregated_' + file_name)
+        for split in ['training', 'dev']:
+            if aggregation_method != 'hmm':
+                for file_name in ['ws_lfs', 'ws_lfs']:
+                    data = utils.load_json(config.PATH_DATA + '/' + split + '_' + file_name + '.json')
+                    aggregation = Aggregation(config)
+                    annotated_data = aggregation.aggregate_labels(data, aggregation_method)
+                    file_name = utils.get_experiment_name([split, file_name, aggregation_method, experiment_name])
+                    utils.save_json(data, config.PATH_DATA + '/aggregated/' + split , file_name + '.json')
+
+            # For HMM
+            else:
+                file_names_hmm = ['ws_hmm_0', 'ws_hmm_1', 'ws_hmm_2']
+                for file_name in file_names_hmm:
+                    file_name = split + '_' + file_name
+                    data = utils.load_json(config.PATH_DATA + '/' + file_name + '.json')
+                    aggregation = AggregationHMM(config)
+                    docs = skweak.utils.docbin_reader('corpora/' + file_name + '.spacy', spacy_model_name='en_core_web_lg')
+                    file_name = utils.get_experiment_name([file_name, experiment_name])
+                    annotated_data = aggregation.aggregate_labels(docs, data)
+                    utils.save_json(annotated_data, config.PATH_DATA + '/aggregated/' + split, file_name + '.json')
 
 
