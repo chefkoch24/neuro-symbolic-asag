@@ -12,7 +12,7 @@ class Config:
                  task='token_classification',
                  num_epochs=8,
                  batch_size=8,
-                 context=False,
+                 context=None,
                  max_len=512,
                  seed=42,
                  gpus=1,

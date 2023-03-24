@@ -1,5 +1,3 @@
-import csv
-import logging
 import os
 import time
 
@@ -7,12 +5,11 @@ import pandas as pd
 import skweak
 from matplotlib import pyplot as plt
 import json
-import config
-
+from joblib import dump, load
 
 def save_json(data, path, file_name, with_timestamp=False):
     if not os.path.exists(path):
-        os.mkdir(path)
+        os.makedirs(path)
     if with_timestamp:
         file_name + '_' + time.strftime("%Y_%m_%d")
 
@@ -22,11 +19,12 @@ def save_json(data, path, file_name, with_timestamp=False):
 
 def save_csv(data, path, file_name, with_timestamp=True, sep=','):
     if not os.path.exists(path):
-        os.mkdir(path)
+        os.makedirs(path)
     if with_timestamp:
         file_name + '_' + time.strftime("%Y_%m_%d_%H_%M")
     data = pd.DataFrame(columns=data[0].keys(), data=data)
     data.to_csv(path + '/' + file_name + '.csv', index=False)
+    print('saved', file_name + '.csv')
 
 
 def load_json(path):
@@ -104,3 +102,17 @@ def plot_hist(stats, bins=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
     plt.legend()
     plt.show()
 
+def load_symbolic_models(path, rubrics):
+    symbolic_models = {}
+    for k in rubrics.keys():
+        symbolic_models[k] = load(path + '/' + k + '.joblib')
+    return symbolic_models
+
+def get_experiment_name(constituents):
+    EXPERIMENT_NAME = ''
+    for i,c in enumerate(constituents):
+        if i == len(constituents) - 1:
+            EXPERIMENT_NAME += str(c)
+        else:
+            EXPERIMENT_NAME += str(c) + '_'
+    return EXPERIMENT_NAME

@@ -378,23 +378,30 @@ def compute_grading_classification_metrics(outputs):
     }
 
 def compute_grading_regression_metrics(outputs):
-    predictions = torch.cat([x['prediction'] for x in outputs]).numpy().tolist()
-    targets = torch.cat([x['score'] for x in outputs]).numpy().tolist()
+    predictions = torch.cat([x['prediction'] for x in outputs])
+    targets = torch.cat([x['score'] for x in outputs])
     langs = utils.flat_list([x['lang'] for x in outputs])
     rmse_calc = MeanSquaredError(squared=False).to(device)
-    cohenkappa = CohenKappa(task="multiclass", num_classes=2, weights="quadratic").to(device)
+    # num_classes = 9 because we have 9 different scores, 0.   , 0.125, 0.25 , 0.375, 0.5  , 0.625, 0.75 , 0.875, 1
+    cohenkappa = CohenKappa(task="multiclass", num_classes=9, weights="quadratic").to(device)
+    overall_rmse = rmse_calc(predictions, targets)
+    overall_qwk = cohenkappa(predictions, targets)
     rmses, qwks = [], []
+    predictions = predictions.cpu().detach().numpy().tolist()
+    targets = targets.cpu().detach().numpy().tolist()
     for language in ['de', 'en']:
         tmp_predictions = [p for p,l in zip(predictions, langs) if l == language]
         tmp_labels = [p for p,l in zip(targets, langs) if l == language]
-        tmp_labels = torch.tensor(tmp_labels)
-        tmp_predictions = torch.tensor(tmp_predictions)
+        tmp_labels = torch.tensor(tmp_labels, device=device)
+        tmp_predictions = torch.tensor(tmp_predictions, device=device)
         rmse = rmse_calc(tmp_predictions, tmp_labels)
         qwk = cohenkappa(tmp_predictions, tmp_labels)
         rmses.append(rmse.item())
         qwks.append(qwk.item())
 
     return {
+        'rmse':overall_rmse,
+        'qwk': overall_qwk,
         'rmse_de': rmses[0],
         'rmse_en': rmses[1],
         'qwk_de': qwks[0],

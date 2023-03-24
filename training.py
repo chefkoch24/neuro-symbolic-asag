@@ -1,13 +1,9 @@
 import logging
-
-import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import CSVLogger
 from torch.utils.data import DataLoader
-
-import myutils as utils
 from dataset import JustificationCueDataset, SpanJustificationCueDataset, GradingDataset, CustomBatchSampler
-from grading_model import GradingModelTrivial, GradingModel
+from grading_model import GradingModel
 from justification_cue_model import TokenClassificationModel, SpanPredictionModel
 from paraphrase_scorer import BertScorer
 from preprocessor import *
@@ -22,10 +18,21 @@ class TrainingJustificationCueDetection:
             num_gpus = self.config.GPUS
         else:
             num_gpus= 1
-        total_batch_size = self.config.BATCH_SIZE * num_gpus
-        self.EXPERIMENT_NAME = config.TASK + "_" + self.config.MODEL_NAME.replace('/', '_') +  "_bs-" + str(total_batch_size) + "_aggr-" + self.config.AGGREGATION_METHOD
         if self.config.TASK == 'token_classification':
-            self. EXPERIMENT_NAME += "_context-" + str(self.config.CONTEXT)
+            self.EXPERIMENT_NAME = utils.get_experiment_name([self.config.TASK, self.config.MODEL_NAME, self.config.CONTEXT])
+        else:
+            self.EXPERIMENT_NAME = utils.get_experiment_name([self.config.TASK, self.config.MODEL_NAME])
+        logging_hyperparams = {
+            'batch_size': self.config.BATCH_SIZE,
+            'num_gpus': num_gpus,
+            'device': self.config.DEVICE,
+            'context': self.config.CONTEXT,
+            'model_name': self.config.MODEL_NAME,
+            'max_length' : self.config.MAX_LEN,
+            'seed': self.config.SEED,
+            'task': self.config.TASK,
+        }
+        utils.save_json(logging_hyperparams, path='logs/' + self.EXPERIMENT_NAME, file_name= 'hyperparams.json')
         logger = CSVLogger("logs", name=self.EXPERIMENT_NAME)
         self.trainer = Trainer(
             max_epochs=self.config.NUM_EPOCHS,
@@ -86,7 +93,7 @@ class TrainingGrading():
 
     def __init__(self, config):
         self.config = config
-        self.EXPERIMENT_NAME = 'grading_' + config.TASK + "_" + self.config.MODEL_NAME.replace('/', '_') + "_" + self.config.GRADING_MODEL
+        self.EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.config.TASK, self.config.MODE, self.config.GRADING_MODEL])
         logger = CSVLogger("logs", name=self.EXPERIMENT_NAME)
         self.trainer = Trainer(max_epochs=self.config.NUM_EPOCHS,
                                # gradient_clip_val=0.5,
@@ -104,10 +111,7 @@ class TrainingGrading():
 
     def run_training(self):
         rubrics = utils.load_rubrics(self.config.PATH_RUBRIC)
-        if self.config.GRADING_MODEL == 'trivial':
-            model = GradingModelTrivial(self.config.PATH_CHECKPOINT, rubrics)
-        elif self.config.GRADING_MODEL == 'decision_tree':
-            model = GradingModel(self.config.PATH_CHECKPOINT, rubrics, self.config.MODEL_NAME, mode=self.config.MODE, task=self.config.TASK)
+        model = GradingModel(self.config.PATH_CHECKPOINT, rubrics, self.config.MODEL_NAME, mode=self.config.MODE, task=self.config.TASK, learning_strategy=self.config.GRADING_MODEL)
 
         if self.config.TASK == 'token_classification':
             preprocessor = GradingPreprocessorTokenClassification(self.config.MODEL_NAME, with_context=self.config.CONTEXT, rubrics=rubrics)
