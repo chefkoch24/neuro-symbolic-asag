@@ -10,18 +10,27 @@ for task in ['token_classification', 'span_prediction']:
     for model in ["distilbert-base-multilingual-cased", "xlm-roberta-base"]:
             train_file = 'training_aligned_labels_' + model.replace('/', '_') + '.json'
             dev_file = "dev_aligned_labels_" + model.replace('/', '_') + ".json"
-            config = Config(
-                task=task,
-                model=model,
-                train_file=train_file,
-                dev_file=dev_file,
-                device=device,
-                gpus=1,
-                batch_size=8
-            )
             if task == 'token_classification':
-               for c in [True, False]:
-                   config.context = c
+               for context in [True, False]:
+                   config = Config(
+                       task=task,
+                       model=model,
+                       train_file=train_file,
+                       dev_file=dev_file,
+                       device=device,
+                       gpus=1,
+                       batch_size=8,
+                       context=context
+                   )
                    TrainingJustificationCueDetection(config).run_training()
             else:
+                config = Config(
+                    task=task,
+                    model=model,
+                    train_file=train_file,
+                    dev_file=dev_file,
+                    device=device,
+                    gpus=1,
+                    batch_size=8
+                )
                 TrainingJustificationCueDetection(config).run_training()

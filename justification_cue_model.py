@@ -70,6 +70,11 @@ class TokenClassificationModel(LightningModule):
         data['loss'] = loss
         return data
 
+    def predict_step(self, batch, batch_idx):
+        outputs = self.forward(batch['input_ids'], batch['attention_mask'])
+        predictions = torch.argmax(outputs, dim=-1)
+        return predictions
+
     def test_epoch_end(self, outputs):
         metric = metrics.compute_metrics_token_classification(outputs)
         self.log_dict(metric, on_step=False, on_epoch=True, logger=True)
@@ -127,6 +132,16 @@ class SpanPredictionModel(LightningModule):
         metric = metrics.compute_metrics_span_prediction(outputs)
         self.log_dict(metric, on_step=False, on_epoch=True, logger=True)
         return metric
+
+    def predict_step(self, batch, batch_idx):
+        start_logits, end_logits = self.forward(batch['input_ids'], batch['attention_mask'])
+        mask = (batch['attention_mask'] == 1) & (batch['token_type_ids'] == 1)
+        start_logits_masked = start_logits.masked_fill(~mask, float('-inf'))
+        end_logits_masked = end_logits.masked_fill(~mask, float('-inf'))
+
+        start_predictions = start_logits_masked.argmax(dim=-1)
+        end_predictions = end_logits_masked.argmax(dim=-1)
+        return torch.stack(start_predictions, end_predictions)
 
     def configure_optimizers(self):
         #lr_scheduler=get_constant_schedule_with_warmup(optimizer, num_warmup_steps=self.warmup_steps)

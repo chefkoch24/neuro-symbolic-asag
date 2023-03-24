@@ -54,7 +54,7 @@ class Config:
         self.lr_callback = LearningRateMonitor(logging_interval='epoch', log_momentum=True)
         self.checkpoint_callback = ModelCheckpoint(
             filename='checkpoint-{epoch:02d}-{val_loss:.2f}',
-            save_top_k=1,
+            save_top_k=2,
             monitor='val_loss',
             mode='min',
         )
