@@ -289,6 +289,15 @@ def compute_f1_spans(pred_span, true_span):
     f1 = 2 * precision * recall / (precision + recall)
     return f1, precision, recall
 
+def get_labels_from_spans(spans):
+    start, end = spans[0], spans[1]
+    l = (end - start)+1
+    labels = []
+    if l >= 1:
+        for i in range(l):
+            labels.append(1)
+    return labels
+
 
 def compute_metrics_span_prediction(outputs):
     avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
@@ -306,13 +315,17 @@ def compute_metrics_span_prediction(outputs):
     start_predictions = start_logits_masked.argmax(dim=-1)
     end_predictions = end_logits_masked.argmax(dim=-1)
 
-    input_ids = torch.cat([x['input_ids'] for x in outputs])
     classes = [x['class'] for x in outputs]
     classes = utils.flat_list(classes)
 
     # for using the same method it's wrapped in []
     predicted_spans = [[(s.item(), e.item())] for s, e in zip(start_predictions, end_predictions)]
     true_spans = [[(s.item(), e.item())] for s, e in zip(start_positions, end_positions)]
+
+    spans_as_labels = [get_labels_from_spans(span[0]) for span in predicted_spans]
+    n_correct, n_partial, n_incorrect = get_average_number_of_key_elements_by_class(spans_as_labels, classes)
+    tn_correct, tn_partial, tn_incorrect = get_average_number_of_tokens_per_key_element_by_class(spans_as_labels, classes)
+
     pm = get_partial_match_score(true_spans, predicted_spans)
     f1s_precisions_recalls = [compute_f1_spans(p_span, t_span) for p_span, t_span in zip(predicted_spans, true_spans)]
     f1 = np.average([v[0] for v in f1s_precisions_recalls])
@@ -324,6 +337,12 @@ def compute_metrics_span_prediction(outputs):
         'f1': f1,
         'precision': precision,
         'recall': recall,
+        'average_number_of_key_elements_correct': n_correct,
+        'average_number_of_key_elements_partial': n_partial,
+        'average_number_of_key_elements_incorrect': n_incorrect,
+        'average_number_of_tokens_per_key_element_correct': tn_correct,
+        'average_number_of_tokens_per_key_element_partial': tn_partial,
+        'average_number_of_tokens_per_key_element_incorrect': tn_incorrect,
     }
 
 def compute_grading_classification_metrics(outputs):

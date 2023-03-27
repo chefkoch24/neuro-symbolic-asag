@@ -1,6 +1,7 @@
 import os
 import time
 
+import numpy as np
 import pandas as pd
 import skweak
 from matplotlib import pyplot as plt
@@ -116,3 +117,14 @@ def get_experiment_name(constituents):
         else:
             EXPERIMENT_NAME += str(c) + '_'
     return EXPERIMENT_NAME
+
+def scaled_rounding(x, scale=0.125):
+    # we round all values between 0 and 1 to the nearest interval of 0.125 (e.g. 0.125, 0.25, 0.375, ...)
+    scaler = 1/scale
+    # first we scale the values to the interval [0, scaler]
+    x = x * scaler
+    # then we round to the nearest integer
+    x = np.round(x)
+    # finally we scale back to the interval [0, 1]
+    x = x / scaler
+    return x

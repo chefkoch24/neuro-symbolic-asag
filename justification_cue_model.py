@@ -141,7 +141,7 @@ class SpanPredictionModel(LightningModule):
 
         start_predictions = start_logits_masked.argmax(dim=-1)
         end_predictions = end_logits_masked.argmax(dim=-1)
-        return torch.stack(start_predictions, end_predictions)
+        return torch.stack((start_predictions, end_predictions))
 
     def configure_optimizers(self):
         #lr_scheduler=get_constant_schedule_with_warmup(optimizer, num_warmup_steps=self.warmup_steps)

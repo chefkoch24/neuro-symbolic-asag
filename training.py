@@ -71,8 +71,8 @@ class TrainingJustificationCueDetection:
             # Preprocess data
             scorer = BertScorer()
             preprocessor = PreprocessorSpanPrediction(self.config.MODEL_NAME, scorer=scorer, rubrics=rubrics)
-            training_dataset = preprocessor.preprocess(train_data)
-            dev_dataset = preprocessor.preprocess(dev_data)
+            training_dataset = preprocessor.preprocess(train_data[0:10])
+            dev_dataset = preprocessor.preprocess(dev_data[0:10])
             # Generate dataset
             training_dataset = SpanJustificationCueDataset(training_dataset)
             dev_dataset = SpanJustificationCueDataset(dev_dataset)
@@ -94,6 +94,19 @@ class TrainingGrading():
     def __init__(self, config):
         self.config = config
         self.EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.config.TASK, self.config.MODE, self.config.GRADING_MODEL])
+        logging_hyperparams = {
+            'batch_size': self.config.BATCH_SIZE,
+            'num_gpus': self.config.GPUS,
+            'device': self.config.DEVICE,
+            'context': self.config.CONTEXT,
+            'model_name': self.config.MODEL_NAME,
+            'max_length': self.config.MAX_LEN,
+            'seed': self.config.SEED,
+            'task': self.config.TASK,
+            'mode': self.config.MODE,
+            'grading_model': self.config.GRADING_MODEL,
+        }
+        utils.save_json(logging_hyperparams, path='logs/' + self.EXPERIMENT_NAME, file_name='hyperparams.json')
         logger = CSVLogger("logs", name=self.EXPERIMENT_NAME)
         self.trainer = Trainer(max_epochs=self.config.NUM_EPOCHS,
                                # gradient_clip_val=0.5,

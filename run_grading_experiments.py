@@ -2,8 +2,9 @@ import torch
 from training import *
 from config import Config
 
+# define the fixed justification cue model here
 TASK = 'token_classification'
-CHECKPOINT_PATH = 'logs/token_classification_distilbert-base-multilingual-cased_bs-8_aggr-lfs_sum_context-True/version_0/checkpoints/checkpoint-epoch=00-val_loss=0.67.ckpt'
+CHECKPOINT_PATH = 'logs/token_classification_distilbert-base-multilingual-cased_True/version_0/checkpoints/checkpoint-epoch=02-val_loss=0.63.ckpt'
 MODEL = 'distilbert-base-multilingual-cased'
 CONTEXT = True
 TRAIN_FILE = 'training_dataset.json'
@@ -11,7 +12,7 @@ DEV_FILE = 'dev_dataset.json'
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 for mode in ['classification', 'regression']:
-    for grading_model in ['decision_tree']:
+    for grading_model in ['decision_tree', 'summation']:
         config = Config(task=TASK,
                         model=MODEL,
                         train_file=TRAIN_FILE,
