@@ -56,35 +56,6 @@ def get_spans_from_labels(labels):
     return spans
 
 
-def partial_match(predicted_spans, true_spans):
-    # Calculate the start and end indices of the predicted and true spans
-    scores = []
-    for predicted_span in predicted_spans:
-        p_start, p_end = predicted_span[0], predicted_span[1]
-        for true_span in true_spans:
-            t_start, t_end = true_span[0], true_span[1]
-
-            # Calculate the length of the overlap between the predicted and true spans
-            overlap = max(0, min(p_end, t_end) - max(p_start, t_start))
-
-            # Calculate the length of the union between the predicted and true spans
-            union = max(p_end, t_end) - min(p_start, t_start)
-
-            # Calculate the partial match score as the overlap divided by the union
-            score = overlap / union if union > 0 else 0
-            scores.append(score)
-    # Return the average over all spans in the sequence
-    return np.average(scores) if scores else 0
-
-
-def get_partial_match_score(predicted_spans, true_spans):
-    # Calculate the partial match score for each predicted span
-    scores = [partial_match(p, t) for p,t in  zip(predicted_spans, true_spans)]
-
-    # Return the average over the batch
-    return np.average(scores) if scores else 0
-
-
 def get_matches(predicitons, labels):
     matches = []
     for pred, label in zip(predicitons, labels):
@@ -248,7 +219,6 @@ def compute_metrics_token_classification(outputs):
     # Span Metrics
     true_spans = [get_spans_from_labels(l) for l in hard_labels]
     predicted_spans = [get_spans_from_labels(l) for l in true_predictions]
-    pm = get_partial_match_score(predicted_spans, true_spans)
     # Justification Cue Specific Metrics
     n_correct, n_partial, n_incorrect = get_average_number_of_key_elements_by_class(true_predictions, classes)
     r_correct, r_partial, r_incorrect = get_average_realtion_by_class(true_predictions, classes)
@@ -264,7 +234,6 @@ def compute_metrics_token_classification(outputs):
         "micro_f1": ner_metrics["micro_f1"],
         "accuracy": ner_metrics["accuracy"],
         'val_loss': avg_loss,
-        'partial_match': pm,
         'average_number_of_key_elements_correct': n_correct,
         'average_number_of_key_elements_partial': n_partial,
         'average_number_of_key_elements_incorrect': n_incorrect,
@@ -326,14 +295,12 @@ def compute_metrics_span_prediction(outputs):
     n_correct, n_partial, n_incorrect = get_average_number_of_key_elements_by_class(spans_as_labels, classes)
     tn_correct, tn_partial, tn_incorrect = get_average_number_of_tokens_per_key_element_by_class(spans_as_labels, classes)
 
-    pm = get_partial_match_score(true_spans, predicted_spans)
     f1s_precisions_recalls = [compute_f1_spans(p_span, t_span) for p_span, t_span in zip(predicted_spans, true_spans)]
     f1 = np.average([v[0] for v in f1s_precisions_recalls])
     precision = np.average([v[1] for v in f1s_precisions_recalls])
     recall = np.average([v[2] for v in f1s_precisions_recalls])
     return {
         'val_loss': avg_loss,
-        'partial_match': pm,
         'f1': f1,
         'precision': precision,
         'recall': recall,
