@@ -9,7 +9,7 @@ import myutils as utils
 
 class Preprocessor:
     def __init__(self, tokenizer:str, max_len:int = 512):
-        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer, use_fast=False)
         self.max_len = max_len
 
     @abstractmethod
@@ -89,7 +89,7 @@ class PreprocessorSpanPrediction(Preprocessor):
                 tokenized = self.tokenizer(re, student_answer, max_length=self.max_len, truncation=True,
                                       padding='max_length', return_token_type_ids=True)
                 # calculate the start and end positions
-                offset = tokenized_len + 2 # rubric element length + CLS and SEP
+                offset = tokenized_len + 2  # rubric element length + CLS and SEP
                 model_input = {
                     'input_ids': tokenized['input_ids'],
                     'attention_mask': tokenized['attention_mask'],

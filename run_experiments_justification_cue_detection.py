@@ -5,9 +5,9 @@ import torch
 from config import Config
 from training import TrainingJustificationCueDetection
 
-for task in ['token_classification', 'span_prediction']:
+for task in ['span_prediction', 'token_classification', ]:
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    for model in ["distilbert-base-multilingual-cased", "xlm-roberta-base"]:
+    for model in ["microsoft/mdeberta-v3-base", "distilbert-base-multilingual-cased"]:
             train_file = 'training_aligned_labels_' + model.replace('/', '_') + '.json'
             dev_file = "dev_aligned_labels_" + model.replace('/', '_') + ".json"
             if task == 'token_classification':
@@ -31,6 +31,6 @@ for task in ['token_classification', 'span_prediction']:
                     dev_file=dev_file,
                     device=device,
                     gpus=1,
-                    batch_size=8
+                    batch_size=4
                 )
                 TrainingJustificationCueDetection(config).run_training()

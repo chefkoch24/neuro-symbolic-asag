@@ -40,14 +40,14 @@ def create_aligned_labels(data):
         aligned_data.append(d)
     return aligned_data
 
-train_file = 'aggregated/training/training_ws_lfs_sum_all_lfs.json'
-dev_file = 'aggregated/dev/dev_ws_lfs_sum_all_lfs.json'
+train_file = 'aggregated/training/training_ws_hmm_1_all_lfs.json'
+dev_file = 'aggregated/dev/dev_ws_hmm_1_all_lfs.json'
 
-for model in ['distilbert-base-multilingual-cased', 'xlm-roberta-base']:
+for model in ['distilbert-base-multilingual-cased', 'microsoft/mdeberta-v3-base']:
         config = Config(train_file=train_file,
                         dev_file=dev_file,
                         model=model,)
-        tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
+        tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME, use_fast=False)
         rubrics = utils.load_rubrics(config.PATH_RUBRIC)
         DATASET_NAME = utils.get_experiment_name(['aligned_labels', config.MODEL_NAME]) + '.json'
 

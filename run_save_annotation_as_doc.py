@@ -29,7 +29,7 @@ def create_ents(tokens, indicies, labels=None):
 
 doc = []
 config = Config()
-annotated_data = utils.load_json('data/aggregated/dev/dev_ws_lfs_sum_all_lfs.json')
+annotated_data = utils.load_json('data/aggregated/dev/dev_ws_hmm_1_all_lfs.json')
 for a in annotated_data:
     text = a['student_answer']
     qid = a['question_id']
@@ -47,4 +47,4 @@ for a in annotated_data:
     tokens.ents = ents
     doc.append(tokens)
 
-skweak.utils.docbin_writer(doc, 'corpora/dev_ws_lfs_sum_all_lfs.spacy')
+skweak.utils.docbin_writer(doc, 'corpora/dev_ws_hmm_1_all_lfs.spacy')

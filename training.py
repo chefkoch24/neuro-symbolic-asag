@@ -71,8 +71,8 @@ class TrainingJustificationCueDetection:
             # Preprocess data
             scorer = BertScorer()
             preprocessor = PreprocessorSpanPrediction(self.config.MODEL_NAME, scorer=scorer, rubrics=rubrics)
-            training_dataset = preprocessor.preprocess(train_data[0:10])
-            dev_dataset = preprocessor.preprocess(dev_data[0:10])
+            training_dataset = preprocessor.preprocess(train_data)
+            dev_dataset = preprocessor.preprocess(dev_data)
             # Generate dataset
             training_dataset = SpanJustificationCueDataset(training_dataset)
             dev_dataset = SpanJustificationCueDataset(dev_dataset)

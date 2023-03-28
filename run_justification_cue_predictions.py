@@ -2,21 +2,26 @@ from pytorch_lightning import Trainer
 from torch.utils.data import DataLoader
 
 from config import Config
-import myutils as utils
 from dataset import *
 from paraphrase_scorer import BertScorer
 from preprocessor import *
 from justification_cue_model import *
 
+# Configure the predictions here by uncommenting the appropriate lines
 config = Config(
-   # task='token_classification',
-    task='span_prediction',
-    model='distilbert-base-multilingual-cased',
-    dev_file='dev_aligned_labels_distilbert-base-multilingual-cased.json',
-    #checkpoint_path='logs/token_classification_distilbert-base-multilingual-cased_None/version_0/checkpoints/checkpoint-epoch=02-val_loss=0.64.ckpt',
-    checkpoint_path='logs/span_prediction_distilbert-base-multilingual-cased/version_0/checkpoints/checkpoint-epoch=01-val_loss=3.56.ckpt',
-    device= 'cuda' if torch.cuda.is_available() else 'cpu',
+    task='token_classification',
+    #task='span_prediction',
+    model='microsoft/mdeberta-v3-base',
+    #model='distilbert-base-multilingual-cased',
+    dev_file='dev_aligned_labels_microsoft_mdeberta-v3-base.json',
+    #dev_file='dev_aligned_labels_distilbert-base-multilingual-cased.json',
+    #checkpoint_path='logs/span_prediction_microsoft_mdeberta-v3-base/version_0/checkpoints/checkpoint-epoch=00-val_loss=1.59.ckpt',
+    #checkpoint_path='logs/span_prediction_distilbert-base-multilingual-cased/version_0/checkpoints/checkpoint-epoch=01-val_loss=1.52.ckpt',
+    #checkpoint_path='logs/token_classification_distilbert-base-multilingual-cased_True/version_0/checkpoints/checkpoint-epoch=03-val_loss=0.43.ckpt',
+    checkpoint_path='logs/token_classification_microsoft_mdeberta-v3-base_True/version_0/checkpoints/checkpoint-epoch=03-val_loss=0.40.ckpt',
+    device='cuda' if torch.cuda.is_available() else 'cpu',
     context=True,
+    #context= False,
 )
 
 experiment_name = utils.get_experiment_name(['predictions', config.TASK, config.MODEL_NAME, config.CONTEXT])
@@ -71,8 +76,8 @@ def post_process_span_prediction(predictions, dataset):
     return results
 
 
-trainer = Trainer()
-dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)[0:10]
+trainer = Trainer(accelerator=config.DEVICE)
+dev_data = utils.load_json(config.PATH_DATA + '/' + config.DEV_FILE)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 scorer = BertScorer()
 if config.TASK == 'span_prediction':
@@ -93,7 +98,7 @@ dev_dataset = Dataset(dev_dataset)
 val_loader = DataLoader(dev_dataset, batch_size=config.BATCH_SIZE, shuffle=False)
 
 predictions = trainer.predict(model, val_loader, return_predictions=True)
-tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
+tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME, use_fast=False)
 
 results = post_proccess_function(predictions, dev_dataset)
 utils.save_csv(results, config.PATH_RESULTS, experiment_name, with_timestamp=True)

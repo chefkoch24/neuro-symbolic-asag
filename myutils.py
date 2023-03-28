@@ -113,9 +113,9 @@ def get_experiment_name(constituents):
     EXPERIMENT_NAME = ''
     for i,c in enumerate(constituents):
         if i == len(constituents) - 1:
-            EXPERIMENT_NAME += str(c)
+            EXPERIMENT_NAME += str(c).replace('/', '_')
         else:
-            EXPERIMENT_NAME += str(c) + '_'
+            EXPERIMENT_NAME += str(c).replace('/', '_') + '_'
     return EXPERIMENT_NAME
 
 def scaled_rounding(x, scale=0.125):
