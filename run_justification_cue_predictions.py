@@ -11,17 +11,19 @@ from justification_cue_model import *
 config = Config(
     task='token_classification',
     #task='span_prediction',
-    model='microsoft/mdeberta-v3-base',
-    #model='distilbert-base-multilingual-cased',
-    dev_file='dev_aligned_labels_microsoft_mdeberta-v3-base.json',
-    #dev_file='dev_aligned_labels_distilbert-base-multilingual-cased.json',
+    #model='microsoft/mdeberta-v3-base',
+    model='distilbert-base-multilingual-cased',
+    #dev_file='dev_aligned_labels_microsoft_mdeberta-v3-base.json',
+    dev_file='dev_aligned_labels_distilbert-base-multilingual-cased.json',
     #checkpoint_path='logs/span_prediction_microsoft_mdeberta-v3-base/version_0/checkpoints/checkpoint-epoch=00-val_loss=1.59.ckpt',
     #checkpoint_path='logs/span_prediction_distilbert-base-multilingual-cased/version_0/checkpoints/checkpoint-epoch=01-val_loss=1.52.ckpt',
     #checkpoint_path='logs/token_classification_distilbert-base-multilingual-cased_True/version_0/checkpoints/checkpoint-epoch=03-val_loss=0.43.ckpt',
-    checkpoint_path='logs/token_classification_microsoft_mdeberta-v3-base_True/version_0/checkpoints/checkpoint-epoch=03-val_loss=0.40.ckpt',
+   # checkpoint_path='logs/token_classification_microsoft_mdeberta-v3-base_True/version_0/checkpoints/checkpoint-epoch=03-val_loss=0.40.ckpt',
+    #checkpoint_path='logs/token_classification_microsoft_mdeberta-v3-base_False/version_0/checkpoints/checkpoint-epoch=03-val_loss=0.43.ckpt',
+    checkpoint_path='logs/token_classification_distilbert-base-multilingual-cased_False/version_0/checkpoints/checkpoint-epoch=03-val_loss=0.45.ckpt',
     device='cuda' if torch.cuda.is_available() else 'cpu',
-    context=True,
-    #context= False,
+    #context=True,
+    context= False,
 )
 
 experiment_name = utils.get_experiment_name(['predictions', config.TASK, config.MODEL_NAME, config.CONTEXT])

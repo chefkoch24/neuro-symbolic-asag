@@ -3,9 +3,10 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from transformers import AutoTokenizer
-
 import metrics
 import myutils as utils
+import warnings
+warnings.filterwarnings("ignore")
 
 class Preprocessor:
     def __init__(self, tokenizer:str, max_len:int = 512):
@@ -133,7 +134,7 @@ class GradingPreprocessor(Preprocessor):
             d['attention_mask'] = tokenized['attention_mask']
             d['class'] = self.class2idx[d['label']]
             d['token_type_ids'] = tokenized['token_type_ids']
-            d['score'] = normalize_score(d['score'], max_scores[q_id])
+            d['score'] = utils.scaled_rounding(normalize_score(d['score'], max_scores[q_id]))
             model_inputs.append({
                 'input_ids': d['input_ids'],
                 'attention_mask': d['attention_mask'],

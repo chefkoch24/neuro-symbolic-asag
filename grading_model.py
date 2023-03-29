@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 
 import numpy as np
 import torch
@@ -6,6 +7,7 @@ import torch.nn as nn
 from incremental_trees.models.regression.streaming_rfr import StreamingRFR
 from joblib import dump
 from pytorch_lightning import LightningModule
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from transformers import AutoTokenizer, AdamW
 import metrics
 from incremental_trees.models.classification.streaming_rfc import StreamingRFC
@@ -24,28 +26,24 @@ class Summation:
 
     def predict(self, scoring_vectors):
         y_preds_regression = []
-        for scoring_vector in scoring_vectors:
-            analytical_points = np.array(self.rubric['points'].tolist())
-            scoring_vector = np.array([1 if s >= self.th else 0 for s in scoring_vector])
-            score = sum(analytical_points * scoring_vector)
-            y_preds_regression.append(float(score))
-        return np.array(y_preds_regression)
-
-
-    def predict_proba(self, scoring_vectors):
         y_preds_classification = []
         for scoring_vector in scoring_vectors:
             analytical_points = np.array(self.rubric['points'].tolist())
             scoring_vector = np.array([1 if s >= self.th else 0 for s in scoring_vector])
             score = sum(analytical_points * scoring_vector)
             if score >= 1:  # correct
-                classification = [1.0, 0.0, 0.0]
+                classification = 0
             elif score < 1 and score > 0:  # partially correct
-                classification = [0.0, 1.0, 0.0]
+                classification = 1
             else:  # incorrect
-                classification = [0.0, 0.0, 1.0]
+                classification = 2
+            y_preds_regression.append(float(score))
             y_preds_classification.append(classification)
-        return np.array(y_preds_classification)
+        if self.mode == 'regression':
+            y_pred = np.array(y_preds_regression)
+        elif self.mode == 'classification':
+            y_pred = np.array(y_preds_classification)
+        return y_pred
 
 
 class GradingModel(LightningModule):
@@ -66,7 +64,9 @@ class GradingModel(LightningModule):
         self.epoch = 1
         self.summation_th = summation_th
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
-        self.init_scoring_vector_logging()
+        # for saving and the training step of the symbolic models
+        self.all_targets = defaultdict(list)
+        self.all_scoring_vectors = defaultdict(list)
         self.symbolic_models = self._init_symbolic_models(symbolic_models)
         self.para_detector = BertScorer()
         self.lr = lr
@@ -82,7 +82,6 @@ class GradingModel(LightningModule):
             justification_cues,true_input_ids = self.get_span_classification_output(input_ids, attention_mask, token_type_ids, question_ids)
 
         scoring_vectors = self.get_scoring_vectors(justification_cues, true_input_ids, question_ids)
-        self.scoring_vectors_logging[q_id].append(scoring_vectors.tolist())
         if return_justification_cues:
             return scoring_vectors, justification_cues
         else:
@@ -142,14 +141,16 @@ class GradingModel(LightningModule):
                 max_features = len(self.rubrics[qid]['key_element'].tolist())
                 if self.mode == 'classification':
                     if self.learning_strategy == 'decision_tree':
-                        symbolic_models[qid] = StreamingRFC(n_estimators_per_chunk=1, max_features=max_features)
+                        #symbolic_models[qid] = StreamingRFC(n_estimators_per_chunk=1, max_features=max_features)
+                        symbolic_models[qid] = DecisionTreeClassifier(max_features=max_features)
                     else:
                         symbolic_models[qid] = Summation(self.rubrics[qid], mode='classification', th=self.summation_th,
                                                          num_classes=len(self.classes))
                 elif self.mode == 'regression':
 
                     if self.learning_strategy == 'decision_tree':
-                        symbolic_models[qid] = StreamingRFR(n_estimators_per_chunk=1, max_features=max_features)
+                        #symbolic_models[qid] = StreamingRFR(n_estimators_per_chunk=1, max_features=max_features)
+                        symbolic_models[qid] = DecisionTreeRegressor(max_features=max_features)
                     else:
                         symbolic_models[qid] = Summation(self.rubrics[qid], mode='regression', th=self.summation_th, num_classes=3)
         else:
@@ -178,57 +179,80 @@ class GradingModel(LightningModule):
                     if s > scoring_vector[i]:
                         scoring_vector[i] = s
             scoring_vectors.append(scoring_vector)
-        return np.array(scoring_vectors)
+        return scoring_vectors
 
-    def init_scoring_vector_logging(self):
-        self.scoring_vectors_logging = {}
-        for k in self.rubrics.keys():
-            self.scoring_vectors_logging[k] = []
 
     def training_step(self, batch, batch_idx):
         q_id = batch['question_id'][0]
         symbolic_model = self.symbolic_models[q_id]
+        prediction_function = symbolic_model.predict  # independent if decision tree or summation
         if self.mode == 'classification':
             labels = batch['class']
             loss_function = self.cross_entropy_loss
-            prediction_function = symbolic_model.predict_proba
         elif self.mode == 'regression':
             labels = batch['score']
             loss_function = self.mse_loss
-            prediction_function = symbolic_model.predict  # independent if decision tree or summation
-
         scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
                                        batch['question_id'])
-
         labels_cpu = torch.clone(labels).cpu().detach().numpy()
-        if self.learning_strategy == 'decision_tree':
-            self.symbolic_models[q_id] = symbolic_model.partial_fit(scoring_vectors, labels_cpu,
-                                                                    classes=self.classes)
+        self.all_targets[q_id].append(labels_cpu)
+        self.all_scoring_vectors[q_id].append(scoring_vectors)
+        loss = torch.tensor(0.0, requires_grad=True, device=self.device)
+        if self.epoch > 1:
+           loss, y_pred = self.forward_step(scoring_vectors, labels, prediction_function, loss_function)
+        return loss
+
+    def forward_step(self, scoring_vectors, labels, prediction_function, loss_function):
         y_pred = prediction_function(scoring_vectors)
         if self.mode == 'regression':
             y_pred = [utils.scaled_rounding(y) for y in y_pred]
-        y_pred = torch.tensor(y_pred, requires_grad=True, device=self.device)
+            y_pred = torch.tensor(y_pred, requires_grad=True, device=self.device)
+        elif self.mode == 'classification':
+            y_pred = [int(y) for y in y_pred]  # because one_hot requires index indices
+            y_pred = torch.nn.functional.one_hot(torch.tensor(y_pred, device=self.device), num_classes=len(self.classes)).float().requires_grad_(True)
         loss = loss_function(y_pred, labels)
-        return loss
+        return loss, y_pred
+
+
+    def training_epoch_end(self, outputs):
+        # fit only in the first epoch
+        if self.epoch == 1:
+            if self.learning_strategy == 'decision_tree':
+                for qid in self.rubrics.keys():
+                    if self.all_scoring_vectors[qid] != []:
+                        self.symbolic_models[qid] = self.symbolic_models[qid].fit(np.array(self.all_scoring_vectors[qid]).squeeze(0),
+                                                  np.array(self.all_targets[qid]).squeeze(0))
+            self._save_symbolic_models()
+        self.epoch += 1
+        # save scoring vectors
+        EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.task, self.mode, self.learning_strategy])
+        utils.save_json(self.all_scoring_vectors, 'logs/' + EXPERIMENT_NAME + '/scoring_vectors',
+                        'scoring_vectors_epoch_{}.json'.format(self.epoch))
+        self.all_targets = defaultdict(list)
+        self.all_scoring_vectors = defaultdict(list)
+
 
     def validation_step(self, batch, batch_idx):
         q_id = batch['question_id'][0]
         symbolic_model = self.symbolic_models[q_id]
+        prediction_function = symbolic_model.predict
         if self.mode == 'classification':
             labels = batch['class']
             loss_function = self.cross_entropy_loss
-            prediction_function = symbolic_model.predict_proba
         elif self.mode == 'regression':
             labels = batch['score']
             loss_function = self.mse_loss
-            prediction_function = symbolic_model.predict
         scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
                                        batch['question_id'])
-        y_pred = prediction_function(scoring_vectors)
-        if self.mode == 'regression':
-            y_pred = [utils.scaled_rounding(y) for y in y_pred]
-        y_pred = torch.tensor(y_pred, requires_grad=True, device=self.device)
-        loss = loss_function(y_pred, labels)
+        if self.epoch > 1:
+            loss, y_pred = self.forward_step(scoring_vectors, labels, prediction_function, loss_function)
+        else:
+            # first epoch
+            if self.mode == 'classification':
+                y_pred = torch.tensor([[0.0, 0.0, 0.0]] * len(labels), requires_grad=True, device=self.device)
+            elif self.mode == 'regression':
+                y_pred = torch.tensor([0.0] * len(labels), requires_grad=True, device=self.device)
+            loss = torch.tensor(0.0, requires_grad=True, device=self.device)
         batch['prediction'] = y_pred
         batch['loss'] = loss
         return batch
@@ -240,14 +264,6 @@ class GradingModel(LightningModule):
         elif self.mode == 'regression':
             metric = metrics.compute_grading_regression_metrics(outputs)
         self.log_dict(metric)
-        # save scoring vectors
-        EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.task, self.mode, self.learning_strategy])
-        utils.save_json(self.scoring_vectors_logging, 'logs/' + EXPERIMENT_NAME + '/scoring_vectors', 'scoring_vectors_epoch_{}.json'.format(self.epoch))
-        self.init_scoring_vector_logging()
-        # save symbolic models
-        self._save_symbolic_models()
-        self.epoch += 1
-        # save the incremental models
 
         return metric
 
@@ -261,10 +277,7 @@ class GradingModel(LightningModule):
         # used in the trainer.predict() method
         q_id = batch['question_id'][0]
         symbolic_model = self.symbolic_models[q_id]
-        if self.mode == 'classification':
-            prediction_function = symbolic_model.predict_proba
-        elif self.mode == 'regression':
-            prediction_function = symbolic_model.predict
+        prediction_function = symbolic_model.predict
         scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
                                        batch['question_id'])
         y_pred = prediction_function(scoring_vectors)
@@ -279,10 +292,7 @@ class GradingModel(LightningModule):
                                            batch['question_id'], return_justification_cues=return_reasoning)
             q_id = batch['question_id'][0]
             symbolic_model = self.symbolic_models[q_id]
-            if self.mode == 'classification':
-                prediction_function = symbolic_model.predict_proba
-            elif self.mode == 'regression':
-                prediction_function = symbolic_model.predict
+            prediction_function = symbolic_model.predict
             y_pred = prediction_function(scoring_vectors)
             if self.mode == 'regression':
                 y_pred = [utils.scaled_rounding(y) for y in y_pred]
