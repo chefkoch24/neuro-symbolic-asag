@@ -89,7 +89,7 @@ class TrainingJustificationCueDetection:
         self.trainer.fit(model, train_loader, val_loader)
         logging.info("End training", self.EXPERIMENT_NAME)
 
-class TrainingGrading():
+class TrainingGrading:
 
     def __init__(self, config):
         self.config = config
@@ -119,18 +119,13 @@ class TrainingGrading():
                                logger=logger,
                                gpus=self.config.GPUS,
                                num_sanity_val_steps=0,
-                               accelerator=config.DEVICE,
+                               accelerator=self.config.DEVICE,
                                )
 
     def run_training(self):
         rubrics = utils.load_rubrics(self.config.PATH_RUBRIC)
-        model = GradingModel(self.config.PATH_CHECKPOINT, rubrics, self.config.MODEL_NAME, mode=self.config.MODE, task=self.config.TASK, learning_strategy=self.config.GRADING_MODEL)
-
-        if self.config.TASK == 'token_classification':
-            preprocessor = GradingPreprocessorTokenClassification(self.config.MODEL_NAME, with_context=self.config.CONTEXT, rubrics=rubrics)
-        elif self.config.TASK == 'span_prediction':
-            preprocessor = GradingPreprocessorSpanPrediction(self.config.MODEL_NAME, rubrics=rubrics)
-
+        model = GradingModel(self.config.PATH_CHECKPOINT, rubrics, self.config.MODEL_NAME, mode=self.config.MODE, task=self.config.TASK, learning_strategy=self.config.GRADING_MODEL, summation_th=self.config.SUMMATION_TH)
+        preprocessor = GradingPreprocessor(self.config.MODEL_NAME, with_context=self.config.CONTEXT, rubrics=rubrics)
         train_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.TRAIN_FILE)
         dev_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.DEV_FILE)
         training_dataset = preprocessor.preprocess(train_data)

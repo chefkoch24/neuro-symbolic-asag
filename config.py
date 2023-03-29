@@ -22,7 +22,8 @@ class Config:
                  excluded_lfs=None,
                  mode='classification',
                  grading_model='decision_tree',
-                 device='cpu'
+                 device='cpu',
+                 summation_th=0.8,
                  ):
         self.AGGREGATION_METHOD = aggregation_method
         self.EXCLUDED_LFS= excluded_lfs
@@ -43,6 +44,7 @@ class Config:
         self.MODE = mode
         self.GRADING_MODEL = grading_model
         self.DEVICE = device
+        self.SUMMATION_TH = summation_th
         # FIXED SETTINGS AND PATHS
         self.PATH_DATA = "data"
         self.PATH_RUBRIC = "data/rubrics.json"

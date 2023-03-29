@@ -1,7 +1,6 @@
 import torch
 
 from config import Config
-from prediction import PredictSpan, PredictToken
 
 # config token_classification
 TASK = 'token_classification'
