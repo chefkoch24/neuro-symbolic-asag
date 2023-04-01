@@ -20,7 +20,11 @@ def relation(y):
             class_1 += 1
         elif l == 0:
             class_0 += 1
-    return class_1 / (class_0 + class_1)
+    denominator = class_0 + class_1
+    if denominator == 0:
+        return 0
+    else:
+        return class_1 / denominator
 
 
 def silver2target(data, th=0.5):
@@ -260,7 +264,7 @@ def compute_f1_spans(pred_span, true_span):
 
 def get_labels_from_spans(spans):
     start, end = spans[0], spans[1]
-    l = (end - start)+1
+    l = (end - start)
     labels = []
     if l >= 1:
         for i in range(l):
@@ -274,13 +278,14 @@ def compute_metrics_span_prediction(outputs):
     end_positions = torch.cat([x['end_positions'] for x in outputs])
     attention_mask = torch.cat([x['attention_mask'] for x in outputs])
     token_type_ids = torch.cat([x['token_type_ids'] for x in outputs])
+    input_ids = torch.cat([x['input_ids'] for x in outputs])
     # mask the start and end predictions with attention mask and token type ids
     start_logits = torch.cat([x['start_logits'] for x in outputs])
     end_logits = torch.cat([x['end_logits'] for x in outputs])
     mask = (attention_mask == 1) & (token_type_ids == 1)
     start_logits_masked = start_logits.masked_fill(~mask, float('-inf'))
     end_logits_masked = end_logits.masked_fill(~mask, float('-inf'))
-
+    input_ids = input_ids.masked_fill(~mask, -100)
     start_predictions = start_logits_masked.argmax(dim=-1)
     end_predictions = end_logits_masked.argmax(dim=-1)
 
@@ -294,6 +299,13 @@ def compute_metrics_span_prediction(outputs):
     spans_as_labels = [get_labels_from_spans(span[0]) for span in predicted_spans]
     n_correct, n_partial, n_incorrect = get_average_number_of_key_elements_by_class(spans_as_labels, classes)
     tn_correct, tn_partial, tn_incorrect = get_average_number_of_tokens_per_key_element_by_class(spans_as_labels, classes)
+    full_sequence_labeled = []
+    for inp,span in zip(input_ids, predicted_spans):
+        l = [0 if i.item() != -100 else -100 for i in inp]
+        l = [1 if i in range(span[0][0], span[0][1]) else li for i, li in enumerate(l)]
+        full_sequence_labeled.append(l)
+      #[i[span[0][0]: span[0][1]] for i, span in zip(input_ids, predicted_spans)]
+    r_correct, r_partial, r_incorrect = get_average_realtion_by_class(full_sequence_labeled, classes)
 
     f1s_precisions_recalls = [compute_f1_spans(p_span, t_span) for p_span, t_span in zip(predicted_spans, true_spans)]
     f1 = np.average([v[0] for v in f1s_precisions_recalls])
@@ -301,15 +313,18 @@ def compute_metrics_span_prediction(outputs):
     recall = np.average([v[2] for v in f1s_precisions_recalls])
     return {
         'val_loss': avg_loss,
-        'f1': f1,
-        'precision': precision,
-        'recall': recall,
+        'macro-f1': f1,
+        'macro-precision': precision,
+        'macro-recall': recall,
         'average_number_of_key_elements_correct': n_correct,
         'average_number_of_key_elements_partial': n_partial,
         'average_number_of_key_elements_incorrect': n_incorrect,
         'average_number_of_tokens_per_key_element_correct': tn_correct,
         'average_number_of_tokens_per_key_element_partial': tn_partial,
         'average_number_of_tokens_per_key_element_incorrect': tn_incorrect,
+        'average_relation_correct': r_correct,
+        'average_relation_partial': r_partial,
+        'average_relation_incorrect': r_incorrect,
     }
 
 def compute_grading_classification_metrics(outputs):

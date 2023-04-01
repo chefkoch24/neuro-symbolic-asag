@@ -81,10 +81,12 @@ class GradingModel(LightningModule):
         elif self.task == 'span_prediction':
             justification_cues,true_input_ids = self.get_span_classification_output(input_ids, attention_mask, token_type_ids, question_ids)
 
-        scoring_vectors = self.get_scoring_vectors(justification_cues, true_input_ids, question_ids)
+
         if return_justification_cues:
-            return scoring_vectors, justification_cues
+            scoring_vectors, justification_cue_texts = self.get_scoring_vectors(justification_cues, true_input_ids, question_ids, return_texts=True)
+            return scoring_vectors, justification_cues, justification_cue_texts
         else:
+            scoring_vectors = self.get_scoring_vectors(justification_cues, true_input_ids,question_ids)
             return scoring_vectors
 
     def get_token_classification_output(self, input_ids, attention_mask, token_type_ids, question_ids):
@@ -164,22 +166,40 @@ class GradingModel(LightningModule):
             justification_cues.append(spans)
         return justification_cues
 
-    def get_scoring_vectors(self, justification_cues, input_ids, question_ids):
+    def get_scoring_vectors(self, justification_cues, input_ids, question_ids, return_texts=False):
+        cue_texts = []
         # get batched data
         qid = question_ids[0]
         rubric = self.rubrics[qid]  # expects the same question_id
         scoring_vectors = []
         for jus_cue, input_id in zip(justification_cues, input_ids):
             # fuzzy matching
-            scoring_vector = [0] * len(rubric['key_element'])
+            #scoring_vector = [0] * len(rubric['key_element'])
+            #for span in jus_cue:
+            #    cue_text = self.tokenizer.decode(input_id[span[0]:span[1]], skip_special_tokens=True)
+            #    sim = self.para_detector.detect_score_key_elements(cue_text, rubric)
+            #    for i, s in enumerate(sim):
+            #        if s > scoring_vector[i]:
+            #            scoring_vector[i] = s
+            #scoring_vectors.append(scoring_vector)
+            # hard matching one justification cue per key element
+            max_idxs, max_vals = [], []
             for span in jus_cue:
                 cue_text = self.tokenizer.decode(input_id[span[0]:span[1]], skip_special_tokens=True)
+                cue_texts.append(cue_text)
                 sim = self.para_detector.detect_score_key_elements(cue_text, rubric)
-                for i, s in enumerate(sim):
-                    if s > scoring_vector[i]:
-                        scoring_vector[i] = s
-            scoring_vectors.append(scoring_vector)
-        return scoring_vectors
+                max_idxs.append(np.argmax(sim))
+                max_vals.append(np.max(sim))
+            # make sure that the absolute maximum is taken
+            scoring_vector = np.zeros((len(self.rubrics[qid])))
+            for mi, mv in zip(max_idxs, max_vals):
+                if scoring_vector[mi] < mv:
+                    scoring_vector[mi] = mv
+            scoring_vectors.append(scoring_vector.tolist())
+        if return_texts:
+            return scoring_vectors, cue_texts
+        else:
+            return scoring_vectors
 
 
     def training_step(self, batch, batch_idx):
@@ -216,20 +236,22 @@ class GradingModel(LightningModule):
 
     def training_epoch_end(self, outputs):
         # fit only in the first epoch
-        if self.epoch == 1:
+        if self.epoch >= 1: #if self.epoch == 1:
             if self.learning_strategy == 'decision_tree':
                 for qid in self.rubrics.keys():
                     if self.all_scoring_vectors[qid] != []:
-                        self.symbolic_models[qid] = self.symbolic_models[qid].fit(np.array(self.all_scoring_vectors[qid]).squeeze(0),
-                                                  np.array(self.all_targets[qid]).squeeze(0))
+                        self.all_scoring_vectors[qid] = utils.flat_list(self.all_scoring_vectors[qid])
+                        self.all_targets[qid] = utils.flat_list(self.all_targets[qid])
+                        self.symbolic_models[qid] = self.symbolic_models[qid].fit(np.array(self.all_scoring_vectors[qid]),np.array(self.all_targets[qid]))
             self._save_symbolic_models()
-        self.epoch += 1
         # save scoring vectors
         EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.task, self.mode, self.learning_strategy])
         utils.save_json(self.all_scoring_vectors, 'logs/' + EXPERIMENT_NAME + '/scoring_vectors',
                         'scoring_vectors_epoch_{}.json'.format(self.epoch))
+        # reset scoring vectors
         self.all_targets = defaultdict(list)
         self.all_scoring_vectors = defaultdict(list)
+        self.epoch += 1
 
 
     def validation_step(self, batch, batch_idx):
@@ -278,25 +300,34 @@ class GradingModel(LightningModule):
         q_id = batch['question_id'][0]
         symbolic_model = self.symbolic_models[q_id]
         prediction_function = symbolic_model.predict
+        if self.mode == 'classification':
+            labels = batch['class']
+            loss_function = self.cross_entropy_loss
+        elif self.mode == 'regression':
+            labels = batch['score']
+            loss_function = self.mse_loss
         scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
                                        batch['question_id'])
-        y_pred = prediction_function(scoring_vectors)
-        if self.mode == 'regression':
-            y_pred = [utils.scaled_rounding(y) for y in y_pred]
+        loss, y_pred = self.forward_step(scoring_vectors, labels, prediction_function, loss_function)
         return y_pred
+
 
     def predict(self, batch, batch_idx, return_reasoning=False):
         # custom prediction method used for explainable inference
         if return_reasoning:
-            scoring_vectors, justification_cues = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
-                                           batch['question_id'], return_justification_cues=return_reasoning)
             q_id = batch['question_id'][0]
             symbolic_model = self.symbolic_models[q_id]
             prediction_function = symbolic_model.predict
-            y_pred = prediction_function(scoring_vectors)
-            if self.mode == 'regression':
-                y_pred = [utils.scaled_rounding(y) for y in y_pred]
-            return y_pred, scoring_vectors, justification_cues
+            if self.mode == 'classification':
+                labels = batch['class']
+                loss_function = self.cross_entropy_loss
+            elif self.mode == 'regression':
+                labels = batch['score']
+                loss_function = self.mse_loss
+            scoring_vectors, justification_cues, justification_cue_texts = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
+                                           batch['question_id'], return_justification_cues=True)
+            loss, y_pred = self.forward_step(scoring_vectors, labels, prediction_function, loss_function)
+            return y_pred, scoring_vectors, justification_cues, justification_cue_texts
         else:
             return self.predict_step(batch, batch_idx)
 

@@ -134,7 +134,7 @@ class GradingPreprocessor(Preprocessor):
             d['attention_mask'] = tokenized['attention_mask']
             d['class'] = self.class2idx[d['label']]
             d['token_type_ids'] = tokenized['token_type_ids']
-            d['score'] = utils.scaled_rounding(normalize_score(d['score'], max_scores[q_id]))
+            d['score'] = utils.scaled_rounding(utils.normalize_score(d['score'], max_scores[q_id]))
             model_inputs.append({
                 'input_ids': d['input_ids'],
                 'attention_mask': d['attention_mask'],
@@ -147,7 +147,3 @@ class GradingPreprocessor(Preprocessor):
                 'lang': d['lang']
             })
         return model_inputs
-
-def normalize_score(score,  max_score):
-    #min max normalization of the scores
-    return score / max_score

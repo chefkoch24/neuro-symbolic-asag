@@ -128,3 +128,10 @@ def scaled_rounding(x, scale=0.125):
     # finally we scale back to the interval [0, 1]
     x = x / scaler
     return x
+
+def normalize_score(score,  max_score):
+    #min max normalization of the scores
+    return score / max_score
+
+def denormalize_score(score, max_score):
+    return score * max_score

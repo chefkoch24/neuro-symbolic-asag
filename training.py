@@ -20,8 +20,10 @@ class TrainingJustificationCueDetection:
             num_gpus= 1
         if self.config.TASK == 'token_classification':
             self.EXPERIMENT_NAME = utils.get_experiment_name([self.config.TASK, self.config.MODEL_NAME, self.config.CONTEXT])
+            gradient_accumulation_steps = 1
         else:
             self.EXPERIMENT_NAME = utils.get_experiment_name([self.config.TASK, self.config.MODEL_NAME])
+            gradient_accumulation_steps = 2
         logging_hyperparams = {
             'batch_size': self.config.BATCH_SIZE,
             'num_gpus': num_gpus,
@@ -31,10 +33,12 @@ class TrainingJustificationCueDetection:
             'max_length' : self.config.MAX_LEN,
             'seed': self.config.SEED,
             'task': self.config.TASK,
+            'gradient_accumulation_steps': gradient_accumulation_steps
         }
         utils.save_json(logging_hyperparams, path='logs/' + self.EXPERIMENT_NAME, file_name= 'hyperparams.json')
         logger = CSVLogger("logs", name=self.EXPERIMENT_NAME)
         self.trainer = Trainer(
+            accumulate_grad_batches=gradient_accumulation_steps,
             max_epochs=self.config.NUM_EPOCHS,
             callbacks=[
                       self.config.checkpoint_callback,
@@ -94,6 +98,10 @@ class TrainingGrading:
     def __init__(self, config):
         self.config = config
         self.EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.config.TASK, self.config.MODE, self.config.GRADING_MODEL])
+        if self.config.TASK == 'span_prediction':
+            gradient_accumulation_steps = 2
+        else:
+            gradient_accumulation_steps = 1
         logging_hyperparams = {
             'batch_size': self.config.BATCH_SIZE,
             'num_gpus': self.config.GPUS,
@@ -105,12 +113,13 @@ class TrainingGrading:
             'task': self.config.TASK,
             'mode': self.config.MODE,
             'grading_model': self.config.GRADING_MODEL,
+            'gradient_accumulation_steps': gradient_accumulation_steps,
         }
         utils.save_json(logging_hyperparams, path='logs/' + self.EXPERIMENT_NAME, file_name='hyperparams.json')
         logger = CSVLogger("logs", name=self.EXPERIMENT_NAME)
         self.trainer = Trainer(max_epochs=self.config.NUM_EPOCHS,
                                # gradient_clip_val=0.5,
-                               # accumulate_grad_batches=2,
+                               accumulate_grad_batches=gradient_accumulation_steps,
                                callbacks=[
                                    self.config.checkpoint_callback,
                                    self.config.early_stop_callback,
