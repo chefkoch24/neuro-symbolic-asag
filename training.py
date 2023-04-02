@@ -98,10 +98,7 @@ class TrainingGrading:
     def __init__(self, config):
         self.config = config
         self.EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.config.TASK, self.config.MODE, self.config.GRADING_MODEL])
-        if self.config.TASK == 'span_prediction':
-            gradient_accumulation_steps = 2
-        else:
-            gradient_accumulation_steps = 1
+        gradient_accumulation_steps = 2
         logging_hyperparams = {
             'batch_size': self.config.BATCH_SIZE,
             'num_gpus': self.config.GPUS,
