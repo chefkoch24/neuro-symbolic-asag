@@ -19,14 +19,12 @@ validation_dataset = SpanJustificationCueDataset(validation_data)
 validation_loader = DataLoader(validation_dataset, batch_size=config.BATCH_SIZE, shuffle=True)
 model = SpanPredictionModel.load_from_checkpoint(span_checkpoint_path)
 
-trainer = Trainer(max_epochs=config.NUM_EPOCHS,
-                  callbacks=[config.checkpoint_callback, config.early_stop_callback],
-                  )
+trainer = Trainer()
 trainer.test(model, validation_loader)
 
 # TOKEN CLASSIFICATION
 validation_file = 'training_dataset_distilbert-base-multilingual-cased_context-False.json'
-token_checkpoint_path = 'logs/justification_cue_distilbert-base-multilingual-cased_context-False/version_7/checkpoints/checkpoint-epoch=04-val_loss=0.64.ckpt'
+token_checkpoint_path = 'logs/token_classification_distilbert-base-multilingual-cased_False/version_0/checkpoints/checkpoint-epoch=03-val_loss=0.45.ckpt'
 
 validation_data = utils.load_json(config.PATH_DATA + '/' + validation_file)
 validation_dataset = JustificationCueDataset(validation_data)
