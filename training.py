@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import CSVLogger
 from torch.utils.data import DataLoader
@@ -97,7 +99,9 @@ class TrainingGrading:
 
     def __init__(self, config):
         self.config = config
-        self.EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.config.TASK, self.config.MODE, self.config.GRADING_MODEL])
+        current_time = datetime.now()
+        current_time_string = current_time.strftime("%Y-%m-%d_%H-%M")
+        self.EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.config.TASK, current_time_string])
         gradient_accumulation_steps = 2
         logging_hyperparams = {
             'batch_size': self.config.BATCH_SIZE,
@@ -111,7 +115,12 @@ class TrainingGrading:
             'mode': self.config.MODE,
             'grading_model': self.config.GRADING_MODEL,
             'gradient_accumulation_steps': gradient_accumulation_steps,
+            'matching': self.config.MATCHING,
+            'is_fixed_learner': self.config.IS_FIXED_LEARNER,
+            'lr': self.config.LR,
+            'summation_th': self.config.SUMMATION_TH,
         }
+        print(logging_hyperparams)
         utils.save_json(logging_hyperparams, path='logs/' + self.EXPERIMENT_NAME, file_name='hyperparams.json')
         logger = CSVLogger("logs", name=self.EXPERIMENT_NAME)
         self.trainer = Trainer(max_epochs=self.config.NUM_EPOCHS,
@@ -130,7 +139,19 @@ class TrainingGrading:
 
     def run_training(self):
         rubrics = utils.load_rubrics(self.config.PATH_RUBRIC)
-        model = GradingModel(self.config.PATH_CHECKPOINT, rubrics, self.config.MODEL_NAME, mode=self.config.MODE, task=self.config.TASK, learning_strategy=self.config.GRADING_MODEL, summation_th=self.config.SUMMATION_TH)
+        model = GradingModel(
+            self.config.PATH_CHECKPOINT,
+            rubrics,
+            self.config.MODEL_NAME,
+            mode=self.config.MODE,
+            task=self.config.TASK,
+            learning_strategy=self.config.GRADING_MODEL,
+            summation_th=self.config.SUMMATION_TH,
+            matching=self.config.MATCHING,
+            lr=self.config.LR,
+            is_fixed_learner=self.config.IS_FIXED_LEARNER,
+            experiment_name=self.EXPERIMENT_NAME
+        )
         preprocessor = GradingPreprocessor(self.config.MODEL_NAME, with_context=self.config.CONTEXT, rubrics=rubrics)
         train_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.TRAIN_FILE)
         dev_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.DEV_FILE)

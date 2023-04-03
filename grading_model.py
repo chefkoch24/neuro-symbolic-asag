@@ -1,19 +1,11 @@
 import os
 from collections import defaultdict
-
 import numpy as np
-import torch
-import torch.nn as nn
-from incremental_trees.models.regression.streaming_rfr import StreamingRFR
 from joblib import dump
-from pytorch_lightning import LightningModule
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 from transformers import AutoTokenizer, AdamW
-import metrics
-from incremental_trees.models.classification.streaming_rfc import StreamingRFC
 from paraphrase_scorer import BertScorer
 import myutils as utils
-
 from justification_cue_model import *
 
 
@@ -48,7 +40,7 @@ class Summation:
 
 class GradingModel(LightningModule):
     def __init__(self, checkpoint: str, rubrics, model_name, mode='classification', learning_strategy='decision_tree',
-                 task='token_classification', symbolic_models=None, lr=0.1, summation_th=0.8):
+                 task='token_classification', symbolic_models=None, lr=0.001, summation_th=0.8, matching='exact', is_fixed_learner=True, experiment_name=''):
         super().__init__()
         self.task = task
         if self.task == 'token_classification':
@@ -61,15 +53,19 @@ class GradingModel(LightningModule):
         self.mode = mode
         self.learning_strategy = learning_strategy
         self.classes = np.array([0, 1, 2])
-        self.epoch = 1
+        self.epoch = 0
         self.summation_th = summation_th
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
         # for saving and the training step of the symbolic models
         self.all_targets = defaultdict(list)
-        self.all_scoring_vectors = defaultdict(list)
+        self.all_train_scoring_vectors = defaultdict(list)
+        self.all_test_scoring_vectors = defaultdict(list)
         self.symbolic_models = self._init_symbolic_models(symbolic_models)
         self.para_detector = BertScorer()
         self.lr = lr
+        self.is_fixed_learner = is_fixed_learner
+        self.matching = matching
+        self.experiment_name = experiment_name
         self.save_hyperparameters()
 
     def forward(self, input_ids, attention_mask, token_type_ids, question_ids, return_justification_cues=False):
@@ -143,16 +139,14 @@ class GradingModel(LightningModule):
                 max_features = len(self.rubrics[qid]['key_element'].tolist())
                 if self.mode == 'classification':
                     if self.learning_strategy == 'decision_tree':
-                        #symbolic_models[qid] = StreamingRFC(n_estimators_per_chunk=1, max_features=max_features)
-                        symbolic_models[qid] = DecisionTreeClassifier(max_features=max_features)
+                        symbolic_models[qid] = DecisionTreeClassifier(max_features=max_features, max_depth=max_features)
                     else:
                         symbolic_models[qid] = Summation(self.rubrics[qid], mode='classification', th=self.summation_th,
                                                          num_classes=len(self.classes))
                 elif self.mode == 'regression':
 
                     if self.learning_strategy == 'decision_tree':
-                        #symbolic_models[qid] = StreamingRFR(n_estimators_per_chunk=1, max_features=max_features)
-                        symbolic_models[qid] = DecisionTreeRegressor(max_features=max_features)
+                        symbolic_models[qid] = DecisionTreeRegressor(max_features=max_features, max_depth=max_features)
                     else:
                         symbolic_models[qid] = Summation(self.rubrics[qid], mode='regression', th=self.summation_th, num_classes=3)
         else:
@@ -170,36 +164,52 @@ class GradingModel(LightningModule):
         cue_texts = []
         # get batched data
         qid = question_ids[0]
-        rubric = self.rubrics[qid]  # expects the same question_id
         scoring_vectors = []
         for jus_cue, input_id in zip(justification_cues, input_ids):
-            # fuzzy matching
-            #scoring_vector = [0] * len(rubric['key_element'])
-            #for span in jus_cue:
-            #    cue_text = self.tokenizer.decode(input_id[span[0]:span[1]], skip_special_tokens=True)
-            #    sim = self.para_detector.detect_score_key_elements(cue_text, rubric)
-            #    for i, s in enumerate(sim):
-            #        if s > scoring_vector[i]:
-            #            scoring_vector[i] = s
-            #scoring_vectors.append(scoring_vector)
-            # hard matching one justification cue per key element
-            max_idxs, max_vals = [], []
-            for span in jus_cue:
-                cue_text = self.tokenizer.decode(input_id[span[0]:span[1]], skip_special_tokens=True)
-                cue_texts.append(cue_text)
-                sim = self.para_detector.detect_score_key_elements(cue_text, rubric)
-                max_idxs.append(np.argmax(sim))
-                max_vals.append(np.max(sim))
-            # make sure that the absolute maximum is taken
-            scoring_vector = np.zeros((len(self.rubrics[qid])))
-            for mi, mv in zip(max_idxs, max_vals):
-                if scoring_vector[mi] < mv:
-                    scoring_vector[mi] = mv
-            scoring_vectors.append(scoring_vector.tolist())
+            # choose between hard or fuzzy matching
+            if self.matching == 'exact':
+                scoring_vector, cue_text = self.hard_matching(jus_cue, input_id, qid)
+            elif self.matching == 'fuzzy':
+                scoring_vector, cue_text = self.fuzzy_matching(jus_cue, input_id, qid)
+            scoring_vectors.append(scoring_vector)
+            cue_texts.append(cue_text)
         if return_texts:
             return scoring_vectors, cue_texts
         else:
             return scoring_vectors
+
+    def hard_matching(self, justification_cue, input_id, question_id):
+        # hard matching one justification cue per key element
+        rubric = self.rubrics[question_id]
+        max_idxs, max_vals = [], []
+        cue_texts = []
+        for span in justification_cue:
+            cue_text = self.tokenizer.decode(input_id[span[0]:span[1]], skip_special_tokens=True)
+            cue_texts.append(cue_text)
+            sim = self.para_detector.detect_score_key_elements(cue_text, rubric)
+            max_idxs.append(np.argmax(sim))
+            max_vals.append(np.max(sim))
+        # make sure that the absolute maximum is taken
+        scoring_vector = np.zeros((len(self.rubrics[question_id])))
+        for mi, mv in zip(max_idxs, max_vals):
+            if scoring_vector[mi] < mv:
+                scoring_vector[mi] = mv
+        return scoring_vector.tolist(), cue_texts
+
+
+    def fuzzy_matching(self, justification_cue, input_id, question_id):
+        #fuzzy matching
+        rubric = self.rubrics[question_id]
+        scoring_vector = [0] * len(rubric['key_element'])
+        cue_texts = []
+        for span in justification_cue:
+            cue_text = self.tokenizer.decode(input_id[span[0]:span[1]], skip_special_tokens=True)
+            cue_texts.append(cue_text)
+            sim = self.para_detector.detect_score_key_elements(cue_text, rubric)
+            for i, s in enumerate(sim):
+               if s > scoring_vector[i]:
+                   scoring_vector[i] = s
+        return scoring_vector, cue_texts
 
 
     def training_step(self, batch, batch_idx):
@@ -216,9 +226,9 @@ class GradingModel(LightningModule):
                                        batch['question_id'])
         labels_cpu = torch.clone(labels).cpu().detach().numpy()
         self.all_targets[q_id].append(labels_cpu)
-        self.all_scoring_vectors[q_id].append(scoring_vectors)
+        self.all_train_scoring_vectors[q_id].append(scoring_vectors)
         loss = torch.tensor(0.0, requires_grad=True, device=self.device)
-        if self.epoch > 1:
+        if self.epoch > 0:
            loss, y_pred = self.forward_step(scoring_vectors, labels, prediction_function, loss_function)
         return loss
 
@@ -236,21 +246,26 @@ class GradingModel(LightningModule):
 
     def training_epoch_end(self, outputs):
         # fit only in the first epoch
-        if self.epoch >= 1: #if self.epoch == 1:
-            if self.learning_strategy == 'decision_tree':
-                for qid in self.rubrics.keys():
-                    if self.all_scoring_vectors[qid] != []:
-                        self.all_scoring_vectors[qid] = utils.flat_list(self.all_scoring_vectors[qid])
-                        self.all_targets[qid] = utils.flat_list(self.all_targets[qid])
-                        self.symbolic_models[qid] = self.symbolic_models[qid].fit(np.array(self.all_scoring_vectors[qid]),np.array(self.all_targets[qid]))
-            self._save_symbolic_models()
+        if self.learning_strategy == 'decision_tree':
+            for qid in self.rubrics.keys():
+                if self.all_train_scoring_vectors[qid] != []:
+                    self.all_train_scoring_vectors[qid] = utils.flat_list(self.all_train_scoring_vectors[qid])
+                    self.all_test_scoring_vectors[qid] = utils.flat_list(self.all_test_scoring_vectors[qid])
+                    self.all_targets[qid] = utils.flat_list(self.all_targets[qid])
+                    if self.epoch == 0:
+                        self.symbolic_models[qid] = self.symbolic_models[qid].fit(np.array(self.all_train_scoring_vectors[qid]), np.array(self.all_targets[qid]))
+                    elif not self.is_fixed_learner:
+                        self.symbolic_models[qid] = self.symbolic_models[qid].fit(np.array(self.all_train_scoring_vectors[qid]), np.array(self.all_targets[qid]))
+        self._save_symbolic_models()
         # save scoring vectors
-        EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.task, self.mode, self.learning_strategy])
-        utils.save_json(self.all_scoring_vectors, 'logs/' + EXPERIMENT_NAME + '/scoring_vectors',
-                        'scoring_vectors_epoch_{}.json'.format(self.epoch))
+        utils.save_json(self.all_train_scoring_vectors, 'logs/' + self.experiment_name + '/scoring_vectors',
+                        'train_scoring_vectors_epoch_{}.json'.format(self.epoch))
+        utils.save_json(self.all_test_scoring_vectors, 'logs/' + self.experiment_name + '/scoring_vectors',
+                        'test_scoring_vectors_epoch_{}.json'.format(self.epoch))
         # reset scoring vectors
         self.all_targets = defaultdict(list)
-        self.all_scoring_vectors = defaultdict(list)
+        self.all_train_scoring_vectors = defaultdict(list)
+        self.all_test_scoring_vectors = defaultdict(list)
         self.epoch += 1
 
 
@@ -266,7 +281,8 @@ class GradingModel(LightningModule):
             loss_function = self.mse_loss
         scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
                                        batch['question_id'])
-        if self.epoch > 1:
+        self.all_test_scoring_vectors[q_id].append(scoring_vectors)
+        if self.epoch > 0:
             loss, y_pred = self.forward_step(scoring_vectors, labels, prediction_function, loss_function)
         else:
             # first epoch
@@ -343,8 +359,7 @@ class GradingModel(LightningModule):
         return m
 
     def _save_symbolic_models(self):
-        EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.task, self.mode, self.learning_strategy])
-        path = 'logs/' + EXPERIMENT_NAME + '/symbolic_models/epoch_' + str(self.epoch)
+        path = 'logs/' + self.experiment_name + '/symbolic_models/epoch_' + str(self.epoch)
         if not os.path.exists(path):
             os.makedirs(path)
         for qid, dt in self.symbolic_models.items():

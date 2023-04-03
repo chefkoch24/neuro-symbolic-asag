@@ -24,6 +24,8 @@ class Config:
                  grading_model='decision_tree',
                  device='cpu',
                  summation_th=0.8,
+                 matching='fuzzy',
+                 is_fixed_learner=True,
                  ):
         self.AGGREGATION_METHOD = aggregation_method
         self.EXCLUDED_LFS= excluded_lfs
@@ -40,6 +42,8 @@ class Config:
         self.PATH_CHECKPOINT = checkpoint_path
         self.TASK = task
         self.LR = lr
+        self.IS_FIXED_LEARNER = is_fixed_learner
+        self.MATCHING = matching
         self.GPUS = gpus
         self.MODE = mode
         self.GRADING_MODEL = grading_model
