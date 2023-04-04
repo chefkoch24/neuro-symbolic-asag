@@ -40,7 +40,7 @@ class ParaphraseScorerSBERT():
         return similarities
 
 class BertScorer():
-    def __init__(self, model_name='xlm-roberta-large'):
+    def __init__(self, model_name='microsoft/mdeberta-v3-base'):
         self.bertscore = load("bertscore")
         self.model_name = model_name
 
@@ -50,7 +50,7 @@ class BertScorer():
         if len(key_element) == 0:
             return [0] * len(rubric['key_element'])
         try:
-            return self. bertscore.compute(predictions=predictions, references=references,
+            return self.bertscore.compute(predictions=predictions, references=references,
                           model_type=self.model_name)['f1']
         except:
             return [0] * len(rubric['key_element'])
