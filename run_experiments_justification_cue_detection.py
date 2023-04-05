@@ -19,7 +19,7 @@ for task in ['token_classification', 'span_prediction']:
                        dev_file=dev_file,
                        device=device,
                        gpus=1,
-                       batch_size=8,
+                       batch_size=4,
                        context=context
                    )
                    TrainingJustificationCueDetection(config).run_training()

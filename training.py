@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import CSVLogger
+from pytorch_lightning.utilities.seed import seed_everything
 from torch.utils.data import DataLoader
 from dataset import JustificationCueDataset, SpanJustificationCueDataset, GradingDataset, CustomBatchSampler
 from grading_model import GradingModel
@@ -16,16 +17,16 @@ warnings.filterwarnings("ignore")
 class TrainingJustificationCueDetection:
     def __init__(self, config):
         self.config = config
+        seed_everything(self.config.SEED, workers=True)
         if self.config.DEVICE == 'cuda':
             num_gpus = self.config.GPUS
         else:
             num_gpus= 1
         if self.config.TASK == 'token_classification':
             self.EXPERIMENT_NAME = utils.get_experiment_name([self.config.TASK, self.config.MODEL_NAME, self.config.CONTEXT])
-            gradient_accumulation_steps = 1
         else:
             self.EXPERIMENT_NAME = utils.get_experiment_name([self.config.TASK, self.config.MODEL_NAME])
-            gradient_accumulation_steps = 2
+        gradient_accumulation_steps = 2
         logging_hyperparams = {
             'batch_size': self.config.BATCH_SIZE,
             'num_gpus': num_gpus,
@@ -50,6 +51,7 @@ class TrainingJustificationCueDetection:
             logger=logger,
             gpus=self.config.GPUS,
             accelerator=self.config.DEVICE,
+            deterministic=True,
             )
 
     def run_training(self):
@@ -99,6 +101,7 @@ class TrainingGrading:
 
     def __init__(self, config):
         self.config = config
+        seed_everything(self.config.SEED, workers=True)
         current_time = datetime.now()
         current_time_string = current_time.strftime("%Y-%m-%d_%H-%M")
         self.EXPERIMENT_NAME = utils.get_experiment_name(['grading', self.config.TASK, current_time_string])
@@ -135,6 +138,7 @@ class TrainingGrading:
                                gpus=self.config.GPUS,
                                num_sanity_val_steps=0,
                                accelerator=self.config.DEVICE,
+                               deterministic=True,
                                )
 
     def run_training(self):
@@ -150,7 +154,8 @@ class TrainingGrading:
             matching=self.config.MATCHING,
             lr=self.config.LR,
             is_fixed_learner=self.config.IS_FIXED_LEARNER,
-            experiment_name=self.EXPERIMENT_NAME
+            experiment_name=self.EXPERIMENT_NAME,
+            seed=self.config.SEED,
         )
         preprocessor = GradingPreprocessor(self.config.MODEL_NAME, with_context=self.config.CONTEXT, rubrics=rubrics)
         train_data = utils.load_json(self.config.PATH_DATA + '/' + self.config.TRAIN_FILE)
@@ -163,9 +168,6 @@ class TrainingGrading:
         # Generate data loaders
         train_loader = DataLoader(training_dataset, batch_sampler=CustomBatchSampler(training_dataset, self.config.BATCH_SIZE))
         val_loader = DataLoader(dev_dataset, batch_sampler=CustomBatchSampler(dev_dataset, self.config.BATCH_SIZE))
-
-        torch.manual_seed(self.config.SEED)
-        torch.cuda.manual_seed_all(self.config.SEED)
         # Training
         logging.info("Start training", self.EXPERIMENT_NAME)
         self.trainer.fit(model, train_loader, val_loader)

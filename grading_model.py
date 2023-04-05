@@ -40,7 +40,7 @@ class Summation:
 
 class GradingModel(LightningModule):
     def __init__(self, checkpoint: str, rubrics, model_name, mode='classification', learning_strategy='decision_tree',
-                 task='token_classification', symbolic_models=None, lr=0.001, summation_th=0.8, matching='exact', is_fixed_learner=True, experiment_name=''):
+                 task='token_classification', symbolic_models=None, lr=0.001, summation_th=0.8, matching='exact', is_fixed_learner=True, experiment_name='', seed=0):
         super().__init__()
         self.task = task
         if self.task == 'token_classification':
@@ -52,6 +52,7 @@ class GradingModel(LightningModule):
         self.rubrics = rubrics
         self.mode = mode
         self.learning_strategy = learning_strategy
+        self.seed = seed
         self.classes = np.array([0, 1, 2])
         self.epoch = 0
         self.summation_th = summation_th
@@ -139,14 +140,14 @@ class GradingModel(LightningModule):
                 max_features = len(self.rubrics[qid]['key_element'].tolist())
                 if self.mode == 'classification':
                     if self.learning_strategy == 'decision_tree':
-                        symbolic_models[qid] = DecisionTreeClassifier(max_features=max_features, max_depth=max_features)
+                        symbolic_models[qid] = DecisionTreeClassifier(max_features=max_features, max_depth=max_features, random_state=self.seed)
                     else:
                         symbolic_models[qid] = Summation(self.rubrics[qid], mode='classification', th=self.summation_th,
                                                          num_classes=len(self.classes))
                 elif self.mode == 'regression':
 
                     if self.learning_strategy == 'decision_tree':
-                        symbolic_models[qid] = DecisionTreeRegressor(max_features=max_features, max_depth=max_features)
+                        symbolic_models[qid] = DecisionTreeRegressor(max_features=max_features, max_depth=max_features, random_state=self.seed)
                     else:
                         symbolic_models[qid] = Summation(self.rubrics[qid], mode='regression', th=self.summation_th, num_classes=3)
         else:
@@ -306,10 +307,10 @@ class GradingModel(LightningModule):
         return metric
 
     def test_step(self, batch, batch_idx):
-        self.validation_step(batch, batch_idx)
+        return self.validation_step(batch, batch_idx)
 
     def test_epoch_end(self, outputs):
-        self.validation_epoch_end(outputs)
+        return self.validation_epoch_end(outputs)
 
     def predict_step(self, batch, batch_idx):
         # used in the trainer.predict() method
@@ -356,6 +357,7 @@ class GradingModel(LightningModule):
     def load_from_checkpoint(self, checkpoint_path, map_location=None, hparams_file=None, strict=True, symbolic_models=None, **kwargs):
         m = super().load_from_checkpoint(checkpoint_path, map_location, hparams_file, strict, **kwargs)
         m.symbolic_models = symbolic_models
+        m.epoch = 1 # set because we are loading a checkpoint
         return m
 
     def _save_symbolic_models(self):

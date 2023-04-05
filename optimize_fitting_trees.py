@@ -1,5 +1,8 @@
 import numpy as np
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import confusion_matrix
 from sklearn.tree import export_graphviz, DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.metrics import classification_report
 from config import Config
 import myutils as utils
 
@@ -9,9 +12,9 @@ def _init_symbolic_models(mode, rubrics):
             max_features = len(rubrics[qid]['key_element'].tolist())
             if mode == 'classification':
                 if MAX_DEPTH == None:
-                    symbolic_models[qid] = DecisionTreeClassifier(max_features=max_features)
+                    symbolic_models[qid] = GradientBoostingClassifier()
                 else:
-                    symbolic_models[qid] = DecisionTreeClassifier(max_features=max_features, max_depth=max_features)
+                    symbolic_models[qid] = GradientBoostingClassifier()#DecisionTreeClassifier(max_features=max_features, max_depth=max_features)
         return symbolic_models
 
 config = Config(
@@ -28,8 +31,8 @@ MODE = 'classification'
 MAX_DEPTH ='rubric_length'
 MAX_FEATURES = 'rubric_length'
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
-PATH_TO_TRAIN_SCORING_VECTORS = 'logs/grading_token_classification_classification_decision_tree/scoring_vectors/train_scoring_vectors_epoch_1.json'
-PATH_TO_DEV_SCORING_VECTORS = 'logs/grading_token_classification_classification_decision_tree/scoring_vectors/test_scoring_vectors_epoch_1.json'
+PATH_TO_TRAIN_SCORING_VECTORS = 'logs/grading_token_classification_2023-04-03_04-16/scoring_vectors/train_scoring_vectors_epoch_2.json'
+PATH_TO_DEV_SCORING_VECTORS = 'logs/grading_token_classification_2023-04-03_04-16/scoring_vectors/test_scoring_vectors_epoch_2.json'
 #PATH_TO_TRAIN_SCORING_VECTORS = 'logs/grading_span_prediction_classification_decision_tree/scoring_vectors/train_scoring_vectors_epoch_1.json'
 #PATH_TO_DEV_SCORING_VECTORS = 'logs/grading_span_prediction_classification_decision_tree/scoring_vectors/test_scoring_vectors_epoch_1.json'
 train_scoring_vectors = utils.load_json(PATH_TO_TRAIN_SCORING_VECTORS)
@@ -55,14 +58,24 @@ for qid in list(rubrics.keys()):
 
 # Scoring
 scores = {}
+cms = {}
+reports = {}
 for qid in list(rubrics.keys()):
     X = dev_scoring_vectors[qid]
     y_true = [d[label] for d in dev_data if d['question_id'] == qid]
     s = symbolic_models[qid].score(X, y_true)
     scores[qid] = s
+    y_pred = symbolic_models[qid].predict(X)
+    cm = confusion_matrix(y_true=y_true,y_pred=y_pred)
+    report = classification_report(y_true, y_pred, output_dict=True)
+    reports[qid] = report
+    cms[qid] = cm
 
 final_score = sum(scores.values())/len(scores)
 scores['final_score'] = final_score
 
 experiment_name = utils.get_experiment_name(['decision_tree_optimization',TASK, MODE, MATCHING, MAX_DEPTH])
-utils.save_json(hyperparams | scores, 'results',file_name=experiment_name + '.json')
+print(experiment_name, scores)
+print(cms)
+print(reports)
+#utils.save_json(hyperparams | scores, 'results',file_name=experiment_name + '.json')
