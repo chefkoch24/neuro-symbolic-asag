@@ -3,24 +3,34 @@ import os
 import numpy as np
 import torch
 from pytorch_lightning import Trainer
+from pytorch_lightning.utilities.seed import seed_everything
 from sklearn.metrics import confusion_matrix, classification_report
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import AutoTokenizer
-from dataset import GradingDataset
+from dataset import GradingDataset, CustomBatchSampler
 from grading_model import GradingModel
 from preprocessor import GradingPreprocessor
 import myutils as utils
 from config import Config
 
 # Set the parameters here
-TASK = 'span_prediction'
+#TASK = 'token_classification'
+TASK='span_prediction'
 MODE = 'classification'
-FOLDER = 'logs/grading_span_prediction_2023-04-04_04-27'
-CHECKPOINT = 'checkpoint-epoch=03-val_loss=0.89.ckpt'
-SYMBOLIC_MODELS_EPOCH = 'epoch_3'
+#MODE = 'regression'
+#FOLDER = 'logs/grading_token_classification_2023-04-05_12-04' #classification
+#FOLDER = 'logs/grading_token_classification_2023-04-05_04-02' #regression
+FOLDER = 'logs/grading_span_prediction_2023-04-05_16-49' #classification
+#FOLDER = 'logs/grading_span_prediction_2023-04-05_14-58' #regression
+#CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.86.ckpt' #classification
+#CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.08.ckpt' #regression
+CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.40.ckpt' #classification
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.60.ckpt' #regression
+SYMBOLIC_MODELS_EPOCH = 'epoch_1'
+#SYMBOLIC_MODELS_EPOCH = 'epoch_2'
 SUB_FOLDER= '/version_0/checkpoints/'
 TEST_FILE = 'dev_dataset.json'
+#TEST_FILE = 'test_dataset.json'
 MODEL = 'microsoft/mdeberta-v3-base'
 LEARNING_STRATEGY = 'decision_tree'
 CHECKPOINT_PATH = FOLDER + SUB_FOLDER  + CHECKPOINT
@@ -40,6 +50,7 @@ config = Config(task=TASK,
                 grading_model=LEARNING_STRATEGY,
                 batch_size=4, # for compatibility baseline
                 )
+seed_everything(config.SEED)
 rubrics = utils.load_rubrics(config.PATH_RUBRIC)
 symbolic_models = utils.load_symbolic_models(CHECKPOINT_PATH_SYMBOLIC_MODELS, rubrics)
 model = GradingModel.load_from_checkpoint(
@@ -60,9 +71,12 @@ for k in rubrics.keys():
     else:
         max_scores[k] = 0
 
-test_loader = DataLoader(test_dataset, batch_size=config.BATCH_SIZE, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_sampler=CustomBatchSampler(test_dataset, config.BATCH_SIZE, seed=config.SEED))
 
-trainer = Trainer(gpus=1, accelerator=DEVICE)
+trainer = Trainer(gpus=1,
+                  accelerator=DEVICE,
+                  deterministic=True,
+                  )
 # report the standard metrics for the task on the test set
 metrics = trainer.test(model, test_loader)
 
@@ -99,19 +113,27 @@ for d, p in tqdm(zip(test_dataset, predictions)):
         'y_pred': p['y_pred'],
     })
 
+experiment_name = utils.get_experiment_name(['grading_final', LEARNING_STRATEGY, TASK, MODE])
+
+if TEST_FILE == 'dev_dataset.json':
+   experiment_name = 'dev_' + experiment_name
+os.mkdir(config.PATH_RESULTS + '/' + experiment_name) if os.path.exists(config.PATH_RESULTS + '/' + experiment_name) is False else None
+save_path = config.PATH_RESULTS + '/' + experiment_name
+utils.save_csv(prediction_data, save_path, 'final_prediction')
+
 # more detailed metrics
 print('Generate more detailed insights...')
-y_true = [y[label] for y in prediction_data]
+y_true = [str(y[label]) for y in prediction_data]
 y_pred = [str(y['y_pred']) for y in prediction_data]
 
 if MODE == 'classification':
     label_names = ['CORRECT', 'PARTIAL_CORRECT', 'INCORRECT']
 else:
-    label_names = ['0', '0.125', '0.25', '0.375', '0.5', '0.625', '0.75', '0.875', '1.0']
+    label_names = ['0.0', '0.125', '0.25', '0.375', '0.5', '0.625', '0.75', '0.875', '1.0']
 
 final_cm = {'confusion_matrix' : []}
 final_cm['confusion_matrix'] = confusion_matrix(y_true=y_true,y_pred=y_pred, labels=label_names).tolist()
-report = classification_report(y_true, y_pred, output_dict=True, labels=label_names)
+final_report = classification_report(y_true, y_pred, output_dict=True, labels=label_names)
 
 # more detailed metrics per question
 print('Generate more detailed insights per question...')
@@ -119,19 +141,16 @@ print('Generate more detailed insights per question...')
 reports = {}
 cms = {}
 for qid in list(rubrics.keys()):
-    y_true = [d[label] for d in prediction_data if d['question_id'] == qid]
+    y_true = [str(d[label]) for d in prediction_data if d['question_id'] == qid]
     y_pred = [str(d['y_pred']) for d in prediction_data if d['question_id'] == qid]
     cm = confusion_matrix(y_true=y_true,y_pred=y_pred)
     report = classification_report(y_true, y_pred, output_dict=True)
     reports[qid] = report
     cms[qid] = cm.tolist()
 
-experiment_name = utils.get_experiment_name(['grading_final', LEARNING_STRATEGY, TASK, MODE])
-os.mkdir(config.PATH_RESULTS + '/' + experiment_name) if os.path.exists(config.PATH_RESULTS + '/' + experiment_name) is False else None
-save_path = config.PATH_RESULTS + '/' + experiment_name
-utils.save_csv(prediction_data, save_path, 'final_prediction')
+
 utils.save_json(reports, save_path, 'final_reports.json')
 utils.save_json(cms, save_path, 'final_cms.json')
 utils.save_json(final_cm, save_path, 'final_overall_cm.json')
-utils.save_json(report, save_path, 'final_overall_report.json')
+utils.save_json(final_report, save_path, 'final_overall_report.json')
 utils.save_json(metrics, save_path, 'final_metrics.json')

@@ -73,7 +73,8 @@ class GradingDataset(Dataset):
 
 
 class CustomBatchSampler(Sampler):
-    def __init__(self, dataset, batch_size):
+    def __init__(self, dataset, batch_size,seed=42):
+        np.random.seed(seed)
         self.dataset = dataset
         self.batch_size = batch_size
         self.rubrics = np.unique([d['question_id'] for d in self.dataset])

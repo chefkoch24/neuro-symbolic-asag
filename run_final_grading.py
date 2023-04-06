@@ -10,7 +10,7 @@ DEV_FILE = 'dev_dataset.json'
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-for task in ['token_classification', 'span_prediction']:
+for task in ['span_prediction', 'token_classification']:
     if task == 'token_classification':
         ckpt = 'logs/token_classification_microsoft_mdeberta-v3-base_True/version_0/checkpoints/checkpoint-epoch=02-val_loss=0.40.ckpt'
     else:
@@ -30,14 +30,13 @@ for task in ['token_classification', 'span_prediction']:
                             device=DEVICE,
                             mode=mode,
                             grading_model=grading_model,
-                            summation_th=0.9,
+                            summation_th=0.7,
                             batch_size=4,
                             lr=0.01,
                             matching='fuzzy',
                             is_fixed_learner=False,
                         )
-            if task != 'token_classification' and grading_model != 'decision_tree': # because this model is already trained
-                TrainingGrading(config).run_training()
+            TrainingGrading(config).run_training()
 
 
 

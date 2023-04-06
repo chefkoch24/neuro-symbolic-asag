@@ -89,12 +89,10 @@ class TrainingJustificationCueDetection:
             val_loader = DataLoader(dev_dataset, batch_size=self.config.BATCH_SIZE, shuffle=False)
 
             model = SpanPredictionModel(self.config.MODEL_NAME)
-        # Set seed
-        torch.manual_seed(self.config.SEED)
-        torch.cuda.manual_seed_all(self.config.SEED)
         # Training
         logging.info("Start training", self.EXPERIMENT_NAME)
         self.trainer.fit(model, train_loader, val_loader)
+        self.trainer.validate(model, val_loader)
         logging.info("End training", self.EXPERIMENT_NAME)
 
 class TrainingGrading:
@@ -139,6 +137,7 @@ class TrainingGrading:
                                num_sanity_val_steps=0,
                                accelerator=self.config.DEVICE,
                                deterministic=True,
+                               #fast_dev_run=True,
                                )
 
     def run_training(self):
@@ -166,9 +165,10 @@ class TrainingGrading:
         training_dataset = GradingDataset(training_dataset)
         dev_dataset = GradingDataset(dev_dataset)
         # Generate data loaders
-        train_loader = DataLoader(training_dataset, batch_sampler=CustomBatchSampler(training_dataset, self.config.BATCH_SIZE))
-        val_loader = DataLoader(dev_dataset, batch_sampler=CustomBatchSampler(dev_dataset, self.config.BATCH_SIZE))
+        train_loader = DataLoader(training_dataset, batch_sampler=CustomBatchSampler(training_dataset, self.config.BATCH_SIZE, seed=self.config.SEED))
+        val_loader = DataLoader(dev_dataset, batch_sampler=CustomBatchSampler(dev_dataset, self.config.BATCH_SIZE, seed=self.config.SEED))
         # Training
         logging.info("Start training", self.EXPERIMENT_NAME)
         self.trainer.fit(model, train_loader, val_loader)
+        self.trainer.validate(model, val_loader)
         logging.info("End training", self.EXPERIMENT_NAME)
