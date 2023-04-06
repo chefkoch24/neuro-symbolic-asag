@@ -114,10 +114,10 @@ class GradingModel(LightningModule):
             jus_cues= []
             student_answer = self.tokenizer.batch_decode(input, skip_special_tokens=True)[0]
             for re in self.rubrics[q_id]['key_element']:
-                input = self.tokenizer(re,student_answer, truncation=True, return_tensors='pt', return_token_type_ids=True, max_length=512)
-                i_ids = input['input_ids'].to(self.device)
-                a_mask = input['attention_mask'].to(self.device)
-                t_ids = input['token_type_ids'].to(self.device)
+                _input = self.tokenizer(re,student_answer, truncation=True, return_tensors='pt', return_token_type_ids=True, max_length=512)
+                i_ids = _input['input_ids'].to(self.device)
+                a_mask = _input['attention_mask'].to(self.device)
+                t_ids = _input['token_type_ids'].to(self.device)
                 start_logits, end_logits = self.model(i_ids, attention_mask=a_mask)
                 mask = (a_mask == 1) & (t_ids == 1)
                 start_logits_masked = start_logits.masked_fill(~mask, float('-inf'))
@@ -130,7 +130,7 @@ class GradingModel(LightningModule):
                 offset = tokenized_len + 2
                 jus_cues.append((start_predictions.item()-offset, end_predictions.item()-offset))
             justification_cues.append(jus_cues)
-            true_input_ids.append(input['input_ids'][0].tolist()[1:-1])
+            true_input_ids.append(input[0].tolist()[1:-1]) #not account the padding atm.
         return justification_cues, true_input_ids
 
     def _init_symbolic_models(self, symbolic_models):
