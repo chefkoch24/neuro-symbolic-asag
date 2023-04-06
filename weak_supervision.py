@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="nltk")
 class WeakSupervisionSoft:
     def __init__(self, rubrics, config):
         self.rubrics = rubrics
-        self.para_detector = BertScorer()
+        self.para_detector = BertScorer(model_name='xlm-roberta-base')
         self._punctuation = ['.', ',', '?', '!', ';']
         self.config = config
         self.rouge = Rouge(metrics=["rouge-1", "rouge-2", "rouge-3", "rouge-4", "rouge-5", "rouge-l"])
