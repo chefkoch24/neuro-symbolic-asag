@@ -15,7 +15,7 @@ for experiment_name, value in experiments.items():
     config = Config(
         excluded_lfs=value
     )
-    for aggregation_method in ['sum', 'max', 'average', 'average_nonzero', 'hmm']:
+    for aggregation_method in ['hmm']:#['sum', 'max', 'average', 'average_nonzero', 'hmm']:
         for split in ['training', 'dev']:
             if aggregation_method != 'hmm':
                 for file_name in ['ws_lfs', 'ws_lfs']:
