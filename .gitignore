@@ -4,7 +4,9 @@
 *.job
 *.sh
 checkpoints
-corpora
-data
+corpora/*
+!corpora/.gitkeep
+data/*
+!data/.gitkeep
 tmp
 trees
