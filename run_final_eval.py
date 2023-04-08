@@ -8,32 +8,76 @@ from sklearn.metrics import confusion_matrix, classification_report
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from dataset import GradingDataset, CustomBatchSampler
-from grading_model import GradingModel
+from grading_model import GradingModel, Summation
 from preprocessor import GradingPreprocessor
 import myutils as utils
 from config import Config
 
-# Set the parameters here
-#TASK = 'token_classification'
-TASK='span_prediction'
-MODE = 'classification'
-#MODE = 'regression'
-#FOLDER = 'logs/grading_token_classification_2023-04-05_12-04' #classification
-#FOLDER = 'logs/grading_token_classification_2023-04-05_04-02' #regression
-FOLDER = 'logs/grading_span_prediction_2023-04-05_16-49' #classification
-#FOLDER = 'logs/grading_span_prediction_2023-04-05_14-58' #regression
-#CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.86.ckpt' #classification
-#CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.08.ckpt' #regression
-CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.40.ckpt' #classification
-#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.60.ckpt' #regression
-SYMBOLIC_MODELS_EPOCH = 'epoch_1'
-#SYMBOLIC_MODELS_EPOCH = 'epoch_2'
-SUB_FOLDER= '/version_0/checkpoints/'
-TEST_FILE = 'dev_dataset.json'
-#TEST_FILE = 'test_dataset.json'
-MODEL = 'microsoft/mdeberta-v3-base'
+# Uncomment and set the parameters here
 LEARNING_STRATEGY = 'decision_tree'
-CHECKPOINT_PATH = FOLDER + SUB_FOLDER  + CHECKPOINT
+# Config 1: Token Classification DT
+#TASK = 'token_classification'
+#MODE = 'classification'
+#FOLDER = 'logs/grading_token_classification_2023-04-05_12-04' # token
+#CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.86.ckpt' #classification
+#SYMBOLIC_MODELS_EPOCH = 'epoch_2'
+
+# Config 2: Token Regression DT
+TASK = 'token_classification'
+MODE = 'regression'
+FOLDER = 'logs/grading_token_classification_2023-04-05_04-02'
+CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.08.ckpt' #regression
+SYMBOLIC_MODELS_EPOCH = 'epoch_2'
+
+# Config 3: Span Classification DT
+#TASK = 'span_prediction'
+#MODE = 'classification'
+#FOLDER = 'logs/grading_span_prediction_2023-04-06_20-10' #classification
+#CHECKPOINT = 'checkpoint-epoch=03-val_loss=0.87.ckpt' #classification
+#SYMBOLIC_MODELS_EPOCH = 'epoch_3'
+
+#Config 4: Span Regression DT
+#TASK = 'span_prediction'
+#MODE = 'regression'
+#FOLDER = 'logs/grading_span_prediction_2023-04-06_16-19' #regression
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.09.ckpt' #regression
+#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
+
+#LEARNING_STRATEGY = 'summation'
+# Config 5: Token Classification Summation
+#TASK = 'token_classification'
+#MODE = 'classification'
+#FOLDER = 'logs/grading_token_classification_2023-04-07_01-43'
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.42.ckpt'
+#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
+
+# Config 6: Token Regression Summation
+#TASK = 'token_classification'
+#MODE = 'regression'
+#FOLDER ='logs/grading_token_classification_2023-04-07_00-35'
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.61.ckpt'
+#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
+
+# Config 7: Span Classification Summation
+#TASK = 'span_prediction'
+#MODE = 'classification'
+#FOLDER = 'logs/grading_span_prediction_2023-04-06_22-06'
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.31.ckpt'
+#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
+
+# Config 8: Span Regression Summation
+#TASK = 'span_prediction'
+#MODE = 'regression'
+#FOLDER = 'logs/grading_span_prediction_2023-04-06_18-14'
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.50.ckpt'
+#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
+
+# Shared settings
+SUB_FOLDER= '/version_0/checkpoints/'
+
+TEST_FILE = 'test_dataset.json'
+MODEL = 'microsoft/mdeberta-v3-base'
+CHECKPOINT_PATH = FOLDER + SUB_FOLDER + CHECKPOINT
 CHECKPOINT_PATH_SYMBOLIC_MODELS = FOLDER + '/symbolic_models/' + SYMBOLIC_MODELS_EPOCH
 CONTEXT = True if TASK == 'token_classification' else None
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
