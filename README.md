@@ -1,4 +1,7 @@
 # README
+
+For the monolingual experiments we created separate branches for each language.
+
 ## Requirements
 For setup all requirements the following steps has to be done:
 
@@ -25,13 +28,21 @@ For preprocessing the raw data from xml and csv files, run the following command
 
 `python preprocess_raw_data.py`
 
+If we want to incorporate the unseen questions we run the following script:
+
+`python run_split_unseen_question_dataset.py`
+
 
 ## Weak Supervision
 The raw data is used in the weak supervision by applying the different labeling functions. 
 
-The first one is based on learning a HMM. The other option is to annotate the data with labeling functions without learning an additional model.
+Run all the experiments:
 
-`run_weak_supervision.py`
+`python run_weak_supervision_experiments.py`
+
+Setup only the final HMM by setting the configuration: 
+
+`python run_weak_supervision.py`
 
 
 The labeling functions are evaluated by running
@@ -42,7 +53,9 @@ The labeling functions are evaluated by running
 ## Aggregate Labels
 All labels are aggregated by running the following scripts.
 
-`python aggregation.py`
+Configure the aggregation procedure.
+
+`python run_aggregation.py`
 
 The aggregation is evaluated by running
 
@@ -72,9 +85,16 @@ Generates prediction files
 ## Grading
 Trains the final grading model
 
-`python grading_experiments.py`
+`python run_grading_experiments.py`
+
+Train the 
 
 Evaluation
 
 `python grading_experiments.py`
 
+## Helper scripts
+
+Create spacy corpora for the visualization
+
+`python run_save_annotation_as_doc.py`
