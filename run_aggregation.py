@@ -27,7 +27,7 @@ for experiment_name, value in experiments.items():
 
             # For HMM
             else:
-                file_names_hmm = ['ws_hmm_0', 'ws_hmm_1', 'ws_hmm_2']
+                file_names_hmm = ['ws_hmm']#, 'ws_hmm_1', 'ws_hmm_2']
                 for file_name in file_names_hmm:
                     file_name = split + '_' + file_name
                     data = utils.load_json(config.PATH_DATA + '/' + file_name + '.json')
