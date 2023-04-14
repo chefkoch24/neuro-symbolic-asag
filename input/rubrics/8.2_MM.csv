@@ -1,7 +1,0 @@
-ID,key_element,points
-1,"Both implement a more efficient kind of
-broadcasting ",0.2
-2,"Reverse Path Forwarding: only forward to all adjacent nodes when you
-would send packets to S over N",0.4
-3,"Reverse Path Broadcast: identical to Reverse Path Forwarding exception only
-forwards packets on edges that are part of a spanning tree",0.4

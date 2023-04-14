@@ -1,3 +1,0 @@
-ID,key_element,points
-1,Asynchronous transmission: every character unit is surrounded by a start bit and a stop bit,0.5
-2,Synchronous transmission: characters pooled to a continuous stream of data (frames),0.5

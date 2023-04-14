@@ -1,7 +1,0 @@
-ID,key_element,points
-1,network management protocol,0.5
-2,server dynamically assigns an IP address and other network configuration parameters,0.5
-3,has largely replaced RARP (and BOOTP),0.5
-4,Simplifies the installation and configuration of end systems.,0.5
-5,manual and automatic IP address assignment,0.5
-6,additional configuration information,0.5

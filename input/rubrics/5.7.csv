@@ -1,8 +1,0 @@
-ID,key_element,points
-1,"Hop 1 :(A, B, forward),(A, C, forward), (A, D, drop)",0.5
-2,Hop 1: remaining neighbors C and F do not use D as the next hop to get to A,0.25
-3,"Hop 2 :(B, E, forward),(C, F, drop)",0.5
-4,"Hop 2: remaining neighbors D, E, G do not use F as the next hop to get to A",0.25
-5,"Hop 3 :(E, G, forward)",0.25
-6,"Hop 4 :(G, H, drop)",0.5
-7,"Hop 4: H is only connected to G, packet is not forwarded to incoming link",0.25
