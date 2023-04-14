@@ -18,58 +18,58 @@ LEARNING_STRATEGY = 'decision_tree'
 # Config 1: Token Classification DT
 #TASK = 'token_classification'
 #MODE = 'classification'
-#FOLDER = 'logs/grading_token_classification_2023-04-05_12-04' # token
-#CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.86.ckpt' #classification
+#FOLDER = 'logs/grading_token_classification_2023-04-13_17-03' # token
+#CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.82.ckpt' #classification
 #SYMBOLIC_MODELS_EPOCH = 'epoch_2'
 
 # Config 2: Token Regression DT
-TASK = 'token_classification'
-MODE = 'regression'
-FOLDER = 'logs/grading_token_classification_2023-04-05_04-02'
-CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.08.ckpt' #regression
-SYMBOLIC_MODELS_EPOCH = 'epoch_2'
+#TASK = 'token_classification'
+#MODE = 'regression'
+#FOLDER = 'logs/grading_token_classification_2023-04-13_19-18'
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.07.ckpt' #regression
+#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
 
 # Config 3: Span Classification DT
 #TASK = 'span_prediction'
 #MODE = 'classification'
-#FOLDER = 'logs/grading_span_prediction_2023-04-06_20-10' #classification
-#CHECKPOINT = 'checkpoint-epoch=03-val_loss=0.87.ckpt' #classification
-#SYMBOLIC_MODELS_EPOCH = 'epoch_3'
+#FOLDER = 'logs/grading_span_prediction_2023-04-13_14-41' #classification
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.82.ckpt' #classification
+#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
 
 #Config 4: Span Regression DT
 #TASK = 'span_prediction'
 #MODE = 'regression'
-#FOLDER = 'logs/grading_span_prediction_2023-04-06_16-19' #regression
-#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.09.ckpt' #regression
-#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
+#FOLDER = 'logs/grading_span_prediction_2023-04-13_09-02'
+#CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.07.ckpt'
+#SYMBOLIC_MODELS_EPOCH = 'epoch_2'
 
-#LEARNING_STRATEGY = 'summation'
+LEARNING_STRATEGY = 'summation'
 # Config 5: Token Classification Summation
-#TASK = 'token_classification'
-#MODE = 'classification'
-#FOLDER = 'logs/grading_token_classification_2023-04-07_01-43'
-#CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.42.ckpt'
-#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
+TASK = 'token_classification'
+MODE = 'classification'
+FOLDER = 'logs/grading_token_classification_2023-04-13_17-31'
+CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.39.ckpt'
+SYMBOLIC_MODELS_EPOCH = 'epoch_1'
 
 # Config 6: Token Regression Summation
 #TASK = 'token_classification'
 #MODE = 'regression'
-#FOLDER ='logs/grading_token_classification_2023-04-07_00-35'
+#FOLDER ='logs/grading_token_classification_2023-04-13_19-46'
 #CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.61.ckpt'
 #SYMBOLIC_MODELS_EPOCH = 'epoch_1'
 
 # Config 7: Span Classification Summation
 #TASK = 'span_prediction'
 #MODE = 'classification'
-#FOLDER = 'logs/grading_span_prediction_2023-04-06_22-06'
-#CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.31.ckpt'
+#FOLDER = 'logs/grading_span_prediction_2023-04-13_15-52'
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.29.ckpt'
 #SYMBOLIC_MODELS_EPOCH = 'epoch_1'
 
 # Config 8: Span Regression Summation
 #TASK = 'span_prediction'
 #MODE = 'regression'
-#FOLDER = 'logs/grading_span_prediction_2023-04-06_18-14'
-#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.50.ckpt'
+#FOLDER = 'logs/grading_span_prediction_2023-04-13_10-28'
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=0.55.ckpt'
 #SYMBOLIC_MODELS_EPOCH = 'epoch_1'
 
 # Shared settings

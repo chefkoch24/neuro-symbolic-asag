@@ -348,14 +348,20 @@ def compute_grading_classification_metrics(outputs):
     for language in ['de', 'en']:
         tmp_predictions = [p for p,l in zip(predictions, langs) if l == language]
         tmp_labels = [p for p,l in zip(labels, langs) if l == language]
-        tmp_labels = torch.tensor(tmp_labels, device=device)
-        tmp_predictions = torch.tensor(tmp_predictions, device=device)
-        mf1 = macro_f1_score(tmp_predictions, tmp_labels)
-        wf1 = weighted_f1_score(tmp_predictions, tmp_labels)
-        acc = accuracy(tmp_predictions, tmp_labels)
-        mf1s.append(mf1)
-        wf1s.append(wf1)
-        accs.append(acc)
+        if len(tmp_labels) > 0:
+            tmp_labels = torch.tensor(tmp_labels, device=device)
+            tmp_predictions = torch.tensor(tmp_predictions, device=device)
+            mf1 = macro_f1_score(tmp_predictions, tmp_labels)
+            wf1 = weighted_f1_score(tmp_predictions, tmp_labels)
+            acc = accuracy(tmp_predictions, tmp_labels)
+            mf1s.append(mf1)
+            wf1s.append(wf1)
+            accs.append(acc)
+        else:
+            default_val = torch.tensor(0.0, device=device)
+            mf1s.append(default_val)
+            wf1s.append(default_val)
+            accs.append(default_val)
     return {
         'val_f1_correct': f1[0].item(),
         'val_f1_partial': f1[1].item(),
