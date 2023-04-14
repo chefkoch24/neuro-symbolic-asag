@@ -16,11 +16,11 @@ from config import Config
 # Uncomment and set the parameters here
 LEARNING_STRATEGY = 'decision_tree'
 # Config 1: Token Classification DT
-#TASK = 'token_classification'
-#MODE = 'classification'
-#FOLDER = 'logs/grading_token_classification_2023-04-13_17-03' # token
-#CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.82.ckpt' #classification
-#SYMBOLIC_MODELS_EPOCH = 'epoch_2'
+TASK = 'token_classification'
+MODE = 'classification'
+FOLDER = 'logs/grading_token_classification_2023-04-13_17-03' # token
+CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.82.ckpt' #classification
+SYMBOLIC_MODELS_EPOCH = 'epoch_2'
 
 # Config 2: Token Regression DT
 #TASK = 'token_classification'
@@ -43,13 +43,13 @@ LEARNING_STRATEGY = 'decision_tree'
 #CHECKPOINT = 'checkpoint-epoch=02-val_loss=0.07.ckpt'
 #SYMBOLIC_MODELS_EPOCH = 'epoch_2'
 
-LEARNING_STRATEGY = 'summation'
+#LEARNING_STRATEGY = 'summation'
 # Config 5: Token Classification Summation
-TASK = 'token_classification'
-MODE = 'classification'
-FOLDER = 'logs/grading_token_classification_2023-04-13_17-31'
-CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.39.ckpt'
-SYMBOLIC_MODELS_EPOCH = 'epoch_1'
+#TASK = 'token_classification'
+#MODE = 'classification'
+#FOLDER = 'logs/grading_token_classification_2023-04-13_17-31'
+#CHECKPOINT = 'checkpoint-epoch=01-val_loss=1.39.ckpt'
+#SYMBOLIC_MODELS_EPOCH = 'epoch_1'
 
 # Config 6: Token Regression Summation
 #TASK = 'token_classification'
