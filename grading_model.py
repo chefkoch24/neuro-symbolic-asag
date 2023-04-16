@@ -113,7 +113,7 @@ class GradingModel(LightningModule):
         for input in input_ids:
             jus_cues= []
             student_answer = self.tokenizer.batch_decode(input, skip_special_tokens=True)[0]
-            for re in self.rubrics[q_id]['key_element']:
+            for re in self.rubrics[str(q_id)]['key_element']:
                 _input = self.tokenizer(re,student_answer, truncation=True, return_tensors='pt', return_token_type_ids=True, max_length=512)
                 i_ids = _input['input_ids'].to(self.device)
                 a_mask = _input['attention_mask'].to(self.device)
@@ -137,19 +137,19 @@ class GradingModel(LightningModule):
         if symbolic_models is None:
             symbolic_models = {}
             for qid in list(self.rubrics.keys()):
-                max_features = len(self.rubrics[qid]['key_element'].tolist())
+                max_features = len(self.rubrics[str(qid)]['key_element'].tolist())
                 if self.mode == 'classification':
                     if self.learning_strategy == 'decision_tree':
                         symbolic_models[qid] = DecisionTreeClassifier(max_features=max_features, max_depth=max_features, random_state=self.seed)
                     else:
-                        symbolic_models[qid] = Summation(self.rubrics[qid], mode='classification', th=self.summation_th,
+                        symbolic_models[qid] = Summation(self.rubrics[str(qid)], mode='classification', th=self.summation_th,
                                                          num_classes=len(self.classes))
                 elif self.mode == 'regression':
 
                     if self.learning_strategy == 'decision_tree':
                         symbolic_models[qid] = DecisionTreeRegressor(max_features=max_features, max_depth=max_features, random_state=self.seed)
                     else:
-                        symbolic_models[qid] = Summation(self.rubrics[qid], mode='regression', th=self.summation_th, num_classes=3)
+                        symbolic_models[qid] = Summation(self.rubrics[str(qid)], mode='regression', th=self.summation_th, num_classes=3)
         else:
             self.symbolic_models = symbolic_models
         return symbolic_models
@@ -181,7 +181,7 @@ class GradingModel(LightningModule):
 
     def hard_matching(self, justification_cue, input_id, question_id):
         # hard matching one justification cue per key element
-        rubric = self.rubrics[question_id]
+        rubric = self.rubrics[str(question_id)]
         max_idxs, max_vals = [], []
         cue_texts = []
         for span in justification_cue:
@@ -191,7 +191,7 @@ class GradingModel(LightningModule):
             max_idxs.append(np.argmax(sim))
             max_vals.append(np.max(sim))
         # make sure that the absolute maximum is taken
-        scoring_vector = np.zeros((len(self.rubrics[question_id])))
+        scoring_vector = np.zeros((len(self.rubrics[str(question_id)])))
         for mi, mv in zip(max_idxs, max_vals):
             if scoring_vector[mi] < mv:
                 scoring_vector[mi] = mv
@@ -200,7 +200,7 @@ class GradingModel(LightningModule):
 
     def fuzzy_matching(self, justification_cue, input_id, question_id):
         #fuzzy matching
-        rubric = self.rubrics[question_id]
+        rubric = self.rubrics[str(question_id)]
         scoring_vector = [0] * len(rubric['key_element'])
         cue_texts = []
         for span in justification_cue:
@@ -215,7 +215,7 @@ class GradingModel(LightningModule):
 
     def training_step(self, batch, batch_idx):
         q_id = batch['question_id'][0]
-        symbolic_model = self.symbolic_models[q_id]
+        symbolic_model = self.symbolic_models[str(q_id)]
         prediction_function = symbolic_model.predict  # independent if decision tree or summation
         if self.mode == 'classification':
             labels = batch['class']
@@ -226,8 +226,8 @@ class GradingModel(LightningModule):
         scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
                                        batch['question_id'])
         labels_cpu = torch.clone(labels).cpu().detach().numpy()
-        self.all_targets[q_id].append(labels_cpu)
-        self.all_train_scoring_vectors[q_id].append(scoring_vectors)
+        self.all_targets[str(q_id)].append(labels_cpu)
+        self.all_train_scoring_vectors[str(q_id)].append(scoring_vectors)
         loss = torch.tensor(0.0, requires_grad=True, device=self.device)
         if self.epoch > 0:
            loss, y_pred = self.forward_step(scoring_vectors, labels, prediction_function, loss_function)
@@ -272,7 +272,7 @@ class GradingModel(LightningModule):
 
     def validation_step(self, batch, batch_idx):
         q_id = batch['question_id'][0]
-        symbolic_model = self.symbolic_models[q_id]
+        symbolic_model = self.symbolic_models[str(q_id)]
         prediction_function = symbolic_model.predict
         if self.mode == 'classification':
             labels = batch['class']
@@ -282,7 +282,7 @@ class GradingModel(LightningModule):
             loss_function = self.mse_loss
         scoring_vectors = self.forward(batch['input_ids'], batch['attention_mask'], batch['token_type_ids'],
                                        batch['question_id'])
-        self.all_test_scoring_vectors[q_id].append(scoring_vectors)
+        self.all_test_scoring_vectors[str(q_id)].append(scoring_vectors)
         if self.epoch > 0:
             loss, y_pred = self.forward_step(scoring_vectors, labels, prediction_function, loss_function)
         else:
@@ -315,7 +315,7 @@ class GradingModel(LightningModule):
     def predict_step(self, batch, batch_idx):
         # used in the trainer.predict() method
         q_id = batch['question_id'][0]
-        symbolic_model = self.symbolic_models[q_id]
+        symbolic_model = self.symbolic_models[str(q_id)]
         prediction_function = symbolic_model.predict
         if self.mode == 'classification':
             labels = batch['class']
@@ -333,7 +333,7 @@ class GradingModel(LightningModule):
         # custom prediction method used for explainable inference
         if return_reasoning:
             q_id = batch['question_id'][0]
-            symbolic_model = self.symbolic_models[q_id]
+            symbolic_model = self.symbolic_models[str(q_id)]
             prediction_function = symbolic_model.predict
             if self.mode == 'classification':
                 labels = batch['class']

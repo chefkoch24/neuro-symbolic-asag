@@ -12,9 +12,9 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 for task in ['span_prediction', 'token_classification']:
     if task == 'token_classification':
-        ckpt = 'logs/token_classification_microsoft_mdeberta-v3-base_True/version_0/checkpoints/checkpoint-epoch=02-val_loss=0.40.ckpt'
+        ckpt = 'logs/token_classification_microsoft_mdeberta-v3-base_True/version_0/checkpoints/checkpoint-epoch=05-val_loss=0.30.ckpt'
     else:
-        ckpt = 'logs/span_prediction_microsoft_mdeberta-v3-base/version_0/checkpoints/checkpoint-epoch=03-val_loss=1.41.ckpt'
+        ckpt = 'logs/span_prediction_microsoft_mdeberta-v3-base/version_0/checkpoints/checkpoint-epoch=06-val_loss=0.75.ckpt'
     for mode in ['regression','classification']:
         for grading_model in ['decision_tree', 'summation']:
             if 'task' == 'token_classification':

@@ -60,7 +60,7 @@ class PreprocessorSpanPrediction(Preprocessor):
         self.rubrics = rubrics
 
     def get_rubric_elements(self, spans, input_ids, qid):
-        rubric = self.rubrics[qid]
+        rubric = self.rubrics[str(qid)]
         rubric_elements = []
         sims = []
         for s in spans:
@@ -83,7 +83,7 @@ class PreprocessorSpanPrediction(Preprocessor):
             # get the spans from the aligned labels
             hard_labels = metrics.silver2target(aligned_labels)
             spans = metrics.get_spans_from_labels(hard_labels)
-            rubric_elements, rubric_sims = self.get_rubric_elements(spans, tokenized['input_ids'], q_id)
+            rubric_elements, rubric_sims = self.get_rubric_elements(spans, tokenized['input_ids'], str(q_id))
             # generate final input for every span individually
             for span, re, sim in zip(spans, rubric_elements, rubric_sims):
                 tokenized_len = len(self.tokenizer.tokenize(re))
@@ -134,7 +134,7 @@ class GradingPreprocessor(Preprocessor):
             d['attention_mask'] = tokenized['attention_mask']
             d['class'] = self.class2idx[d['label']]
             d['token_type_ids'] = tokenized['token_type_ids']
-            d['score'] = utils.scaled_rounding(utils.normalize_score(d['score'], max_scores[q_id]))
+            d['score'] = utils.scaled_rounding(utils.normalize_score(d['score'], max_scores[str(q_id)]))
             model_inputs.append({
                 'input_ids': d['input_ids'],
                 'attention_mask': d['attention_mask'],

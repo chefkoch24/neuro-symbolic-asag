@@ -59,7 +59,7 @@ class WeakSupervisionSoft:
         ]
 
     def _get_rubric(self, question_id: str):
-        return self.rubrics[question_id]
+        return self.rubrics[str(question_id)]
 
     def _generate_sentences(self, tokenized_sequence):
         sentences = []
@@ -498,10 +498,10 @@ class WeakSupervisionSoft:
     def apply(self, data):
         annotated_data = []
         for i, d in tqdm(data.iterrows()):
-            q_id = d['question_id']
+            q_id = str(d['question_id'])
             x = d['tokenized']
             lang = d['lang']
-            rubric = self.rubrics[q_id]
+            rubric = self.rubrics[str(q_id)]
             len_seq = len(x)
             labeling_functions = {}
             for i, lf in enumerate(self.labeling_functions):

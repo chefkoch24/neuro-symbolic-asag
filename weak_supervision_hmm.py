@@ -137,7 +137,7 @@ class WeakSupervisionHMM:
         ]
 
     def _get_rubric(self, question_id: str):
-        return self.rubrics[question_id]
+        return self.rubrics[str(question_id)]
 
     def _get_spans_above_threshold(self, spans, threshold):
         spans = list(spans)
