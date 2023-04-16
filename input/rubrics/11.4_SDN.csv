@@ -1,5 +1,0 @@
-ID,key_element,points
-1,Meter table: collects flow statistics or contains meter entry per flow,0.25
-2,QoS operation,0.25
-3,Flow pipeline: that contain “rules” or fields,0.25
-4,forwarding /actions to be taken on the packets,0.25
