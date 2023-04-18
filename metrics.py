@@ -388,7 +388,7 @@ def compute_grading_regression_metrics(outputs):
     predictions = torch.cat([x['prediction'] for x in outputs])
     targets = torch.cat([x['score'] for x in outputs])
     langs = utils.flat_list([x['lang'] for x in outputs])
-    rmse_calc = MeanSquaredError(squared=False).to(device)
+    rmse_calc = MeanSquaredError(squared=True).to(device)
     # num_classes = 9 because we have 9 different scores, 0.   , 0.125, 0.25 , 0.375, 0.5  , 0.625, 0.75 , 0.875, 1
     cohenkappa = CohenKappa(task="multiclass", num_classes=9, weights="quadratic").to(device)
     overall_rmse = rmse_calc(predictions, targets)
