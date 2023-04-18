@@ -7,11 +7,11 @@ from training import TrainingJustificationCueDetection
 
 for task in ['token_classification', 'span_prediction']:
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    for model in ["microsoft/mdeberta-v3-base", "distilbert-base-multilingual-cased"]:
+    for model in ["microsoft/mdeberta-v3-base",]:#"distilbert-base-multilingual-cased"]:
             train_file = 'training_aligned_labels_' + model.replace('/', '_') + '.json'
             dev_file = "dev_aligned_labels_" + model.replace('/', '_') + ".json"
             if task == 'token_classification':
-               for context in [True, False]:
+               for context in [True, ]:#False]:
                    config = Config(
                        task=task,
                        model=model,

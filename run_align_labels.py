@@ -40,8 +40,8 @@ def create_aligned_labels(data):
         aligned_data.append(d)
     return aligned_data
 
-train_file = 'aggregated/training/training_ws_hmm_1_all_lfs.json'
-dev_file = 'aggregated/dev/dev_ws_hmm_1_all_lfs.json'
+train_file = 'aggregated/training/training_ws_hmm_all_lfs.json'
+dev_file = 'aggregated/dev/dev_ws_hmm_all_lfs.json'
 
 for model in ['distilbert-base-multilingual-cased', 'microsoft/mdeberta-v3-base']:
         config = Config(train_file=train_file,
