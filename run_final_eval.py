@@ -164,37 +164,3 @@ if TEST_FILE == 'dev_dataset.json':
 os.mkdir(config.PATH_RESULTS + '/' + experiment_name) if os.path.exists(config.PATH_RESULTS + '/' + experiment_name) is False else None
 save_path = config.PATH_RESULTS + '/' + experiment_name
 utils.save_csv(prediction_data, save_path, 'final_prediction')
-
-# more detailed metrics
-print('Generate more detailed insights...')
-y_true = [str(y[label]) for y in prediction_data]
-y_pred = [str(y['y_pred']) for y in prediction_data]
-
-if MODE == 'classification':
-    label_names = ['CORRECT', 'PARTIAL_CORRECT', 'INCORRECT']
-else:
-    label_names = ['0.0', '0.125', '0.25', '0.375', '0.5', '0.625', '0.75', '0.875', '1.0']
-
-final_cm = {'confusion_matrix' : []}
-final_cm['confusion_matrix'] = confusion_matrix(y_true=y_true,y_pred=y_pred, labels=label_names).tolist()
-final_report = classification_report(y_true, y_pred, output_dict=True, labels=label_names)
-
-# more detailed metrics per question
-print('Generate more detailed insights per question...')
-
-reports = {}
-cms = {}
-for qid in list(rubrics.keys()):
-    y_true = [str(d[label]) for d in prediction_data if d['question_id'] == qid]
-    y_pred = [str(d['y_pred']) for d in prediction_data if d['question_id'] == qid]
-    cm = confusion_matrix(y_true=y_true,y_pred=y_pred)
-    report = classification_report(y_true, y_pred, output_dict=True)
-    reports[qid] = report
-    cms[qid] = cm.tolist()
-
-
-utils.save_json(reports, save_path, 'final_reports.json')
-utils.save_json(cms, save_path, 'final_cms.json')
-utils.save_json(final_cm, save_path, 'final_overall_cm.json')
-utils.save_json(final_report, save_path, 'final_overall_report.json')
-utils.save_json(metrics, save_path, 'final_metrics.json')
