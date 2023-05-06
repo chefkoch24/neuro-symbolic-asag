@@ -13,11 +13,15 @@
 
 ## Code Structure
 
-All scripts are  run scripts are located in the root directory and are named according to the experiments they run.
+All scripts are in the main folder.
+The scripts for running configurations contain the prefix *run*.
+Helper scripts contain the prefix *_*.
+All other scripts contain the classes according to their name.
+For running own experiments the configurations has to be adapted in the code.
 
 ## Data Splits 
 
-We created different branches per data split for the experiments.
+We created different Github branches per data split for the experiments.
 
 - **master** - contains data & setup for German and English questions, including training data from the
 unseen questions, are used to train the models.
@@ -42,10 +46,10 @@ For setup all requirements the following steps has to be done:
 
 
 ## Configurations
-The configurations of all shared data paths are set in the file `config.py` to customize you have to adapt this file.
+The configurations of all shared data paths are set in the file `config.py` to customize paths you have to adapt this file.
 
 ## Preprocess raw data
-For preprocessing the raw data from xml and csv files, run the following command:
+For preprocessing the raw data from xml and csv files, run the following script:
 
 `python run_preprocess_raw_data.py`
 
@@ -93,7 +97,7 @@ The alignment is done by running the following script:
 `python run_align_labels.py`
 
 
-## Train Justification Cue Detection Model
+## Justification Cue Detection Model
 Trains the justification cue detection model, 
 all configurations are set in the file `config.py`.
 
@@ -125,13 +129,8 @@ it's necessary to link/ uncomment the respective lines to configure the correct 
 ## Evaluation
 
 The final metrics are based on generated prediction files which allow to exclude the unseen questions from the final metrics.
-The final analysis is done in the notebook `analyze_final_results.ipynb` in the *notebooks* folder.
-
-## Helper scripts
-
-Create spacy corpora for the visualization
-
-`python run_save_annotation_as_doc.py`
+The final results are manually extracted from the notebook `analyze_final_results.ipynb` in the *notebooks* folder.
+The respective table is stored in the file `final_results_grading.csv` and `final_results_scoring.csv` in the *results* folder.
 
 ## Analysis
 
