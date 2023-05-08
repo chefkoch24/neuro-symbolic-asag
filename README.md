@@ -10,6 +10,7 @@
   - **safdataset** - contains all safdataset files downloaded from https://github.com/SebOchs/SAF
 - **notebooks** - contains all notebooks for analysis and visualization
 - **results** - contains all result files. Subfolders for each final experiment
+- **logs** - logs while training
 
 ## Code Structure
 
