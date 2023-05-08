@@ -18,7 +18,7 @@ DEV_FILE = 'dev_dataset.json'
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 for mode in ['regression','classification']:
-    for grading_model in ['decision_tree']:#,'summation']:
+    for grading_model in ['decision_tree','summation']:
         for is_fixed_learner in [True, False]:
             for lr in [0.001, 0.01, 0.1]:
                 for matching in ['fuzzy', 'exact']:
@@ -31,7 +31,7 @@ for mode in ['regression','classification']:
                                     device=DEVICE,
                                     mode=mode,
                                     grading_model=grading_model,
-                                    summation_th=0.9,
+                                    summation_th=0.7,
                                     batch_size=4,
                                     lr=lr,
                                     matching=matching,
