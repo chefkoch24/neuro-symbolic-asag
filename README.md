@@ -5,12 +5,12 @@
 - **corpora** - contains spacy corpora from HMMs
 - **data** - contains all pre-processed data files
   - **aggregated** - all files with aggregated labels from weak supervision
-- **input** - contains all raw data files including rubric
+- **input** - contains all raw data files, including the rubric
   - **rubrics** - contains all rubric files
   - **safdataset** - contains all safdataset files downloaded from https://github.com/SebOchs/SAF
 - **notebooks** - contains all notebooks for analysis and visualization
 - **results** - contains all result files. Subfolders for each final experiment
-- **logs** - logs while training
+- **logs** - contains all logs while training
 
 ## Code Structure
 
@@ -18,20 +18,20 @@ All scripts are in the main folder.
 The scripts for running configurations contain the prefix *run*.
 Helper scripts contain the prefix *_*.
 All other scripts contain the classes according to their name.
-For running own experiments the configurations has to be adapted in the code.
+The configurations must be adapted in the code for running own experiments.
 
 ## Data Splits 
 
 We created different Github branches per data split for the experiments.
 
 - **master** - contains data & setup for German and English questions, including training data from the
-unseen questions, are used to train the models.
+unseen questions are used to train the models.
 - **monolingual-de** - contains data & setup for German questions
 - **monolingual-en** - contains data & setup for English questions
 - **multilingual** - contains data & setup for German and English questions, excluding training data from the unseen questions
 
 ## Requirements
-For setup all requirements the following steps has to be done:
+To set up all requirements, the following steps have to be done:
 
 `pip install -r requirements.txt`
 
@@ -47,7 +47,7 @@ For setup all requirements the following steps has to be done:
 
 
 ## Configurations
-The configurations of all shared data paths are set in the file `config.py` to customize paths you have to adapt this file.
+The configurations of all shared data paths are set in the file `config.py`. To customize paths, you have to adapt this file.
 
 ## Preprocess raw data
 For preprocessing the raw data from xml and csv files, run the following script:
@@ -125,7 +125,9 @@ For the final evaluation and generation of prediction files run the following sc
 
 `python run_final_eval.py`
 
-it's necessary to link/ uncomment the respective lines to configure the correct model combinations
+it's necessary to link/ uncomment the respective lines to configure the correct model combinations.
+All grading models are stored in separate folders in the *logs* folder and contain a hyperparameter file and metrics.csv
+which was created during training.
 
 ## Evaluation
 
@@ -135,4 +137,4 @@ The respective table is stored in the file `final_results_grading.csv` and `fina
 
 ## Analysis
 
-In the folder *notebooks* are all notebooks for deeper analysis and visualizations of the data and results.
+In the folder, *notebooks* are all notebooks for deeper analysis and visualizations of the data and results.
