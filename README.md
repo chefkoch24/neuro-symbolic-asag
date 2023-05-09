@@ -31,6 +31,8 @@ unseen questions are used to train the models.
 - **multilingual** - contains data & setup for German and English questions, excluding training data from the unseen questions
 
 ## Requirements
+Python 3.9
+
 To set up all requirements, the following steps have to be done:
 
 `pip install -r requirements.txt`
@@ -40,8 +42,6 @@ To set up all requirements, the following steps have to be done:
 `python -m spacy download en_core_web_lg`
 
 `python -m nltk.downloader -d /path/to/data/storage/ wordnet`
-
-`python -m nltk.downloader -d /path/to/data/storage/ omw-1.4`
 
 `python -m nltk.downloader -d /path/to/data/storage/ stopwords`
 
